@@ -1,7 +1,7 @@
-// Which platform the keys are written for. Key hints are written as a Mac
-// shows them (⌘K) and rewritten with Ctrl, Alt and Shift elsewhere
-// (Ctrl+K). ?platform=linux or ?platform=mac forces one, for screenshots
-// and tests (the browser suite runs on Linux and keeps the Mac look).
+// Which platform the keys are for: ⌘ on a Mac, Ctrl elsewhere, from the
+// browser. Key hints are written as a Mac shows them (⌘K) and rewritten
+// with Ctrl, Alt and Shift elsewhere (Ctrl+K). ?platform=linux or
+// ?platform=mac forces one, for screenshots and tests.
 
 const forced = (() => {
   try {
@@ -13,7 +13,7 @@ const forced = (() => {
 
 const nav = typeof navigator === "undefined" ? "" : `${navigator.platform} ${navigator.userAgent}`;
 
-export const IS_MAC = forced ? forced === "mac" : /Mac|iPhone|iPad/.test(nav) || !forced;
+export const IS_MAC = forced ? forced === "mac" : /Mac|iPhone|iPad/.test(nav);
 export const IS_LINUX = !IS_MAC;
 
 // The key that stands in for ⌘: ⌘ on a Mac, Ctrl everywhere else.
