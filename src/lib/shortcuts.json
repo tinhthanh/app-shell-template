@@ -1,0 +1,13 @@
+{
+  "_": "The app's keyboard shortcuts, read by lib/shortcuts.ts: the handler (hooks/use-shortcuts.ts), the Keyboard shortcuts sheet and Settings › Shortcuts all draw this one table. group is the heading an item is under; count makes items 1..count, with {n} in label; what is how a list names it when that differs from label. Keys are written for a Mac (⌘⇧K) and shown as Ctrl+Shift+K elsewhere (lib/platform.ts).",
+  "shortcuts": [
+    { "id": "palette", "group": "Go", "label": "Search and commands…", "keys": "⌘K" },
+    { "id": "place", "group": "Go", "label": "Place {n}", "keys": "⌘1–9", "count": 9, "what": "Go to the sidebar's place 1–9" },
+    { "id": "settings", "group": "Go", "label": "Settings", "keys": "⌘," },
+    { "id": "sidebar", "group": "View", "label": "Show or hide the sidebar", "keys": "⌘\\" },
+    { "id": "zoom-in", "group": "View", "label": "Zoom in", "keys": "⌘+", "sep": true },
+    { "id": "zoom-out", "group": "View", "label": "Zoom out", "keys": "⌘−" },
+    { "id": "zoom-reset", "group": "View", "label": "Actual size", "keys": "⌘0" },
+    { "id": "shortcuts", "group": "Help", "label": "Keyboard shortcuts", "keys": "⌘/" }
+  ]
+}
