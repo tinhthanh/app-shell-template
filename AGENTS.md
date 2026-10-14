@@ -40,7 +40,15 @@ suite included, in both appearances.
    a reason beside it.
 6. The work is on a branch, as a PR against `main`, with a lowercase
    conventional subject (`feat: …`, `fix: …`, `test: …`, `docs: …`,
-   `ci: …`, `chore: …`) that says what the user gets.
+   `ci: …`, `chore: …`) that says what the user gets. The PR template's
+   Proof section is filled in.
+
+CI holds you to this: the `evidence` job refuses a change under `src/`
+with no changed test (write `no-test: <why>` in the PR body when none is
+possible) and a user-visible change with no changelog bullet; the
+`guardrails` job refuses `test.skip`, `test.fixme`, `test.only`,
+`@ts-ignore`, a `biome-ignore` without a reason, and any edit to the checks,
+configs or these rules without the `guardrail-change` label.
 
 ## Which test proves it
 

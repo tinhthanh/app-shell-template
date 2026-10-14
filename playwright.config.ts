@@ -16,7 +16,13 @@ export default defineConfig({
   workers: process.env.E2E_WORKERS ? Number(process.env.E2E_WORKERS) : process.env.CI ? 2 : undefined,
   timeout: 30_000,
   expect: { timeout: 10_000 },
-  reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
+  // E2E_REPORT=1 (CI) writes the HTML report and a JUnit file beside the
+  // results: the evidence a PR links to.
+  reporter: [
+    ["list"],
+    ...(process.env.CI ? [["github"] as const] : []),
+    ...(process.env.E2E_REPORT ? [["html", { open: "never", outputFolder: "node_modules/.e2e-report" }] as const, ["junit", { outputFile: "node_modules/.e2e-results/junit.xml" }] as const] : []),
+  ],
   use: {
     ...devices["Desktop Chrome"],
     baseURL: `http://localhost:${port}`,
