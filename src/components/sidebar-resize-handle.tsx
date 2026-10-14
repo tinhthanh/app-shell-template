@@ -130,13 +130,18 @@ export function SidebarResizeHandle({ folded = false }: { folded?: boolean }) {
   useEffect(() => {
     if (!drag) return;
     setActive(true);
-    const t = window.setInterval(() => !drag && (setActive(false), window.clearInterval(t)), 100);
+    const t = window.setInterval(() => {
+      if (drag) return;
+      setActive(false);
+      window.clearInterval(t);
+    }, 100);
     return () => window.clearInterval(t);
   }, []);
   const max = sidebarMax(typeof window === "undefined" ? Infinity : window.innerWidth);
   const now = folded ? RAIL_WIDTH : Math.min(width, max);
   return (
     <Tip side="right" delay={600} label={folded ? "Drag to open the sidebar" : "Drag to resize · double-click for the default width"}>
+      {/* biome-ignore lint/a11y/useSemanticElements: <hr> cannot be dragged or focused; this is a WAI-ARIA focusable separator. */}
       <div
         ref={self}
         role="separator"

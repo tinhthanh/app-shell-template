@@ -3,9 +3,9 @@
 import { Toast } from "@base-ui/react/toast";
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon, LoaderCircleIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import type React from "react";
-import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { type Box, useModalBox } from "@/hooks/use-modal-open";
+import { cn } from "@/lib/utils";
 
 const TOAST_ICONS = {
   error: CircleAlertIcon,
@@ -64,7 +64,7 @@ function clearOf(m: Box): ToastPosition {
     ["top-right", { left: W - 12 - STACK_W, right: W - 12, top: 12, bottom: 12 + STACK_H }],
     ["top-left", { left: 12, right: 12 + STACK_W, top: 12, bottom: 12 + STACK_H }],
   ];
-  let best = spots[0][0];
+  let best: ToastPosition = "bottom-left";
   let least = Number.POSITIVE_INFINITY;
   for (const [at, spot] of spots) {
     const covered = area(spot, m);

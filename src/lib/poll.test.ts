@@ -38,16 +38,22 @@ test("nothing new backs off to max; something new goes back to every", async () 
   mock.timers.enable({ apis: ["setTimeout", "Date"] });
   const at: number[] = [];
   let changed = false;
-  const p = poll(() => (at.push(Date.now()), changed), { every: 1000, max: 8000 });
+  const p = poll(
+    () => {
+      at.push(Date.now());
+      return changed;
+    },
+    { every: 1000, max: 8000 },
+  );
   await settle();
   await advance(2000 + 4000 + 8000 + 8000);
-  const gaps = at.slice(1).map((t, i) => t - at[i]);
+  const gaps = at.slice(1).map((t, i) => t - (at[i] ?? 0));
   assert.deepEqual(gaps, [2000, 4000, 8000, 8000]);
   changed = true;
   at.length = 0;
   await advance(8000 + 1000 + 1000);
   assert.deepEqual(
-    at.slice(1).map((t, i) => t - at[i]),
+    at.slice(1).map((t, i) => t - (at[i] ?? 0)),
     [1000, 1000],
   );
   p.stop();
@@ -92,7 +98,13 @@ test("hidden can keep a slow look", async () => {
 test("kick looks now and starts the backing off again from every", async () => {
   mock.timers.enable({ apis: ["setTimeout", "Date"] });
   let n = 0;
-  const p = poll(() => (n++, false), { every: 1000, max: 16_000 });
+  const p = poll(
+    () => {
+      n++;
+      return false;
+    },
+    { every: 1000, max: 16_000 },
+  );
   await settle();
   await advance(1000 + 2000 + 4000);
   const was = n;

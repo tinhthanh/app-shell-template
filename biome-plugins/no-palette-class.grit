@@ -1,0 +1,6 @@
+language js
+
+or { JsStringLiteralExpression(), JsxString(), JsTemplateChunkElement() } as $s where {
+  $s <: r"(?s).*\b(?:bg|text|border|ring|fill|stroke|outline|from|to|via|divide|decoration|caret|accent)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-[0-9]{2,3}\b.*",
+  register_diagnostic(span=$s, message="Tailwind palette colour: use a state token (destructive, success, warning, info) or a tone.", severity="error")
+}

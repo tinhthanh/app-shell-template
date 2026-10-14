@@ -1,0 +1,7 @@
+language js
+
+or { JsStringLiteralExpression(), JsxString(), JsTemplateChunkElement() } as $s where {
+  not $filename <: r".*/src/themes/.*",
+  $s <: r"(?s).*#[0-9a-fA-F]{3,8}\b.*",
+  register_diagnostic(span=$s, message="Hard-coded hex colour: use a theme token (bg-primary, text-destructive...) or a tone (themes/tones.ts).", severity="error")
+}

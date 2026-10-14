@@ -13,6 +13,14 @@ export type View = { kind: "home" } | { kind: "projects"; id?: string } | { kind
 
 export type SettingsSectionId = "general" | "appearance" | "shortcuts" | "about";
 
+export type ViewKind = View["kind"];
+
+// assertNever is the default of a switch over View or a ShortcutId: adding
+// a kind without handling it fails to compile.
+export function assertNever(x: never): never {
+  throw new Error(`unhandled ${JSON.stringify(x)}`);
+}
+
 interface State {
   view: View;
   themeId: string;

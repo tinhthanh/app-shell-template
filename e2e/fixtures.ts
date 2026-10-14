@@ -1,4 +1,4 @@
-import { type BrowserContext, expect, type Locator, type Page, test as base } from "@playwright/test";
+import { type BrowserContext, test as base, expect, type Locator, type Page } from "@playwright/test";
 
 // The browser suite's shared setup. Every test opens the production build
 // (vite preview) in its own browser context, so storage starts empty unless

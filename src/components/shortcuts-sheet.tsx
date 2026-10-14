@@ -32,7 +32,7 @@ export function ShortcutsSheet() {
               <h3 className="mb-1 font-medium text-muted-foreground text-xs">{group}</h3>
               <ul className="flex flex-col">
                 {SHORTCUTS.filter((s) => s.group === group).map((s) => (
-                  <li key={s.id} className="flex min-h-7.5 items-center gap-2 border-b border-dashed py-0.5 text-sm last:border-b-0">
+                  <li key={s.id} className="flex min-h-side-row items-center gap-2 border-b border-dashed py-0.5 text-sm last:border-b-0">
                     <span className="min-w-0 flex-1 truncate">{describe(s)}</span>
                     <Kbd className="text-foreground/80">{s.keys}</Kbd>
                   </li>

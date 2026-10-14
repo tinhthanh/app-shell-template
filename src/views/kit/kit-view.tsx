@@ -36,28 +36,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { ApiError } from "@/lib/errors";
 import { useStore } from "@/lib/store";
-import { hashTone, TONES, toneVar } from "@/themes/tones";
 import { cn } from "@/lib/utils";
+import { hashTone, TONES, toneVar } from "@/themes/tones";
+import { type KitSectionId, KIT_SECTIONS as SECTIONS } from "@/views/kit/sections";
 import { ViewHeader } from "@/views/view-header";
 
 // Kit shows the pieces the app is built from, in the theme in use: the
 // coss ui components (components/ui) and the app's own (components/). A
 // place to see what there is, and to check a theme against all of it.
-// Each section is addressed (#/kit/buttons).
-
-const SECTIONS = [
-  { id: "buttons", title: "Buttons" },
-  { id: "inputs", title: "Inputs" },
-  { id: "choices", title: "Choices" },
-  { id: "feedback", title: "Feedback" },
-  { id: "overlays", title: "Overlays" },
-  { id: "data", title: "Data" },
-  { id: "tones", title: "Tones" },
-] as const;
+// Each section is addressed (#/kit/buttons); the list is in sections.ts.
 
 export function KitView() {
   const view = useStore((s) => s.view);
-  const current = (view.kind === "kit" && SECTIONS.some((s) => s.id === view.section) ? view.section : "buttons") as (typeof SECTIONS)[number]["id"];
+  const current = (view.kind === "kit" && SECTIONS.some((s) => s.id === view.section) ? view.section : "buttons") as KitSectionId;
   return (
     <div className="flex h-full flex-col" data-testid="kit">
       <ViewHeader title="Kit" description="The components, in the theme in use" />
@@ -461,7 +452,7 @@ function Data() {
                 <TableCell>
                   <span className="flex items-center gap-2">
                     <Avatar className="size-5">
-                      <AvatarFallback className="text-[10px]">{r.owner[0].toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-[10px]">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     {r.owner}
                   </span>

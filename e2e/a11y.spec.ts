@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 
+import { KIT_SECTIONS } from "../src/views/kit/sections";
 import { type App, expect, test } from "./fixtures";
 
 // axe-core over the app's screens, in Default Dark: no serious or critical
@@ -27,16 +28,17 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
       await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
     },
   },
-  ...["buttons", "inputs", "choices", "feedback", "overlays", "data", "tones"].map((s) => ({
-    id: `kit ${s}`,
+  ...KIT_SECTIONS.map(({ id }) => ({
+    id: `kit ${id}`,
     run: async (app: App) => {
-      await app.page.goto(`/?mock=1#/kit/${s}`);
-      await expect(app.page.getByTestId(`kit-${s}`)).toBeVisible();
+      await app.page.goto(`/?mock=1#/kit/${id}`);
+      await expect(app.page.getByTestId(`kit-${id}`)).toBeVisible();
     },
   })),
   { id: "settings appearance", run: async (app) => void (await app.openSettings("appearance")) },
   { id: "settings general", run: async (app) => void (await app.openSettings("general")) },
   { id: "settings shortcuts", run: async (app) => void (await app.openSettings("shortcuts")) },
+  { id: "settings about", run: async (app) => void (await app.openSettings("about")) },
   {
     id: "palette",
     run: async (app) => {
@@ -61,7 +63,14 @@ for (const theme of themes) {
       await app.open({ theme });
       await scene.run(app);
       // Animations finish first, so contrast is read at rest.
-      await app.page.waitForTimeout(250);
+      await app.page.evaluate(() =>
+        Promise.all(
+          document
+            .getAnimations()
+            .filter((a) => a.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY)
+            .map((a) => a.finished.catch(() => {})),
+        ),
+      );
       const r = await new AxeBuilder({ page: app.page }).withTags(TAGS).exclude("[data-a11y-skip]").analyze();
       const bad = r.violations
         .filter((x) => x.impact === "serious" || x.impact === "critical")

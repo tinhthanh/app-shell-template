@@ -27,4 +27,4 @@ export function Radio({ className, ...props }: RadioPrimitive.Root.Props): React
   );
 }
 
-export { RadioGroupPrimitive, RadioPrimitive, Radio as RadioGroupItem };
+export { Radio as RadioGroupItem, RadioGroupPrimitive, RadioPrimitive };

@@ -23,9 +23,9 @@ export function hex([r, g, b]: RGB): string {
 
 // mix is color-mix(in srgb, a p, b): p of a, the rest b.
 export function mix(a: string, b: string, p: number): string {
-  const x = parse(a).rgb;
-  const y = parse(b).rgb;
-  return hex([0, 1, 2].map((i) => x[i] * p + y[i] * (1 - p)) as RGB);
+  const [xr, xg, xb] = parse(a).rgb;
+  const [yr, yg, yb] = parse(b).rgb;
+  return hex([xr * p + yr * (1 - p), xg * p + yg * (1 - p), xb * p + yb * (1 - p)]);
 }
 
 // over lays a colour, with its own alpha or the one given, on an opaque one.
@@ -40,18 +40,18 @@ function channel(v: number) {
 }
 
 export function luminance(c: string): number {
-  const [r, g, b] = parse(c).rgb.map(channel);
+  const [r, g, b] = parse(c).rgb.map(channel) as RGB;
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 // contrast is the WCAG 2 ratio, 1 to 21.
 export function contrast(a: string, b: string): number {
-  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p);
+  const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p) as [number, number];
   return (x + 0.05) / (y + 0.05);
 }
 
 export function oklab(c: string): RGB {
-  const [r, g, b] = parse(c).rgb.map(channel);
+  const [r, g, b] = parse(c).rgb.map(channel) as RGB;
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
   const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);

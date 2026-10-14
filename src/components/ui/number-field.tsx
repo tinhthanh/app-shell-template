@@ -3,8 +3,8 @@
 import { NumberField as NumberFieldPrimitive } from "@base-ui/react/number-field";
 import { MinusIcon, PlusIcon } from "lucide-react";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export const NumberFieldContext: React.Context<{
   fieldId: string;
@@ -104,7 +104,7 @@ export function NumberFieldScrubArea({
       <Label className="cursor-ew-resize" htmlFor={context.fieldId}>
         {label}
       </Label>
-      <NumberFieldPrimitive.ScrubAreaCursor className="drop-shadow-[0_1px_1px_#0008] filter">
+      <NumberFieldPrimitive.ScrubAreaCursor className="drop-shadow-[0_1px_1px_--theme(--color-black/50%)] filter">
         <CursorGrowIcon />
       </NumberFieldPrimitive.ScrubAreaCursor>
     </NumberFieldPrimitive.ScrubArea>

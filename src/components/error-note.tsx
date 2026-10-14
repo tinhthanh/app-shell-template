@@ -40,6 +40,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           <DialogDescription>What was said, word for word.</DialogDescription>
         </DialogHeader>
         <div className="px-6 pb-2">
+          {/* biome-ignore lint/a11y/useSemanticElements: a <section> would not keep the text preformatted; the region is the output itself. */}
           <pre
             role="region"
             aria-label="Full output"
