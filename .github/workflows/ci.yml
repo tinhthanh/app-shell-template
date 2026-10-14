@@ -1,7 +1,9 @@
 name: ci
 
 on:
+  # labeled/unlabeled: the guardrails job reads the PR's labels.
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
