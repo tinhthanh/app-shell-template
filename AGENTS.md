@@ -8,6 +8,14 @@ vocabulary; `docs/decisions/` has why things are the way they are.
 
 ## Tooling
 
+- `pnpm install` points git at `.githooks/`: pre-commit formats and lints
+  what's staged, commit-msg checks the subject, pre-push runs `pnpm check`.
+  Never `--no-verify`: CI runs the same and more.
+- Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
+  when the tree has changes and blocks stopping while it is red; an
+  Edit/Write hook formats the file; force pushes, pushes to `main`,
+  `pkill` and killing port 1420 are refused.
+
 - Node 22 (`.nvmrc`) and pnpm 11 (`packageManager`). If `pnpm` is not on
   your PATH, run it as `npx pnpm@11` (or `corepack enable` on Node 22–24).
 - Chromium for the browser tests, once: `pnpm exec playwright install --with-deps chromium`.
