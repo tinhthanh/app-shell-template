@@ -224,7 +224,10 @@ function EditProject({ project, onSaved }: { project: Project; onSaved(): void }
         <PencilIcon />
       </DialogTrigger>
       <DialogPopup>
+        {/* The form is the popup's one child, laid out as the popup lays out
+            its header, panel and footer, so the panel scrolls on a short window. */}
         <Form
+          className="flex min-h-0 flex-1 flex-col"
           errors={errors}
           onFormSubmit={async (values) => {
             setErrors({});
