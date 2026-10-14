@@ -42,9 +42,14 @@ const touched = changed.filter((f) => GUARDRAILS.some((r) => r.test(f)));
 if (touched.length && !labels.includes("guardrail-change")) problems.push(`guardrail files changed without the "guardrail-change" label:\n    ${touched.join("\n    ")}`);
 
 let file = "";
+let skip = false;
 for (const line of diff.split("\n")) {
-  if (line.startsWith("+++ ")) file = line.slice(6);
-  if (!line.startsWith("+") || line.startsWith("+++")) continue;
+  if (line.startsWith("+++ ")) {
+    file = line.slice(6);
+    // The checks themselves name what they refuse; the label rule covers them.
+    skip = GUARDRAILS.some((r) => r.test(file));
+  }
+  if (skip || !line.startsWith("+") || line.startsWith("+++")) continue;
   const added = line.slice(1);
   if (/\btest\.(skip|fixme|only)\(/.test(added)) problems.push(`${file}: adds ${/test\.(skip|fixme|only)/.exec(added)?.[0]}; a test that doesn't run proves nothing`);
   if (/@ts-(ignore|expect-error)/.test(added)) problems.push(`${file}: adds ${/@ts-(ignore|expect-error)/.exec(added)?.[0]}; fix the type instead`);
