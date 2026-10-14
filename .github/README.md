@@ -9,8 +9,9 @@ conventional subject) and the `guardrails` job
 without the `guardrail-change` label).
 
 `rulesets/main.json` makes `main` take only squash-merged pull requests
-with those three checks green and a code owner's review, with no force
-pushes. GitHub applies rulesets to private repositories on paid plans and to
+with those three checks green, with no force pushes. A code owner's review
+isn't required: with one owner, nobody could approve their own PR. Admins
+can bypass, but only through a pull request. GitHub applies rulesets to private repositories on paid plans and to
 public ones on any plan; apply it once with:
 
 ```sh
