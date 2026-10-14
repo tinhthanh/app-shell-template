@@ -19,3 +19,8 @@ gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/main.json
 ```
 
 Create the `guardrail-change` label once: `gh label create guardrail-change --color D93F0B --description "Changes a check, a config or the rules agents follow"`.
+
+Dependabot's pull requests go through the same gates: `dependabot.yml` gives
+them lowercase conventional subjects and, for workflow bumps, the
+`guardrail-change` label. A major TypeScript bump is ignored until it is
+migrated by hand.
