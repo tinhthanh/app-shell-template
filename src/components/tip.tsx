@@ -31,8 +31,8 @@ import { cn } from "@/lib/utils";
 // `delay` overrides the app's 300ms for rows people sweep the pointer over,
 // like the sidebar's, where a tooltip at every row would be noise.
 //
-// Inside a tip layer (useTipLayer: the sidebar's rows, the rail's agents) a
-// Tip is only a mark on its element, and the layer's one tooltip opens over
+// Inside a tip layer (useTipLayer: a long list's rows) a Tip is only a
+// mark on its element, and the layer's one tooltip opens over
 // whichever is hovered or focused: hundreds of rows, one tooltip.
 export function Tip({
   label,

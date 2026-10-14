@@ -78,15 +78,3 @@ export function applyTheme(theme: Theme) {
     // Remembering is a convenience.
   }
 }
-
-// syntaxThemes is the Shiki theme pair the diff renderer colours code with:
-// the theme's own on its side, Pierre's on the other.
-export function syntaxThemes(theme: Theme): { dark: string; light: string } {
-  const own = theme.syntax;
-  return { dark: theme.appearance === "dark" && own ? own : "pierre-dark", light: theme.appearance === "light" && own ? own : "pierre-light" };
-}
-
-// xtermTheme is the terminal palette in xterm.js's own names.
-export function xtermTheme(theme: Theme) {
-  return { ...theme.terminal, cursorAccent: theme.terminal.background };
-}

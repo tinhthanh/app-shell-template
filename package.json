@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p e2e",
     "check:titles": "node scripts/check-titles.mjs",
     "check:themes": "node --experimental-strip-types --test src/themes/contrast.test.ts",
-    "test": "node --experimental-strip-types --test src/lib/sidebar-width.test.ts src/lib/last-of.test.ts src/lib/poll.test.ts src/lib/prefs.test.ts src/lib/mock.test.ts src/lib/routes.test.ts src/lib/explain.test.ts",
+    "test": "node --experimental-strip-types --test \"src/lib/**/*.test.ts\"",
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:themes && pnpm test && pnpm build",
     "lint": "biome check .",

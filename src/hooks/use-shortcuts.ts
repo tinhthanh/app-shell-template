@@ -2,15 +2,17 @@ import { useEffect } from "react";
 
 import { toggleShortcuts } from "@/components/shortcuts-sheet";
 import { announce } from "@/lib/announce";
+import { shortcutFor } from "@/lib/keys";
 import { places } from "@/lib/nav";
-import { modKey } from "@/lib/platform";
+import { IS_MAC } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { openSettings, useStore } from "@/lib/store";
 import { zoom } from "@/lib/zoom";
 
 // The app's shortcuts (lib/shortcuts.json) are caught on the window, before
-// anything else sees them, and end up in run. A key that does nothing here
-// goes on to the page, so a text field keeps its own.
+// anything else sees them: lib/keys.ts says which one a press is, and run
+// does it. A key that does nothing here goes on to the page, so a text
+// field keeps its own.
 
 // run does what the shortcut id does and says whether it did anything.
 // arg is the place's number (place).
@@ -49,28 +51,11 @@ export function run(id: string, arg?: number): boolean {
   }
 }
 
-// The keys, as KeyboardEvent reports them, to the ids in shortcuts.json.
-// Add a line here when you add a shortcut there.
-function idOf(e: KeyboardEvent): { id: string; arg?: number } | undefined {
-  if (!modKey(e) || e.altKey) return undefined;
-  const k = e.key;
-  if (e.shiftKey) return undefined;
-  if (k === "k") return { id: "palette" };
-  if (k === ",") return { id: "settings" };
-  if (k === "\\") return { id: "sidebar" };
-  if (k === "/") return { id: "shortcuts" };
-  if (k === "=" || k === "+") return { id: "zoom-in" };
-  if (k === "-") return { id: "zoom-out" };
-  if (k === "0") return { id: "zoom-reset" };
-  if (/^[1-9]$/.test(k)) return { id: "place", arg: Number(k) };
-  return undefined;
-}
-
 export function useShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.isComposing) return;
-      const hit = idOf(e);
+      const hit = shortcutFor(e, IS_MAC);
       if (!hit) return;
       if (run(hit.id, hit.arg)) {
         e.preventDefault();

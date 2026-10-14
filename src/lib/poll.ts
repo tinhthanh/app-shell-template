@@ -1,8 +1,9 @@
-// poll runs a look at something on a box (or the laptop agent) again and
-// again, the way the app's backstops should: often while it shows and
-// changes, less often while nothing changes, and not at all while the
-// window is hidden (minimised, covered, on another Space, or the Mac
-// asleep). Coming back looks at once, then carries on as before.
+// poll reads something from the API again and again, the way a backstop
+// behind live updates should: often while it shows and changes, less often
+// while nothing changes, and not at all while the window is hidden
+// (minimised, covered, or the computer asleep). Coming back looks at once,
+// then carries on as before. Not used by the template's views; kept for an
+// app that polls.
 //
 //   const stop = poll(async () => changed, { every: 2000, max: 16_000 });
 //
@@ -12,8 +13,8 @@
 // something changed), or as soon as every has passed since the last look,
 // and goes back to every.
 //
-// A timer that fires much later than it was set for means the Mac slept:
-// that look counts as coming back, too.
+// A timer that fires much later than it was set for means the computer
+// slept: that look counts as coming back, too.
 
 export interface PollOptions {
   // The wait while things change, in ms.
@@ -61,7 +62,7 @@ export function poll(look: () => unknown, o: PollOptions): Poller {
       return;
     }
     if (hiddenNow() && o.hidden === undefined) return;
-    // Late by far more than the wait: the Mac slept.
+    // Late by far more than the wait: the computer slept.
     if (due && Date.now() - due > Math.max(10_000, wait)) wait = o.every;
     busy = true;
     started = Date.now();

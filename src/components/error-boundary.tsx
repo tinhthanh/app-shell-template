@@ -6,7 +6,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 
 type Props = {
   children: ReactNode;
-  // What the boundary guards, for the message: "Automations", "a dialog".
+  // What the boundary guards, for the message: "Projects", "a dialog".
   scope?: string;
   // Shown as a way out, such as back home.
   onLeave?: () => void;

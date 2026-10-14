@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-// What a screen reader should hear when something changes out of sight: an
-// agent finished, needs you, or failed. Toasts are heard already (base-ui's
-// viewport is a live region; urgent ones are alerts); this is for the rest,
-// such as a notification the centre keeps without a toast. Two regions, in
-// components/announcer.tsx: polite waits for a pause, assertive doesn't.
+// What a screen reader should hear when something changes out of sight:
+// the sidebar folded by a key, a background job that finished. Toasts are
+// heard already (Base UI's viewport is a live region; urgent ones are
+// alerts); this is for the rest. Two regions, in components/announcer.tsx:
+// polite waits for a pause, assertive doesn't.
 
 interface Said {
   polite: string;

@@ -1,15 +1,14 @@
 import { confirm } from "@/components/confirm";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import { resetPrefs, setPrefs, usePrefs } from "@/lib/prefs";
 import { Segmented } from "@/views/settings/controls";
 import { Code, SettingsGroup, SettingsPage, SettingsRow, Value } from "@/views/settings/rows";
 
-// General shows one of each control a settings row takes: a switch, a
-// segmented pick, a read-only value and a button. Replace them with yours.
+// General shows one of each control a settings row takes: a segmented
+// pick, a read-only value and a button (a switch is on the Kit page).
+// Replace them with yours.
 export function GeneralSection() {
-  const confirmLeaving = usePrefs((p) => p.confirmBeforeLeaving);
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
 
   return (
@@ -24,12 +23,6 @@ export function GeneralSection() {
             ]}
             onChange={(v) => setPrefs({ sidebarCollapsed: v === "rail" })}
           />
-        </SettingsRow>
-      </SettingsGroup>
-
-      <SettingsGroup title="Behaviour">
-        <SettingsRow label="Confirm before leaving" description="An example switch: a boolean preference, saved as it changes.">
-          <Switch checked={confirmLeaving} onCheckedChange={(confirmBeforeLeaving) => setPrefs({ confirmBeforeLeaving })} />
         </SettingsRow>
       </SettingsGroup>
 

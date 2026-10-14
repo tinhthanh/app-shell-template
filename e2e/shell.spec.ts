@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { APP_NAME } from "../src/lib/app";
 import { expect, test } from "./fixtures";
 
 // The shell: the sidebar's places, the palette, the shortcuts and what the
@@ -11,12 +12,15 @@ test("the sidebar's places open their views, and ⌘1–9 jump to them", async (
   await app.open();
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects")).toBeVisible();
-  await expect(app.page).toHaveTitle("Projects — App Shell");
-  await app.page.keyboard.press(`${mod}+1`);
+  await expect(app.page).toHaveTitle(`Projects — ${APP_NAME}`);
+  // ⌘1–9 follow the sidebar's order, whatever it is.
+  const ids = await app.page.locator("[data-testid=sidebar] [data-testid^=nav-]").evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!.slice(4)));
+  const n = (id: string) => ids.indexOf(id) + 1;
+  await app.page.keyboard.press(`${mod}+${n("home")}`);
   await expect(app.page.getByRole("heading", { name: "Home" })).toBeVisible();
-  await app.page.keyboard.press(`${mod}+3`);
+  await app.page.keyboard.press(`${mod}+${n("kit")}`);
   await expect(app.page.getByTestId("kit")).toBeVisible();
-  await app.page.keyboard.press(`${mod}+4`);
+  await app.page.keyboard.press(`${mod}+${n("settings")}`);
   await expect(app.page.getByTestId("settings-general")).toBeVisible();
 });
 
@@ -121,11 +125,15 @@ test("the first launch follows the system's appearance, with no flash on the nex
 
 test("⌘+ and ⌘− zoom the text and show the HUD; ⌘0 resets", async ({ app }) => {
   await app.open();
-  await app.page.keyboard.press(`${mod}+Equal`);
+  // ⌘+ is ⌘⇧= on a US keyboard.
+  await app.page.keyboard.press(`${mod}+Shift+Equal`);
   const hud = app.page.getByTestId("zoom-hud");
-  await expect(hud).toHaveAttribute("data-shown", "true");
   await expect(hud).toContainText("14px");
   await expect.poll(() => app.page.evaluate(() => document.documentElement.style.fontSize)).not.toBe("");
+  await app.page.keyboard.press(`${mod}+Equal`);
+  await expect(hud).toContainText("15px");
+  await app.page.keyboard.press(`${mod}+Minus`);
+  await expect(hud).toContainText("14px");
   await app.page.keyboard.press(`${mod}+0`);
   await expect(hud).toContainText("13px");
   await expect.poll(() => app.page.evaluate(() => document.documentElement.style.fontSize)).toBe("");

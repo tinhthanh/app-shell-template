@@ -62,10 +62,7 @@ const INTERACTIVE_ROLES = new Set(["button", "link", "tab", "menuitem", "option"
 // Files that may still carry a title where it means something, with why.
 // Keep it empty unless there is no way round it, and take a file out once
 // it is fixed.
-const ALLOW = new Map([
-  // StateGlyph's state title: due a Tip and an aria-label, in the change
-  // that reworks the glyph (state colours, reduced motion).
-]);
+const ALLOW = new Map([]);
 
 async function* files(dir) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
