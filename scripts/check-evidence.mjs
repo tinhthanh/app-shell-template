@@ -1,7 +1,7 @@
 // Fails a pull request that changes behaviour without proof. On a PR, CI
 // runs it with the base commit and the PR's title and body in env:
 //
-//   BASE_SHA=… PR_TITLE=… PR_BODY=… node scripts/check-evidence.mjs
+//   BASE_SHA=… PR_TITLE=… PR_BODY=… PR_ACTOR=… node scripts/check-evidence.mjs
 //
 // What it asks (AGENTS.md › Done means):
 //   - a change under src/ (the vendored kit, styles and tests left out)
@@ -12,12 +12,16 @@
 //     (test:, ci:, chore:, refactor:, docs:, build:);
 //   - the title is a lowercase conventional subject.
 //
+// Dependabot's pull requests (PR_ACTOR dependabot[bot]) are held to the
+// first two but not the title: it writes "Bump" and cannot be told not to.
+//
 // Locally, with no env, it diffs against origin/main.
 import { execFileSync } from "node:child_process";
 
 const base = process.env.BASE_SHA || "origin/main";
 const title = process.env.PR_TITLE ?? "";
 const body = process.env.PR_BODY ?? "";
+const bot = process.env.PR_ACTOR === "dependabot[bot]";
 
 const changed = execFileSync("git", ["diff", "--name-only", `${base}...HEAD`], { encoding: "utf8" })
   .split("\n")
@@ -27,7 +31,7 @@ const tests = changed.filter((f) => f.endsWith(".test.ts") || /^e2e\/.+\.spec\.t
 const problems = [];
 
 const SUBJECT = /^(feat|fix|test|docs|ci|chore|refactor|perf|build)(\([a-z0-9-]+\))?!?: [a-z]/;
-if (title && !SUBJECT.test(title)) problems.push(`the title "${title}" is not a lowercase conventional subject (feat: …, fix: …, test: …)`);
+if (title && !bot && !SUBJECT.test(title)) problems.push(`the title "${title}" is not a lowercase conventional subject (feat: …, fix: …, test: …)`);
 
 const noTest = /^no-test: (.{15,})$/m.exec(body);
 if (behaviour.length && !tests.length && !noTest) problems.push(`behaviour changed with no test changed (or a "no-test: <why>" line in the PR body):\n    ${behaviour.join("\n    ")}`);
