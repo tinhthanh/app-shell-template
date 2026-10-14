@@ -1,10 +1,10 @@
 import { ArrowLeftIcon, PencilIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
-import { ErrorNote, toastError } from "@/components/error-note";
+import { toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { PickOne } from "@/components/pick-one";
-import { PixelLoader } from "@/components/pixel-loader";
+import { ResourceView } from "@/components/resource-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -46,7 +46,7 @@ function ProjectList() {
   const [status, setStatus] = useState<StatusFilter>("");
   const [tags, setTags] = useState<Set<string>>(new Set());
 
-  const all = projects.data ?? [];
+  const all = projects.status === "ready" ? projects.data : [];
   const allTags = [...new Set(all.flatMap((p) => p.tags))].sort();
   const q = query.trim().toLowerCase();
   const shown = all.filter((p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!status || p.status === status) && [...tags].every((t) => p.tags.includes(t)));
@@ -55,7 +55,7 @@ function ProjectList() {
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
         title="Projects"
-        description={projects.data ? `${all.length} in all` : undefined}
+        description={projects.status === "ready" ? `${all.length} in all` : undefined}
         actions={
           <Button size="sm" variant="outline" onClick={projects.reload} disabled={projects.loading} aria-label="Reload">
             <RefreshCwIcon className={cn(projects.loading && "animate-spin")} />
@@ -87,50 +87,54 @@ function ProjectList() {
         ))}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {projects.error && !projects.data ? (
-          <Failed error={projects.error} onRetry={projects.reload} />
-        ) : !projects.data ? (
-          <div className="flex h-full items-center justify-center" data-testid="projects-loading">
-            <PixelLoader label="Reading projects…" />
-          </div>
-        ) : all.length === 0 ? (
-          <Empty className="h-full" data-testid="projects-empty">
-            <EmptyHeader>
-              <EmptyTitle>No projects yet</EmptyTitle>
-              <EmptyDescription>When your API has some, they show here.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : shown.length === 0 ? (
-          <p className="px-6 py-8 text-muted-foreground text-sm">Nothing matches.</p>
-        ) : (
-          <ul className="divide-y" aria-label="Projects">
-            {shown.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  data-testid="project-row"
-                  data-project={p.id}
-                  onClick={() => useStore.getState().setView({ kind: "projects", id: p.id })}
-                  className="flex min-h-row w-full items-center gap-4 px-6 py-row-pad text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate font-medium text-sm">{p.name}</span>
-                      <StatusBadge status={p.status} />
-                    </span>
-                    <span className="mt-0.5 block truncate text-muted-foreground text-xs">{p.description}</span>
-                  </span>
-                  <span className="hidden items-center gap-1 md:flex">
-                    {p.tags.map((t) => (
-                      <Tag key={t} name={t} />
-                    ))}
-                  </span>
-                  <span className="w-20 shrink-0 text-right text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ResourceView
+          resource={projects}
+          label="Reading projects…"
+          testid="projects"
+          isEmpty={(all) => all.length === 0}
+          empty={
+            <Empty className="h-full">
+              <EmptyHeader>
+                <EmptyTitle>No projects yet</EmptyTitle>
+                <EmptyDescription>When your API has some, they show here.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          }
+        >
+          {() =>
+            shown.length === 0 ? (
+              <p className="px-6 py-8 text-muted-foreground text-sm">Nothing matches.</p>
+            ) : (
+              <ul className="divide-y" aria-label="Projects">
+                {shown.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      data-testid="project-row"
+                      data-project={p.id}
+                      onClick={() => useStore.getState().setView({ kind: "projects", id: p.id })}
+                      className="flex min-h-row w-full items-center gap-4 px-6 py-row-pad text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate font-medium text-sm">{p.name}</span>
+                          <StatusBadge status={p.status} />
+                        </span>
+                        <span className="mt-0.5 block truncate text-muted-foreground text-xs">{p.description}</span>
+                      </span>
+                      <span className="hidden items-center gap-1 md:flex">
+                        {p.tags.map((t) => (
+                          <Tag key={t} name={t} />
+                        ))}
+                      </span>
+                      <span className="w-20 shrink-0 text-right text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </ResourceView>
       </div>
     </div>
   );
@@ -143,12 +147,12 @@ function ProjectDetail({ id }: { id: string }) {
     try {
       await client.updateProject(id, { status });
       project.reload();
-      toastManager.add({ type: "success", title: `${project.data?.name ?? "Project"} is now ${status}` });
+      toastManager.add({ type: "success", title: `${p?.name ?? "Project"} is now ${status}` });
     } catch (err) {
       toastError(err, "Couldn't update the project");
     }
   };
-  const p = project.data;
+  const p = project.status === "ready" ? project.data : undefined;
   return (
     <div className="flex h-full flex-col" data-testid="project-detail">
       <ViewHeader
@@ -164,49 +168,35 @@ function ProjectDetail({ id }: { id: string }) {
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {project.error && !p ? (
-          <Failed error={project.error} onRetry={project.reload} />
-        ) : !p ? (
-          <div className="flex h-full items-center justify-center">
-            <PixelLoader label="Reading the project…" />
-          </div>
-        ) : (
-          <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
-            <div className="flex items-start gap-3">
-              <h2 className="font-semibold text-xl tracking-tight">{p.name}</h2>
-              <StatusBadge status={p.status} />
-              <EditProject project={p} onSaved={project.reload} />
+        <ResourceView resource={project} label="Reading the project…" testid="project">
+          {(p) => (
+            <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
+              <div className="flex items-start gap-3">
+                <h2 className="font-semibold text-xl tracking-tight">{p.name}</h2>
+                <StatusBadge status={p.status} />
+                <EditProject project={p} onSaved={project.reload} />
+              </div>
+              <p className="mt-2 text-muted-foreground text-sm">{p.description}</p>
+              <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+                <dt className="text-muted-foreground">Owner</dt>
+                <dd>{p.owner}</dd>
+                <dt className="text-muted-foreground">Tags</dt>
+                <dd className="flex gap-1">
+                  {p.tags.map((t) => (
+                    <Tag key={t} name={t} />
+                  ))}
+                </dd>
+                <dt className="text-muted-foreground">Updated</dt>
+                <dd>{ago(p.updatedAt)}</dd>
+                <dt className="text-muted-foreground">Status</dt>
+                <dd>
+                  <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
+                </dd>
+              </dl>
             </div>
-            <p className="mt-2 text-muted-foreground text-sm">{p.description}</p>
-            <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-              <dt className="text-muted-foreground">Owner</dt>
-              <dd>{p.owner}</dd>
-              <dt className="text-muted-foreground">Tags</dt>
-              <dd className="flex gap-1">
-                {p.tags.map((t) => (
-                  <Tag key={t} name={t} />
-                ))}
-              </dd>
-              <dt className="text-muted-foreground">Updated</dt>
-              <dd>{ago(p.updatedAt)}</dd>
-              <dt className="text-muted-foreground">Status</dt>
-              <dd>
-                <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
-              </dd>
-            </dl>
-          </div>
-        )}
+          )}
+        </ResourceView>
       </div>
-    </div>
-  );
-}
-
-// Failed is a read that didn't come back, in plain words (lib/explain.ts),
-// with what the server said behind Details.
-function Failed({ error, onRetry }: { error: unknown; onRetry(): void }) {
-  return (
-    <div className="mx-auto w-full max-w-xl px-8 pt-8" data-testid="projects-failed">
-      <ErrorNote error={error} onRetry={onRetry} />
     </div>
   );
 }

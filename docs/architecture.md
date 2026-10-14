@@ -10,9 +10,10 @@ file headers say what each module is for; this says how they connect.
 view            useResource(() => client.projects(), [])      src/lib/resource.ts
   └─ client     mockClient() | httpClient(VITE_API_URL)       src/lib/api.ts, src/lib/mock.ts
        └─ answers with data, or throws ApiError(message, status, code)   src/lib/errors.ts
-view draws      loading   → <PixelLoader>                      src/components/pixel-loader.tsx
+<ResourceView>  loading   → <PixelLoader>                      src/components/resource-view.tsx
                 failed    → <ErrorNote error onRetry>          src/components/error-note.tsx (lib/explain.ts)
-                loaded    → the data (and its own empty state)
+                ready     → empty, or the data through children
+                (the status is a union: lib/resource-state.ts has the transitions)
 a write         await client.updateProject(...); reload()     toastError on failure
                 a 422 with code "invalid" lands on the field   views/projects (the edit form)
 ```
