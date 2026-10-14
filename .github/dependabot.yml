@@ -1,13 +1,25 @@
 version: 2
 updates:
+  # The subjects are lowercase conventional ones, as the evidence gate wants
+  # (scripts/check-evidence.mjs); a workflow bump is a guardrail change, so it
+  # carries the label the guardrails gate wants.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
     groups:
       all:
         patterns: ["*"]
+    ignore:
+      # TypeScript 7 is a migration, not a bump: it fails the typecheck today.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: ci
+    labels: ["guardrail-change", "dependencies"]
