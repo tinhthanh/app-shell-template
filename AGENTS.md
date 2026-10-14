@@ -69,7 +69,7 @@ configs or these rules without the `guardrail-change` label.
 | A view | Its round trip in `src/lib/routes.test.ts`, a scene in `e2e/a11y.spec.ts`, a behaviour test in an e2e spec |
 | A setting | A `prefs.test.ts` case (default, and the migration when `PREFS_VERSION` moves), and `e2e/settings.spec.ts` showing it persists (`app.stored("app.prefs")`) |
 | A shortcut | `src/lib/keys.test.ts` (the press reaches it), and `e2e/shell.spec.ts` pressing it with the `mod` helper |
-| A resource, or a view that reads | `src/lib/mock.test.ts`, and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` |
+| A resource, or a view that reads | `src/lib/mock.test.ts`, and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` (`<ResourceView testid="x">` names them `x-loading`, `x-failed`, `x-empty`) |
 | A UI-kit component | A section on the Kit page (axe checks it in both appearances) |
 | A theme | `pnpm check:themes` |
 | Component behaviour (focus, dialogs, layout) | An e2e spec. There is no DOM test runner here, and we don't add one: Playwright on the real build is the proof |
@@ -89,9 +89,10 @@ configs or these rules without the `guardrail-change` label.
   Tailwind palette class.
 - **Key hints** are written for a Mac (`⌘K`) and shown through `<Kbd>`, which
   rewrites them for other platforms.
-- **Reads go through `useResource`** and draw loading, failed and loaded; a
-  failure is `<ErrorNote>`, a failed write is `toastError`. Nothing calls
-  `fetch` outside `src/lib/api.ts`.
+- **Reads go through `useResource`** and are drawn by `<ResourceView>`
+  (components/resource-view.tsx), which draws loading, failed and empty for
+  you; a failed write is `toastError`. Nothing calls `fetch` outside
+  `src/lib/api.ts`.
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).
 - **Browser tests** import `test` and `expect` from `./fixtures` (it refuses
   page errors and requests off the page), wait on what they expect
