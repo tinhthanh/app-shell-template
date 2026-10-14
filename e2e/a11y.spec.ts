@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 
 import { KIT_SECTIONS } from "../src/views/kit/sections";
-import { type App, expect, test } from "./fixtures";
+import { type App, expect, mod, test } from "./fixtures";
 
 // axe-core over the app's screens, in Default Dark: no serious or critical
 // violation of WCAG 2.2 A and AA, or of axe's best practices. A11Y_FULL=1
@@ -40,16 +40,65 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   { id: "settings shortcuts", run: async (app) => void (await app.openSettings("shortcuts")) },
   { id: "settings about", run: async (app) => void (await app.openSettings("about")) },
   {
+    id: "confirm dialog",
+    run: async (app) => {
+      await app.openSettings("general");
+      await app.page.getByRole("button", { name: "Reset" }).click();
+      await expect(app.page.getByTestId("confirm")).toBeVisible();
+    },
+  },
+  {
+    id: "edit dialog with a field error",
+    run: async (app) => {
+      await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+      await app.page.getByRole("button", { name: "Edit the project" }).click();
+      const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
+      await dialog.getByRole("textbox", { name: "Name" }).fill("");
+      await dialog.getByRole("button", { name: "Save" }).click();
+      await expect(dialog.getByText("A project needs a name.")).toBeVisible();
+    },
+  },
+  {
+    id: "shortcuts sheet",
+    run: async (app) => {
+      await app.page.keyboard.press(`${mod()}+/`);
+      await expect(app.page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+    },
+  },
+  {
+    id: "projects failed with details open",
+    run: async (app) => {
+      await app.page.goto("/?mock=1&platform=linux&fail=1#/projects");
+      await app.page.getByTestId("error-note").getByRole("button", { name: "Details" }).click();
+      await expect(app.page.getByLabel("Full output")).toBeVisible();
+    },
+  },
+  {
+    id: "projects empty",
+    run: async (app) => {
+      await app.page.goto("/?mock=1&platform=linux&empty=1#/projects");
+      await expect(app.page.getByTestId("projects-empty")).toBeVisible();
+    },
+  },
+  {
+    id: "narrow window",
+    run: async (app) => {
+      await app.page.setViewportSize({ width: 700, height: 800 });
+      await app.nav("projects").click();
+      await expect(app.page.getByTestId("projects")).toBeVisible();
+    },
+  },
+  {
     id: "palette",
     run: async (app) => {
-      await app.page.keyboard.press(`${process.platform === "darwin" ? "Meta" : "Control"}+k`);
+      await app.page.keyboard.press(`${mod()}+k`);
       await expect(app.page.getByTestId("command-palette")).toBeVisible();
     },
   },
   {
     id: "rail",
     run: async (app) => {
-      await app.page.keyboard.press(`${process.platform === "darwin" ? "Meta" : "Control"}+\\`);
+      await app.page.keyboard.press(`${mod()}+\\`);
       await expect(app.page.getByTestId("sidebar-rail")).toBeVisible();
     },
   },

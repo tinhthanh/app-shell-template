@@ -27,6 +27,7 @@ the PR:
 
 ```sh
 pnpm check                                   # typecheck, lint, titles, themes, unit tests, build
+pnpm test:coverage                           # the node-run modules: lines 90%, branches and functions 80% (CI runs it)
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds first, then Playwright
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
 ```

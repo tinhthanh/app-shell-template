@@ -39,6 +39,8 @@ jobs:
       # (src/themes/contrast.ts).
       - run: pnpm check:themes
       - run: pnpm test
+      # The node-run modules stay covered: lines 90%, branches and functions 80%.
+      - run: pnpm test:coverage
       - run: pnpm build
       # The browser suite (e2e/): the production build in Playwright's
       # Chromium, on the mock fixtures, with no page error allowed.

@@ -31,6 +31,15 @@ test("a name that is empty or taken is refused as invalid", async () => {
   assert.equal((await c.updateProject("p-shop", { name: "Shop 2" })).name, "Shop 2");
 });
 
+test("failOnce fails the first call only, and failWrites only the writes", async () => {
+  const once = mockClient({ latency: 0, failOnce: true });
+  await assert.rejects(once.projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
+  assert.equal((await once.projects()).length, FIXTURES.length);
+  const writes = mockClient({ latency: 0, failWrites: true });
+  assert.equal((await writes.project("p-shop")).name, "Shop");
+  await assert.rejects(writes.updateProject("p-shop", { status: "paused" }), (e: unknown) => e instanceof ApiError && e.status === 503);
+});
+
 test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
   assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), []);

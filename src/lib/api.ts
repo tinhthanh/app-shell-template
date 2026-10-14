@@ -1,6 +1,7 @@
-import { ApiError } from "@/lib/errors";
-import { mockClient } from "@/lib/mock";
-import type { Project } from "@/lib/types";
+// Relative imports and plain timers: api.test.ts runs this in node.
+import { ApiError } from "./errors.ts";
+import { mockClient } from "./mock.ts";
+import type { Project } from "./types.ts";
 
 export type * from "@/lib/types";
 export { ApiError };
@@ -43,7 +44,7 @@ function errorBody(text: string, fallback: string): { message: string; code?: st
 
 async function call<T>(base: string, method: string, path: string, body?: unknown): Promise<T> {
   const ctrl = method === "GET" ? new AbortController() : undefined;
-  const timer = ctrl ? window.setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : 0;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : undefined;
   let res: Response;
   try {
     res = await fetch(`${base}${path}`, {
@@ -56,7 +57,7 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
     if (ctrl?.signal.aborted) throw new ApiError("The server didn't answer.", 0, "timeout");
     throw new ApiError(err instanceof Error ? err.message : String(err), 0, "network");
   } finally {
-    window.clearTimeout(timer);
+    clearTimeout(timer);
   }
   if (!res.ok) {
     const { message, code } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
@@ -77,3 +78,6 @@ export function httpClient(base: string): Client {
 
 // client is the one the app uses: the fixtures, or the HTTP client.
 export const client: Client = isMock() ? mockClient() : httpClient(apiBase());
+
+// For the tests: the pieces on their own.
+export { errorBody };

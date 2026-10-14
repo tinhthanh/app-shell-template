@@ -28,8 +28,13 @@ const SettingsView = lazyView(() => import("@/views/settings/settings-view").the
 // kind but home must be here: tsc says so.
 const viewTitles = { projects: "Projects", kit: "Kit", settings: "Settings" } satisfies Record<Exclude<ViewKind, "home">, string>;
 
+// ?crash=<kind> makes that view throw, so the error boundary around it can
+// be seen and tested (e2e/shell.spec.ts); nothing else reads it.
+const crash = new URLSearchParams(location.search).get("crash");
+
 // ViewFor draws the view in front; a kind this switch leaves out fails to compile.
 function ViewFor({ view }: { view: View }) {
+  if (crash === view.kind) throw new Error(`Crashed on purpose (?crash=${crash})`);
   switch (view.kind) {
     case "home":
       return <HomeView />;
