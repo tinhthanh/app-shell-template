@@ -1,0 +1,15 @@
+# Everything is the owner's; the guardrails need the owner's review in
+# particular (with "require review from code owners" in the ruleset).
+*                       @tinhthanh
+/.github/               @tinhthanh
+/.claude/               @tinhthanh
+/.githooks/             @tinhthanh
+/AGENTS.md              @tinhthanh
+/CLAUDE.md              @tinhthanh
+/biome.json             @tinhthanh
+/biome-plugins/         @tinhthanh
+/scripts/               @tinhthanh
+/playwright.config.ts   @tinhthanh
+/e2e/fixtures.ts        @tinhthanh
+/tsconfig*.json         @tinhthanh
+/package.json           @tinhthanh
