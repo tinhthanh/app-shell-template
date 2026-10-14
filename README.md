@@ -40,7 +40,7 @@ What you get, wired and working:
 ```sh
 pnpm install
 pnpm dev            # http://localhost:1420 on the mock fixtures
-pnpm check          # typecheck, lint, unit tests, build
+pnpm check          # typecheck, lint, titles, themes, unit tests, build
 pnpm format         # Biome, in place
 pnpm test:e2e       # the browser suite (installs Chromium the first time with
                     #   pnpm exec playwright install --with-deps chromium)
@@ -72,6 +72,9 @@ scripts/check-titles.mjs
 
 ## Make it yours
 
+The complete recipes, with every file each one touches, are in
+`AGENTS.md` ("Adding things"); this is the short version.
+
 1. **Name it**: `APP_NAME` in `src/lib/app.ts`, `<title>` in `index.html`,
    `public/favicon.svg`, `name` in `package.json`.
 2. **Your resource**: replace `Project` in `src/lib/types.ts`, the paths in
@@ -93,6 +96,9 @@ scripts/check-titles.mjs
    hooks (`data-testid`, roles), waiting on what it expects, never on time.
 
 ## Conventions
+
+The rules an agent or a person follows here are in `AGENTS.md`. The short
+version:
 
 - Tooltips are `<Tip>`, never the HTML `title` attribute (`check:titles`).
 - Rows take their height from density (`h-row`, `py-row-pad`,

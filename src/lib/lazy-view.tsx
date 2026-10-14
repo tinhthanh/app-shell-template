@@ -1,8 +1,8 @@
 import { type ComponentType, lazy, useState } from "react";
 
-// lazyView is a page (Settings, Automations, Team setup…), a dialog's
-// content or a kind of pane that loads after the app has started rather
-// than with it, so they don't all weigh on its start.
+// lazyView is a view (Projects, Kit, Settings…) or a dialog's content that
+// loads after the app has started rather than with it, so they don't all
+// weigh on its start.
 // preloadViews fetches them once the app is up and idle, and a view whose
 // code is in by the time it shows draws at once, without suspending (no
 // blank frame on a first visit). Render it under a <Suspense>.
@@ -32,8 +32,8 @@ export function lazyView<P extends object>(load: () => Promise<ComponentType<P>>
 }
 
 // preloadViews loads every lazy view's code a while after the app starts,
-// one at a time when the main thread is free. WebKit (the macOS and Linux
-// app) has no requestIdleCallback; there it is a timer.
+// one at a time when the main thread is free. Safari has no
+// requestIdleCallback; there it is a timer.
 export function preloadViews(): () => void {
   const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
   const idle = (cb: () => void) => (ric ? ric(cb, { timeout: 2000 }) : window.setTimeout(cb, 50));

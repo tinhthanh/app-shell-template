@@ -18,8 +18,6 @@ export interface Prefs {
   sidebarWidth: number;
   // The themes "Match system" uses by day and when the OS is dark.
   systemThemes: { light: string; dark: string };
-  // An example of a plain switch (Settings › General).
-  confirmBeforeLeaving: boolean;
 }
 
 export const DEFAULTS: Prefs = {
@@ -28,7 +26,6 @@ export const DEFAULTS: Prefs = {
   sidebarCollapsed: false,
   sidebarWidth: SIDEBAR_DEFAULT,
   systemThemes: { light: "default-light", dark: "default-dark" },
-  confirmBeforeLeaving: false,
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to

@@ -4,7 +4,7 @@ import type { Theme } from "@/lib/types";
 // theme's own palette (its VS Code colours and terminal ANSI 16). Where a
 // colour fell short of the contrast the built-in themes keep (contrast.ts), it
 // was moved in lightness only, hue and chroma kept; the notes say which.
-// Sources, authors and licences: THIRD_PARTY_THEMES.md at the repository's
+// Sources, authors and licences: THIRD_PARTY_NOTICES.md at the repository's
 // root. All are MIT.
 
 // Dracula, from dracula/visual-studio-code.

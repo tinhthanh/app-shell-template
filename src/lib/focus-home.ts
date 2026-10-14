@@ -1,4 +1,4 @@
-import { type RefObject, useEffect } from "react";
+import { useEffect } from "react";
 
 import { OVERLAYS } from "@/lib/overlays";
 
@@ -74,77 +74,12 @@ export function rescueFocus(delay = 60) {
   }, delay);
 }
 
-// focusWithin puts the keyboard on a region's first field or control once
-// it has rendered: a page's new step, a pane that just opened.
-export function focusWithin(get: () => ParentNode | null | undefined, delay = 0) {
-  window.setTimeout(() => {
-    if (document.querySelector(OVERLAYS)) return;
-    firstFocusable(get())?.focus({ preventScroll: true });
-  }, delay);
-}
-
 // FocusRescue goes inside a dialog, sheet or popover popup: when the popup
 // unmounts and its opener is gone (a menu item, a closed pane, a confirm
 // opened by a shortcut), the keyboard goes home instead of to <body>.
 export function FocusRescue(): null {
   useEffect(() => () => rescueFocus(), []);
   return null;
-}
-
-// useKeepFocusIn keeps the keyboard inside a region that swaps its content
-// in place (a page that goes a step at a time): whenever what had focus is
-// replaced and the keyboard falls to <body>, it goes to the region's first
-// field or control. Fields that autofocus themselves win.
-export function useKeepFocusIn(ref: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let timer = 0;
-    const check = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        if (lost() && !document.querySelector(OVERLAYS)) firstFocusable(el)?.focus({ preventScroll: true });
-      }, 30);
-    };
-    const mo = new MutationObserver(check);
-    mo.observe(el, { childList: true, subtree: true });
-    check();
-    return () => {
-      mo.disconnect();
-      window.clearTimeout(timer);
-    };
-  }, [ref]);
-}
-
-// focusNewPane gives the keyboard to the pane that just opened: once the
-// menu that opened it is gone and the pane has something to focus, its
-// first field or control. Gives up after three seconds.
-export function focusNewPane() {
-  // A pane can take a while to draw its content (something read from the
-  // API), and the pane in front until then is the old one: wait for another.
-  const until = Date.now() + 3000;
-  const before = document.querySelector("main [data-pane-focused]");
-  // Its field (an editor, a reply box) once drawn, over a toolbar's
-  // button; a pane with none gets its first control after a moment.
-  const fieldsFirst = Date.now() + 1500;
-  const tick = () => {
-    const now = document.querySelector("main [data-pane-focused]");
-    const pane = now !== before ? now : null;
-    const keep = (el: HTMLElement) => !el.closest(".group\\/header") && (Date.now() > fieldsFirst || el.matches(`[data-autofocus], ${FIELD}`));
-    const t = !document.querySelector(OVERLAYS) && pane ? firstFocusable(pane, keep) : undefined;
-    if (t) {
-      t.focus({ preventScroll: true });
-      // Writing carries on from the end, not above what is there.
-      if (t instanceof HTMLTextAreaElement || t instanceof HTMLInputElement) {
-        try {
-          t.setSelectionRange(t.value.length, t.value.length);
-        } catch {
-          // Some inputs (number, email) have no selection.
-        }
-      }
-    } else if (Date.now() < until) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
 }
 
 // useRescueRemovedFocus is the window's net: when what had the keyboard is
