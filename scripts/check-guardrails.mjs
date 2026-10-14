@@ -1,7 +1,7 @@
 // Fails a pull request that weakens the checks. On a PR, CI runs it with
 // the base commit and the PR's labels in env:
 //
-//   BASE_SHA=… PR_LABELS="a,b" node scripts/check-guardrails.mjs
+//   BASE_SHA=… PR_LABELS="a,b" PR_ACTOR=… node scripts/check-guardrails.mjs
 //
 // What it refuses:
 //   - added lines with test.skip, test.fixme, test.only, @ts-expect-error or
@@ -11,6 +11,8 @@
 //     scripts here, the Playwright config, the workflows, AGENTS.md,
 //     CLAUDE.md, CODEOWNERS, the Claude settings) unless the PR carries
 //     the label "guardrail-change", which CODEOWNERS routes to the owner.
+//     Dependabot (PR_ACTOR dependabot[bot]) may bump an action's version in
+//     the workflows without the label: that is all it ever changes there.
 import { execFileSync } from "node:child_process";
 
 const base = process.env.BASE_SHA || "origin/main";
@@ -18,6 +20,7 @@ const labels = (process.env.PR_LABELS ?? "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+const bot = process.env.PR_ACTOR === "dependabot[bot]";
 
 const GUARDRAILS = [
   /^biome\.json$/,
@@ -39,7 +42,8 @@ const diff = execFileSync("git", ["diff", "--unified=0", `${base}...HEAD`, "--",
 const problems = [];
 
 const touched = changed.filter((f) => GUARDRAILS.some((r) => r.test(f)));
-if (touched.length && !labels.includes("guardrail-change")) problems.push(`guardrail files changed without the "guardrail-change" label:\n    ${touched.join("\n    ")}`);
+if (touched.length && !labels.includes("guardrail-change") && !(bot && touched.every((f) => f.startsWith(".github/workflows/"))))
+  problems.push(`guardrail files changed without the "guardrail-change" label:\n    ${touched.join("\n    ")}`);
 
 let file = "";
 let skip = false;

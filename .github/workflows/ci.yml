@@ -85,6 +85,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_ACTOR: ${{ github.event.pull_request.user.login }}
 
   # Nothing skips a test or edits a check unnoticed (scripts/check-guardrails.mjs).
   guardrails:
@@ -98,3 +99,4 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          PR_ACTOR: ${{ github.event.pull_request.user.login }}
