@@ -1,16 +1,21 @@
-import { ArrowLeftIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
+import { ArrowLeftIcon, PencilIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
+import { ErrorNote, toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
-import { client } from "@/lib/api";
-import { ago, errorMessage } from "@/lib/format";
+import { ApiError, client } from "@/lib/api";
+import { ago } from "@/lib/format";
 import { useResource } from "@/lib/resource";
 import { useStore } from "@/lib/store";
 import { hashTone, toneVar } from "@/themes/tones";
@@ -140,7 +145,7 @@ function ProjectDetail({ id }: { id: string }) {
       project.reload();
       toastManager.add({ type: "success", title: `${project.data?.name ?? "Project"} is now ${status}` });
     } catch (err) {
-      toastManager.add({ type: "error", title: "Couldn't update the project", description: errorMessage(err) });
+      toastError(err, "Couldn't update the project");
     }
   };
   const p = project.data;
@@ -170,6 +175,7 @@ function ProjectDetail({ id }: { id: string }) {
             <div className="flex items-start gap-3">
               <h2 className="font-semibold text-xl tracking-tight">{p.name}</h2>
               <StatusBadge status={p.status} />
+              <EditProject project={p} onSaved={project.reload} />
             </div>
             <p className="mt-2 text-muted-foreground text-sm">{p.description}</p>
             <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
@@ -195,18 +201,74 @@ function ProjectDetail({ id }: { id: string }) {
   );
 }
 
+// Failed is a read that didn't come back, in plain words (lib/explain.ts),
+// with what the server said behind Details.
 function Failed({ error, onRetry }: { error: unknown; onRetry(): void }) {
   return (
-    <Empty className="h-full" data-testid="projects-failed">
-      <EmptyHeader>
-        <EmptyTitle>Couldn't read the projects</EmptyTitle>
-        <EmptyDescription>{errorMessage(error)}</EmptyDescription>
-      </EmptyHeader>
-      <Button size="sm" variant="outline" onClick={onRetry}>
-        <RefreshCwIcon />
-        Try again
-      </Button>
-    </Empty>
+    <div className="mx-auto w-full max-w-xl px-8 pt-8" data-testid="projects-failed">
+      <ErrorNote error={error} onRetry={onRetry} />
+    </div>
+  );
+}
+
+// EditProject is the example form: a dialog with a name (required, up to
+// 60 characters) and a description, validated as the browser does and by
+// the server (an ApiError with code "invalid" lands on the field it names).
+function EditProject({ project, onSaved }: { project: Project; onSaved(): void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ml-auto" />}>
+        <PencilIcon />
+      </DialogTrigger>
+      <DialogPopup>
+        <Form
+          errors={errors}
+          onFormSubmit={async (values) => {
+            setErrors({});
+            setBusy(true);
+            try {
+              await client.updateProject(project.id, { name: String(values.name).trim(), description: String(values.description ?? "").trim() });
+              setOpen(false);
+              onSaved();
+              toastManager.add({ type: "success", title: "Project saved" });
+            } catch (err) {
+              // The server names the field it refused; anything else is a toast.
+              if (err instanceof ApiError && err.code === "invalid") setErrors({ name: err.message });
+              else toastError(err, "Couldn't save the project");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit the project</DialogTitle>
+            <DialogDescription>Its name and what it is for.</DialogDescription>
+          </DialogHeader>
+          <DialogPanel className="flex flex-col gap-4">
+            <Field name="name">
+              <FieldLabel>Name</FieldLabel>
+              <FieldControl render={<Input defaultValue={project.name} required maxLength={60} autoFocus />} />
+              <FieldError match="valueMissing">A project needs a name.</FieldError>
+              <FieldError />
+            </Field>
+            <Field name="description">
+              <FieldLabel>Description</FieldLabel>
+              <FieldControl render={<Textarea defaultValue={project.description} rows={3} />} />
+              <FieldDescription>One line about what it is for.</FieldDescription>
+            </Field>
+          </DialogPanel>
+          <DialogFooter>
+            <DialogClose render={<Button variant="ghost" />}>Cancel</DialogClose>
+            <Button type="submit" loading={busy}>
+              Save
+            </Button>
+          </DialogFooter>
+        </Form>
+      </DialogPopup>
+    </Dialog>
   );
 }
 

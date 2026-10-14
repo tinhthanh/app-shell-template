@@ -18,12 +18,23 @@ export function HomeView() {
         <div className="mx-auto w-full max-w-3xl px-8 pt-8 pb-16">
           <h2 className="font-semibold text-xl tracking-tight">A desktop-style app shell, no backend required</h2>
           <p className="mt-2 max-w-prose text-muted-foreground text-sm leading-relaxed">
-            Sidebar, command palette, settings, 23 themes, keyboard shortcuts and a mock API, all wired. Views read data through one client (<code className="rounded bg-muted px-1 py-px font-mono text-[11px] text-foreground">src/lib/api.ts</code>) that runs on fixtures until you point it at a server.
+            Sidebar, command palette, settings, 23 themes, keyboard shortcuts and a mock API, all wired. Views read data through one client (
+            <code className="rounded bg-muted px-1 py-px font-mono text-[11px] text-foreground">src/lib/api.ts</code>) that runs on fixtures until you point it at a server.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
-            <Card icon={<FolderKanbanIcon />} title="Projects" description="A list read from the API, with its loading, empty and failed states." onClick={() => useStore.getState().setView({ kind: "projects" })} />
+            <Card
+              icon={<FolderKanbanIcon />}
+              title="Projects"
+              description="A list read from the API, with its loading, empty and failed states."
+              onClick={() => useStore.getState().setView({ kind: "projects" })}
+            />
             <Card icon={<SearchIcon />} title="Search and commands" description="Every place, command and theme in one list." keys="⌘K" onClick={() => useStore.getState().setPaletteOpen(true)} />
-            <Card icon={<PaletteIcon />} title="Themes" description="Default Dark and Light, Midnight, Paper, and ports of popular editor themes, each checked for contrast." onClick={() => openSettings("appearance")} />
+            <Card
+              icon={<PaletteIcon />}
+              title="Themes"
+              description="Default Dark and Light, Midnight, Paper, and ports of popular editor themes, each checked for contrast."
+              onClick={() => openSettings("appearance")}
+            />
             <Card icon={<KeyboardIcon />} title="Keyboard shortcuts" description="One table drives the handler, the sheet and Settings." keys="⌘/" onClick={openShortcuts} />
           </div>
           <section className="mt-10">
@@ -52,7 +63,11 @@ export function HomeView() {
 
 function Card({ icon, title, description, keys, onClick }: { icon: ReactNode; title: string; description: string; keys?: string; onClick(): void }) {
   return (
-    <button type="button" onClick={onClick} className="group flex items-start gap-3 rounded-xl border bg-card/40 p-4 text-left outline-none transition-colors hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring">
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex items-start gap-3 rounded-xl border bg-card/40 p-4 text-left outline-none transition-colors hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground [&_svg]:size-4">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">

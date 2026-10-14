@@ -41,3 +41,31 @@ test("a slow server shows the loader, a down one the failure with a retry, an em
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects-empty")).toBeVisible();
 });
+
+test("a failed read is explained in words, with the server's own behind Details", async ({ app }) => {
+  await app.open({ params: { fail: "1" } });
+  await app.nav("projects").click();
+  const note = app.page.getByTestId("error-note");
+  await expect(note).toContainText("The server is busy");
+  await note.getByRole("button", { name: "Details" }).click();
+  await expect(app.page.getByLabel("Full output")).toContainText("not answering right now");
+});
+
+test("the edit form refuses an empty name, shows the server's refusal on the field, and saves", async ({ app }) => {
+  await app.open();
+  await app.page.goto("/?mock=1#/projects/p-shop");
+  const detail = app.page.getByTestId("project-detail");
+  await detail.getByRole("button", { name: "Edit the project" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
+  const name = dialog.getByRole("textbox", { name: "Name" });
+  await name.fill("");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByText("A project needs a name.")).toBeVisible();
+  await name.fill("Docs");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByText("Another project is already called Docs.")).toBeVisible();
+  await name.fill("Shop 2");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(detail.getByRole("heading", { name: "Shop 2", exact: true })).toBeVisible();
+});

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { hashToView, viewToHash } from "@/lib/routes";
 import { load, save } from "@/lib/storage";
 
 // The app's state that isn't a preference (lib/prefs.ts) and isn't data
@@ -7,8 +8,8 @@ import { load, save } from "@/lib/storage";
 // which view shows, which theme, and what's open over them.
 
 // The main area shows one of the app's views. Add a kind here, a lazy view
-// in App.tsx and a place in lib/nav.tsx.
-export type View = { kind: "home" } | { kind: "projects"; id?: string } | { kind: "settings"; section?: SettingsSectionId };
+// in App.tsx, a place in lib/nav.tsx and its address in lib/routes.ts.
+export type View = { kind: "home" } | { kind: "projects"; id?: string } | { kind: "kit"; section?: string } | { kind: "settings"; section?: SettingsSectionId };
 
 export type SettingsSectionId = "general" | "appearance" | "shortcuts" | "about";
 
@@ -28,8 +29,10 @@ interface Actions {
 const persisted = load<{ themeId?: string }>("app.ui", {});
 
 export const useStore = create<State & Actions>()((set) => ({
-  view: { kind: "home" },
-  themeId: persisted.themeId ?? "default-dark",
+  // The view the URL's hash names (lib/routes.ts), else Home.
+  view: hashToView(typeof location === "undefined" ? "" : location.hash),
+  // The system's light or dark until a theme is picked (Settings › Appearance).
+  themeId: persisted.themeId ?? "system",
   paletteOpen: false,
 
   setView: (view) => set({ view }),
@@ -40,6 +43,21 @@ export const useStore = create<State & Actions>()((set) => ({
 useStore.subscribe((s, prev) => {
   if (s.themeId !== prev.themeId) save("app.ui", { themeId: s.themeId });
 });
+
+// The view and the URL's hash follow each other: a view change writes the
+// hash (so reload and the back button work, and a view can be linked to),
+// and the back button, or an edited address, changes the view.
+if (typeof window !== "undefined") {
+  useStore.subscribe((s, prev) => {
+    if (s.view === prev.view) return;
+    const hash = viewToHash(s.view);
+    if (location.hash !== hash) history.pushState(null, "", hash || location.pathname + location.search);
+  });
+  window.addEventListener("popstate", () => {
+    const view = hashToView(location.hash);
+    if (viewToHash(useStore.getState().view) !== viewToHash(view)) useStore.setState({ view });
+  });
+}
 
 // openSettings shows Settings, on a section when given one.
 export function openSettings(section?: SettingsSectionId) {

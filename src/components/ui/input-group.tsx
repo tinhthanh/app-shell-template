@@ -14,8 +14,7 @@ const inputGroupAddonVariants = cva(
     },
     variants: {
       align: {
-        "block-end":
-          "order-last w-full justify-start px-[calc(--spacing(3)-1px)] pb-[calc(--spacing(3)-1px)] [.border-t]:pt-[calc(--spacing(3)-1px)] [[data-size=sm]+&]:px-[calc(--spacing(2.5)-1px)]",
+        "block-end": "order-last w-full justify-start px-[calc(--spacing(3)-1px)] pb-[calc(--spacing(3)-1px)] [.border-t]:pt-[calc(--spacing(3)-1px)] [[data-size=sm]+&]:px-[calc(--spacing(2.5)-1px)]",
         "block-start":
           "order-first w-full justify-start px-[calc(--spacing(3)-1px)] pt-[calc(--spacing(3)-1px)] [.border-b]:pb-[calc(--spacing(3)-1px)] [[data-size=sm]+&]:px-[calc(--spacing(2.5)-1px)]",
         "inline-end":
@@ -27,10 +26,7 @@ const inputGroupAddonVariants = cva(
   },
 );
 
-export function InputGroup({
-  className,
-  ...props
-}: React.ComponentProps<"div">): React.ReactElement {
+export function InputGroup({ className, ...props }: React.ComponentProps<"div">): React.ReactElement {
   return (
     <div
       className={cn(
@@ -44,12 +40,7 @@ export function InputGroup({
   );
 }
 
-export function InputGroupAddon({
-  className,
-  align = "inline-start",
-  ...props
-}: React.ComponentProps<"div"> &
-  VariantProps<typeof inputGroupAddonVariants>): React.ReactElement {
+export function InputGroupAddon({ className, align = "inline-start", ...props }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>): React.ReactElement {
   return (
     <div
       className={cn(inputGroupAddonVariants({ align }), className)}
@@ -59,15 +50,11 @@ export function InputGroupAddon({
         const target = e.target as Element;
         if (!e.currentTarget.contains(target)) return;
 
-        const isInteractive = target.closest(
-          "button, a, input, select, textarea, [role='button'], [role='combobox'], [role='listbox'], [data-slot='select-trigger']",
-        );
+        const isInteractive = target.closest("button, a, input, select, textarea, [role='button'], [role='combobox'], [role='listbox'], [data-slot='select-trigger']");
         if (isInteractive) return;
         e.preventDefault();
         const parent = e.currentTarget.parentElement;
-        const input = parent?.querySelector<
-          HTMLInputElement | HTMLTextAreaElement
-        >("input, textarea");
+        const input = parent?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
         if (input && !parent?.querySelector("input:focus, textarea:focus")) {
           input.focus();
         }
@@ -77,10 +64,7 @@ export function InputGroupAddon({
   );
 }
 
-export function InputGroupText({
-  className,
-  ...props
-}: React.ComponentProps<"span">): React.ReactElement {
+export function InputGroupText({ className, ...props }: React.ComponentProps<"span">): React.ReactElement {
   return (
     <span
       className={cn(
@@ -92,16 +76,10 @@ export function InputGroupText({
   );
 }
 
-export function InputGroupInput({
-  className,
-  ...props
-}: InputProps): React.ReactElement {
+export function InputGroupInput({ className, ...props }: InputProps): React.ReactElement {
   return <Input className={className} unstyled {...props} />;
 }
 
-export function InputGroupTextarea({
-  className,
-  ...props
-}: TextareaProps): React.ReactElement {
+export function InputGroupTextarea({ className, ...props }: TextareaProps): React.ReactElement {
   return <Textarea className={className} unstyled {...props} />;
 }

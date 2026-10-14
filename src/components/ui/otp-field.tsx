@@ -25,10 +25,7 @@ export function OTPField({
   );
 }
 
-export function OTPFieldInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof OTPFieldPrimitive.Input>): React.ReactElement {
+export function OTPFieldInput({ className, ...props }: React.ComponentProps<typeof OTPFieldPrimitive.Input>): React.ReactElement {
   return (
     <OTPFieldPrimitive.Input
       className={cn(
@@ -42,22 +39,10 @@ export function OTPFieldInput({
   );
 }
 
-export function OTPFieldSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof Separator>): React.ReactElement {
+export function OTPFieldSeparator({ className, ...props }: React.ComponentProps<typeof Separator>): React.ReactElement {
   return (
     <OTPFieldPrimitive.Separator
-      render={
-        <Separator
-          className={cn(
-            "rounded-full bg-input data-[orientation=horizontal]:h-0.5 data-[orientation=horizontal]:w-3",
-            className,
-          )}
-          orientation="horizontal"
-          {...props}
-        />
-      }
+      render={<Separator className={cn("rounded-full bg-input data-[orientation=horizontal]:h-0.5 data-[orientation=horizontal]:w-3", className)} orientation="horizontal" {...props} />}
     />
   );
 }

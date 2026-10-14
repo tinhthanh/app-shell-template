@@ -11,8 +11,6 @@ import { contrast, distance, fromOklch, over } from "./color.ts";
 export const TONES = ["violet", "cyan", "magenta", "slate", "pink", "copper"] as const;
 export type Tone = (typeof TONES)[number];
 
-export const isTone = (t: unknown): t is Tone => typeof t === "string" && (TONES as readonly string[]).includes(t);
-
 // toneVar is the CSS variable a tone is drawn with (index.css, applied by
 // themes/apply.ts).
 export const toneVar = (t: Tone) => `var(--tone-${t})`;

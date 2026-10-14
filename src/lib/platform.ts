@@ -27,9 +27,7 @@ const KEYS: Record<string, string> = { "↵": "Enter", "⇥": "Tab", "⌫": "Bac
 // ("⌘⇧D"), and with Ctrl, Alt and Shift elsewhere ("Ctrl+Shift+D").
 export function platformKeys(s: string, mac = IS_MAC): string {
   if (mac || !/[⌃⌘⌥⇧]/.test(s)) return s;
-  return s
-    .replace(/([⌃⌘⌥⇧]+)-click/g, (_, m: string) => `${names(m).join("+")}-click`)
-    .replace(/([⌃⌘⌥⇧]+) ?([^\s⌃⌘⌥⇧]+)/g, (_, m: string, key: string) => [...names(m), KEYS[key] ?? key].join("+"));
+  return s.replace(/([⌃⌘⌥⇧]+)-click/g, (_, m: string) => `${names(m).join("+")}-click`).replace(/([⌃⌘⌥⇧]+) ?([^\s⌃⌘⌥⇧]+)/g, (_, m: string, key: string) => [...names(m), KEYS[key] ?? key].join("+"));
 }
 
 function names(mods: string): string[] {

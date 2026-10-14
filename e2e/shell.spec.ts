@@ -15,6 +15,8 @@ test("the sidebar's places open their views, and ⌘1–9 jump to them", async (
   await app.page.keyboard.press(`${mod}+1`);
   await expect(app.page.getByRole("heading", { name: "Home" })).toBeVisible();
   await app.page.keyboard.press(`${mod}+3`);
+  await expect(app.page.getByTestId("kit")).toBeVisible();
+  await app.page.keyboard.press(`${mod}+4`);
   await expect(app.page.getByTestId("settings-general")).toBeVisible();
 });
 
@@ -30,7 +32,7 @@ test("the palette opens with ⌘K, finds a place and goes there", async ({ app }
 });
 
 test("highlighting a theme in the palette previews it, and Esc puts the old one back", async ({ app }) => {
-  await app.open();
+  await app.open({ theme: "default-dark" });
   const html = app.page.locator("html");
   await app.page.keyboard.press(`${mod}+k`);
   const palette = app.page.getByTestId("command-palette");
@@ -87,4 +89,61 @@ test("the sidebar's edge drags it wider, and double-click puts the default back"
   await expect.poll(async () => ((await app.stored("app.prefs")) as { sidebarWidth?: number }).sidebarWidth).toBe(340);
   await handle.dblclick();
   await expect.poll(() => width(page)).toBe(240);
+});
+
+test("the view is in the URL: reload keeps it, the back button goes back, a link opens it", async ({ app }) => {
+  await app.open();
+  await app.nav("projects").click();
+  await expect(app.page).toHaveURL(/#\/projects$/);
+  await app.page.locator("[data-testid=project-row][data-project=p-shop]").click();
+  await expect(app.page).toHaveURL(/#\/projects\/p-shop$/);
+  await app.page.reload();
+  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+  await app.page.goBack();
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+  await expect(app.page.getByTestId("project-detail")).toHaveCount(0);
+  await app.page.goto("/?mock=1#/settings/appearance");
+  await expect(app.page.getByTestId("settings-appearance")).toBeVisible();
+  await app.page.goto("/?mock=1#/nowhere");
+  await expect(app.page.getByRole("heading", { name: "Home" })).toBeVisible();
+});
+
+test("the first launch follows the system's appearance, with no flash on the next", async ({ app }) => {
+  await app.open();
+  // Playwright's colorScheme is dark (playwright.config.ts).
+  await expect(app.page.locator("html")).toHaveClass(/(^|\s)dark(\s|$)/);
+  await expect.poll(() => app.stored("app.ui")).toBeNull();
+  await app.page.emulateMedia({ colorScheme: "light" });
+  await expect(app.page.locator("html")).not.toHaveClass(/(^|\s)dark(\s|$)/);
+  // The appearance is kept for index.html's first paint.
+  await expect.poll(() => app.stored("app.appearance")).toBe("light");
+});
+
+test("⌘+ and ⌘− zoom the text and show the HUD; ⌘0 resets", async ({ app }) => {
+  await app.open();
+  await app.page.keyboard.press(`${mod}+Equal`);
+  const hud = app.page.getByTestId("zoom-hud");
+  await expect(hud).toHaveAttribute("data-shown", "true");
+  await expect(hud).toContainText("14px");
+  await expect.poll(() => app.page.evaluate(() => document.documentElement.style.fontSize)).not.toBe("");
+  await app.page.keyboard.press(`${mod}+0`);
+  await expect(hud).toContainText("13px");
+  await expect.poll(() => app.page.evaluate(() => document.documentElement.style.fontSize)).toBe("");
+});
+
+test("a narrow window folds the sidebar to a rail that still works", async ({ app }) => {
+  await app.page.setViewportSize({ width: 700, height: 800 });
+  await app.open();
+  await expect(app.page.getByTestId("sidebar-rail")).toHaveAttribute("data-fixed", "true");
+  await app.nav("projects").click();
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+  await app.page.setViewportSize({ width: 1200, height: 800 });
+  await expect(app.page.getByTestId("sidebar")).toBeVisible();
+});
+
+test("on Linux the keys read Ctrl, and Ctrl+K opens the palette", async ({ app }) => {
+  await app.open({ params: { platform: "linux" } });
+  await expect(app.page.getByTestId("sidebar").getByText("Ctrl+K")).toBeVisible();
+  await app.page.keyboard.press("Control+k");
+  await expect(app.page.getByTestId("command-palette")).toBeVisible();
 });

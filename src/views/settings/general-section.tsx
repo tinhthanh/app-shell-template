@@ -1,3 +1,4 @@
+import { confirm } from "@/components/confirm";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
@@ -8,7 +9,7 @@ import { Code, SettingsGroup, SettingsPage, SettingsRow, Value } from "@/views/s
 // General shows one of each control a settings row takes: a switch, a
 // segmented pick, a read-only value and a button. Replace them with yours.
 export function GeneralSection() {
-  const confirm = usePrefs((p) => p.confirmBeforeLeaving);
+  const confirmLeaving = usePrefs((p) => p.confirmBeforeLeaving);
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
 
   return (
@@ -28,7 +29,7 @@ export function GeneralSection() {
 
       <SettingsGroup title="Behaviour">
         <SettingsRow label="Confirm before leaving" description="An example switch: a boolean preference, saved as it changes.">
-          <Switch checked={confirm} onCheckedChange={(confirmBeforeLeaving) => setPrefs({ confirmBeforeLeaving })} />
+          <Switch checked={confirmLeaving} onCheckedChange={(confirmBeforeLeaving) => setPrefs({ confirmBeforeLeaving })} />
         </SettingsRow>
       </SettingsGroup>
 
@@ -47,10 +48,18 @@ export function GeneralSection() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              resetPrefs();
-              toastManager.add({ type: "success", title: "Preferences reset" });
-            }}
+            onClick={() =>
+              confirm({
+                title: "Reset preferences?",
+                description: "Density, text size, the sidebar and every other setting go back to their defaults. The theme stays.",
+                confirm: "Reset",
+                destructive: true,
+                run: () => {
+                  resetPrefs();
+                  toastManager.add({ type: "success", title: "Preferences reset" });
+                },
+              })
+            }
           >
             Reset
           </Button>

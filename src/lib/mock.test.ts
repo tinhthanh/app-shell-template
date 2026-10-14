@@ -24,6 +24,13 @@ test("an unknown id is a 404 with a code", async () => {
   await assert.rejects(c.project("nope"), (e: unknown) => e instanceof ApiError && e.status === 404 && e.code === "not_found");
 });
 
+test("a name that is empty or taken is refused as invalid", async () => {
+  const c = mockClient({ latency: 0 });
+  await assert.rejects(c.updateProject("p-shop", { name: " " }), (e: unknown) => e instanceof ApiError && e.code === "invalid");
+  await assert.rejects(c.updateProject("p-shop", { name: "docs" }), (e: unknown) => e instanceof ApiError && e.status === 422);
+  assert.equal((await c.updateProject("p-shop", { name: "Shop 2" })).name, "Shop 2");
+});
+
 test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
   assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), []);

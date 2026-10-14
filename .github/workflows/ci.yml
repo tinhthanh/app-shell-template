@@ -27,6 +27,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm lint
       # Tooltips are the app's own, never the HTML title attribute.
       - run: pnpm check:titles
       # Every built-in theme's text and states meet their contrast
@@ -46,6 +47,8 @@ jobs:
       - run: pnpm exec playwright test
         env:
           E2E_WORKERS: "2"
+          # axe in the light theme too (e2e/a11y.spec.ts).
+          A11Y_FULL: "1"
       - if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

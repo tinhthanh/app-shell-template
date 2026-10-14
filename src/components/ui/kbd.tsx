@@ -4,11 +4,7 @@ import { cn } from "@/lib/utils";
 
 // A key hint as a string is written for this platform (lib/platform.ts):
 // ⌘K on a Mac, Ctrl+K on Linux.
-export function Kbd({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"kbd">): React.ReactElement {
+export function Kbd({ className, children, ...props }: React.ComponentProps<"kbd">): React.ReactElement {
   return (
     <kbd
       className={cn(
@@ -23,15 +19,6 @@ export function Kbd({
   );
 }
 
-export function KbdGroup({
-  className,
-  ...props
-}: React.ComponentProps<"kbd">): React.ReactElement {
-  return (
-    <kbd
-      className={cn("inline-flex items-center gap-1", className)}
-      data-slot="kbd-group"
-      {...props}
-    />
-  );
+export function KbdGroup({ className, ...props }: React.ComponentProps<"kbd">): React.ReactElement {
+  return <kbd className={cn("inline-flex items-center gap-1", className)} data-slot="kbd-group" {...props} />;
 }

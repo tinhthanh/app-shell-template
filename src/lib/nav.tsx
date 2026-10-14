@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, HouseIcon, SettingsIcon } from "lucide-react";
+import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useStore, type View } from "@/lib/store";
@@ -20,6 +20,7 @@ export function places(): Place[] {
   return [
     { id: "home", label: "Home", icon: <HouseIcon />, view: { kind: "home" } },
     { id: "projects", label: "Projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
+    { id: "kit", label: "Kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
     { id: "settings", label: "Settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
   ];
 }

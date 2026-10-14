@@ -27,6 +27,13 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
       await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
     },
   },
+  ...["buttons", "inputs", "choices", "feedback", "overlays", "data", "tones"].map((s) => ({
+    id: `kit ${s}`,
+    run: async (app: App) => {
+      await app.page.goto(`/?mock=1#/kit/${s}`);
+      await expect(app.page.getByTestId(`kit-${s}`)).toBeVisible();
+    },
+  })),
   { id: "settings appearance", run: async (app) => void (await app.openSettings("appearance")) },
   { id: "settings general", run: async (app) => void (await app.openSettings("general")) },
   { id: "settings shortcuts", run: async (app) => void (await app.openSettings("shortcuts")) },
@@ -56,7 +63,15 @@ for (const theme of themes) {
       // Animations finish first, so contrast is read at rest.
       await app.page.waitForTimeout(250);
       const r = await new AxeBuilder({ page: app.page }).withTags(TAGS).exclude("[data-a11y-skip]").analyze();
-      const bad = r.violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id} (${x.impact}): ${x.help}\n  ${x.nodes.map((n) => n.target.join(" ")).slice(0, 5).join("\n  ")}`);
+      const bad = r.violations
+        .filter((x) => x.impact === "serious" || x.impact === "critical")
+        .map(
+          (x) =>
+            `${x.id} (${x.impact}): ${x.help}\n  ${x.nodes
+              .map((n) => n.target.join(" "))
+              .slice(0, 5)
+              .join("\n  ")}`,
+        );
       expect(bad, "serious or critical axe violations").toEqual([]);
     });
   }

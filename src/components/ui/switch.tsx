@@ -4,10 +4,7 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 import type React from "react";
 import { cn } from "@/lib/utils";
 
-export function Switch({
-  className,
-  ...props
-}: SwitchPrimitive.Root.Props): React.ReactElement {
+export function Switch({ className, ...props }: SwitchPrimitive.Root.Props): React.ReactElement {
   return (
     // App: off, in dark themes, the track and thumb are drawn from the
     // foreground: --input and the background are too close to tell apart.

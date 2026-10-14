@@ -49,8 +49,6 @@ export function migratePrefs(saved: Saved): Saved {
 }
 
 const stored = load<Saved>("app.prefs", {});
-// Nothing saved before: a first run, or storage that was cleared.
-export const firstRun = !Object.keys(stored).length;
 const saved = migratePrefs(stored);
 const { version: _version, ...savedPrefs } = saved;
 

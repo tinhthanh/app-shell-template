@@ -75,7 +75,7 @@ function apply() {
   if (!next.folded) {
     drag.width = next.width;
     live(next.width);
-    document.querySelectorAll<HTMLElement>("[data-sidebar-handle]").forEach((h) => h.setAttribute("aria-valuenow", String(next.width)));
+    for (const h of document.querySelectorAll<HTMLElement>("[data-sidebar-handle]")) h.setAttribute("aria-valuenow", String(next.width));
   }
 }
 

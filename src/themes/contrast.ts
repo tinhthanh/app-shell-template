@@ -40,11 +40,23 @@ export function checks(t: Theme): Check[] {
   const out: Check[] = [];
   const text = (what: string, fg: string, bg: string) => out.push({ what, value: contrast(fg, bg), min: TEXT });
 
-  for (const [name, bg] of [["background", c.background], ["sidebar", c.sidebar], ["card", c.card], ["popover", c.popover], ["muted", c.muted], ["accent", c.accent]] as const) {
+  for (const [name, bg] of [
+    ["background", c.background],
+    ["sidebar", c.sidebar],
+    ["card", c.card],
+    ["popover", c.popover],
+    ["muted", c.muted],
+    ["accent", c.accent],
+  ] as const) {
     text(`foreground on ${name}`, c.foreground, bg);
   }
   text("sidebarForeground on sidebar", c.sidebarForeground, c.sidebar);
-  for (const [name, bg] of [["background", c.background], ["sidebar", c.sidebar], ["card", c.card], ["popover", c.popover]] as const) {
+  for (const [name, bg] of [
+    ["background", c.background],
+    ["sidebar", c.sidebar],
+    ["card", c.card],
+    ["popover", c.popover],
+  ] as const) {
     text(`mutedForeground on ${name}`, c.mutedForeground, bg);
   }
   // A highlighted row: the accent over the page, over a menu, and the chip
@@ -53,7 +65,12 @@ export function checks(t: Theme): Check[] {
   text("mutedForeground on a highlighted menu item", c.mutedForeground, over(c.accent, c.popover));
   text("mutedForeground on muted", c.mutedForeground, over(c.muted, c.background));
   text("sidebarForeground on the sidebar's selected row", c.sidebarForeground, over(c.accent, c.sidebar));
-  for (const [name, bg] of [["background", c.background], ["sidebar", c.sidebar], ["card", c.card], ["popover", c.popover]] as const) {
+  for (const [name, bg] of [
+    ["background", c.background],
+    ["sidebar", c.sidebar],
+    ["card", c.card],
+    ["popover", c.popover],
+  ] as const) {
     out.push({ what: `ring on ${name}`, value: contrast(c.ring, bg), min: UI });
   }
   text("accentForeground on accent", c.accentForeground, c.accent);
@@ -66,12 +83,19 @@ export function checks(t: Theme): Check[] {
   for (const s of STATES) {
     const colour = c[s];
     if (!colour) continue;
-    for (const [name, bg] of [["background", c.background], ["sidebar", c.sidebar]] as const) {
+    for (const [name, bg] of [
+      ["background", c.background],
+      ["sidebar", c.sidebar],
+    ] as const) {
       out.push({ what: `${s} on ${name}`, value: contrast(colour, bg), min: UI });
     }
     const fg = c[`${s}Foreground`];
     if (!fg) continue;
-    for (const [name, bg] of [["background", c.background], ["sidebar", c.sidebar], ["card", c.card]] as const) {
+    for (const [name, bg] of [
+      ["background", c.background],
+      ["sidebar", c.sidebar],
+      ["card", c.card],
+    ] as const) {
       text(`${s}Foreground on its tint over ${name}`, fg, over(colour, bg, TINT));
     }
   }

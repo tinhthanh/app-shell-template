@@ -15,7 +15,7 @@ g.document = doc;
 g.window = globalThis;
 const setHidden = (h: boolean) => {
   doc.hidden = h;
-  listeners.forEach((f) => f());
+  for (const f of listeners) f();
 };
 
 const { poll } = await import("./poll.ts");
@@ -46,7 +46,10 @@ test("nothing new backs off to max; something new goes back to every", async () 
   changed = true;
   at.length = 0;
   await advance(8000 + 1000 + 1000);
-  assert.deepEqual(at.slice(1).map((t, i) => t - at[i]), [1000, 1000]);
+  assert.deepEqual(
+    at.slice(1).map((t, i) => t - at[i]),
+    [1000, 1000],
+  );
   p.stop();
   mock.timers.reset();
 });

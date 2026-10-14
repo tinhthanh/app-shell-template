@@ -1169,4 +1169,24 @@ export const kanagawaWave: Theme = {
   },
 };
 
-export const vscodeThemes: Theme[] = [dracula, oneDarkPro, oneLight, catppuccinMocha, catppuccinLatte, tokyoNight, nord, githubDark, githubDarkDimmed, githubLight, gruvboxDark, gruvboxLight, solarizedDark, solarizedLight, rosePine, rosePineDawn, nightOwl, nightOwlLight, kanagawaWave];
+export const vscodeThemes: Theme[] = [
+  dracula,
+  oneDarkPro,
+  oneLight,
+  catppuccinMocha,
+  catppuccinLatte,
+  tokyoNight,
+  nord,
+  githubDark,
+  githubDarkDimmed,
+  githubLight,
+  gruvboxDark,
+  gruvboxLight,
+  solarizedDark,
+  solarizedLight,
+  rosePine,
+  rosePineDawn,
+  nightOwl,
+  nightOwlLight,
+  kanagawaWave,
+];

@@ -42,6 +42,7 @@
     --color-input: var(--input);
     --color-foreground: var(--foreground);
     --color-destructive: var(--destructive);
+    --color-destructive-strong: var(--destructive-strong);
     --color-card-foreground: var(--card-foreground);
     --color-card: var(--card);
     --color-border: var(--border);
@@ -162,6 +163,9 @@
     --card: var(--color-white);
     --card-foreground: var(--color-neutral-800);
     --destructive: var(--color-red-500);
+    /* A destructive button's fill: red white reads on at 4.5:1. A theme
+       sets its own (themes/apply.ts). */
+    --destructive-strong: var(--color-red-600);
     --foreground: var(--color-neutral-800);
     --input: --alpha(var(--color-black) / 10%);
     --muted: --alpha(var(--color-black) / 4%);
@@ -207,6 +211,7 @@
     --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
     --card-foreground: var(--color-neutral-100);
     --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+    --destructive-strong: var(--color-red-600);
     --foreground: var(--color-neutral-100);
     --input: --alpha(var(--color-white) / 8%);
     --muted: --alpha(var(--color-white) / 4%);

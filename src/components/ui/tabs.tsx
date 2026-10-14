@@ -2,33 +2,16 @@
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import * as React from "react";
-import {
-  type SegmentedControlSize,
-  segmentedControlItemLayoutClassName,
-  segmentedControlItemSizeClassNames,
-} from "@/lib/segmented-control";
+import { type SegmentedControlSize, segmentedControlItemLayoutClassName, segmentedControlItemSizeClassNames } from "@/lib/segmented-control";
 import { cn } from "@/lib/utils";
 
 type TabsVariant = "default" | "underline";
 type TabsSize = SegmentedControlSize;
 
-const TabsListContext: React.Context<TabsSize> =
-  React.createContext<TabsSize>("default");
+const TabsListContext: React.Context<TabsSize> = React.createContext<TabsSize>("default");
 
-export function Tabs({
-  className,
-  ...props
-}: TabsPrimitive.Root.Props): React.ReactElement {
-  return (
-    <TabsPrimitive.Root
-      className={cn(
-        "flex flex-col gap-2 data-[orientation=vertical]:flex-row",
-        className,
-      )}
-      data-slot="tabs"
-      {...props}
-    />
-  );
+export function Tabs({ className, ...props }: TabsPrimitive.Root.Props): React.ReactElement {
+  return <TabsPrimitive.Root className={cn("flex flex-col gap-2 data-[orientation=vertical]:flex-row", className)} data-slot="tabs" {...props} />;
 }
 
 export function TabsList({
@@ -46,18 +29,14 @@ export function TabsList({
       className={cn(
         "relative z-0 flex w-fit items-center justify-center gap-x-0.5 text-muted-foreground",
         "data-[orientation=vertical]:flex-col",
-        variant === "default"
-          ? "rounded-lg bg-muted p-0.5 text-muted-foreground/72"
-          : "data-[orientation=vertical]:px-1 data-[orientation=horizontal]:py-1 *:data-[slot=tabs-tab]:hover:bg-accent",
+        variant === "default" ? "rounded-lg bg-muted p-0.5 text-muted-foreground" : "data-[orientation=vertical]:px-1 data-[orientation=horizontal]:py-1 *:data-[slot=tabs-tab]:hover:bg-accent",
         className,
       )}
       data-size={size}
       data-slot="tabs-list"
       {...props}
     >
-      <TabsListContext.Provider value={size}>
-        {children}
-      </TabsListContext.Provider>
+      <TabsListContext.Provider value={size}>{children}</TabsListContext.Provider>
       <TabsPrimitive.Indicator
         className={cn(
           "absolute bottom-0 left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left) -translate-y-(--active-tab-bottom) transition-[width,translate] duration-200 ease-in-out",
@@ -96,23 +75,8 @@ export function TabsTab({
   );
 }
 
-export function TabsPanel({
-  className,
-  ...props
-}: TabsPrimitive.Panel.Props): React.ReactElement {
-  return (
-    <TabsPrimitive.Panel
-      className={cn("flex-1 outline-none", className)}
-      data-slot="tabs-content"
-      {...props}
-    />
-  );
+export function TabsPanel({ className, ...props }: TabsPrimitive.Panel.Props): React.ReactElement {
+  return <TabsPrimitive.Panel className={cn("flex-1 outline-none", className)} data-slot="tabs-content" {...props} />;
 }
 
-export {
-  TabsPrimitive,
-  TabsTab as TabsTrigger,
-  TabsPanel as TabsContent,
-  type TabsSize,
-  type TabsVariant,
-};
+export { TabsPrimitive, TabsTab as TabsTrigger, TabsPanel as TabsContent, type TabsSize, type TabsVariant };

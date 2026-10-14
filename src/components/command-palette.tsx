@@ -2,7 +2,20 @@ import { KeyboardIcon, PaletteIcon, PanelLeftIcon } from "lucide-react";
 import { type ReactNode, useMemo, useRef, useState } from "react";
 
 import { openShortcuts } from "@/components/shortcuts-sheet";
-import { Command, CommandCollection, CommandDialog, CommandDialogPopup, CommandEmpty, CommandFooter, CommandGroup, CommandGroupLabel, CommandInput, CommandItem, CommandList, CommandPanel } from "@/components/ui/command";
+import {
+  Command,
+  CommandCollection,
+  CommandDialog,
+  CommandDialogPopup,
+  CommandEmpty,
+  CommandFooter,
+  CommandGroup,
+  CommandGroupLabel,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPanel,
+} from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { useThemes } from "@/hooks/use-theme";
 import { places } from "@/lib/nav";
@@ -63,7 +76,13 @@ export function CommandPalette() {
       run: () => useStore.getState().setView({ ...p.view }),
     }));
     const commands: Item[] = [
-      { value: "cmd:sidebar", label: collapsed ? "Show the sidebar" : "Hide the sidebar", icon: <PanelLeftIcon />, shortcut: keysFor("sidebar"), run: () => setPrefs({ sidebarCollapsed: !collapsed }) },
+      {
+        value: "cmd:sidebar",
+        label: collapsed ? "Show the sidebar" : "Hide the sidebar",
+        icon: <PanelLeftIcon />,
+        shortcut: keysFor("sidebar"),
+        run: () => setPrefs({ sidebarCollapsed: !collapsed }),
+      },
       { value: "cmd:shortcuts", label: "Keyboard shortcuts", icon: <KeyboardIcon />, shortcut: keysFor("shortcuts"), run: openShortcuts },
     ];
     const themeItems: Item[] = themes.map((t) => ({

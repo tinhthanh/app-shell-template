@@ -5,6 +5,7 @@ import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { Tip } from "@/components/tip";
 import { Kbd } from "@/components/ui/kbd";
 import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { APP_NAME } from "@/lib/app";
 import { isActive, type Place, places } from "@/lib/nav";
 import { platformKeys } from "@/lib/platform";
@@ -26,12 +27,14 @@ const alwaysOpen: SidebarContextProps = {
 };
 
 // AppSidebar: the app's name, a search button that opens the palette, the
-// places (lib/nav.tsx), and Settings at the bottom. Folded (⌘\) it is a rail
-// of icons. Its width is dragged by its edge (sidebar-resize-handle.tsx).
+// places (lib/nav.tsx), and Settings at the bottom. Folded (⌘\), or in a
+// window narrower than 800px, it is a rail of icons. Its width is dragged
+// by its edge (sidebar-resize-handle.tsx).
 export function AppSidebar() {
   const context = useMemo(() => alwaysOpen, []);
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
-  if (collapsed) return <Rail />;
+  const narrow = useIsMobile();
+  if (collapsed || narrow) return <Rail fixed={narrow} />;
 
   return (
     <SidebarContext.Provider value={context}>
@@ -49,7 +52,12 @@ export function AppSidebar() {
           <img src="/favicon.svg" alt="" className="size-4.5 rounded" />
           <span className="min-w-0 flex-1 truncate font-medium text-[13px] text-foreground">{APP_NAME}</span>
           <Tip label="Hide the sidebar (⌘\)" side="right">
-            <button type="button" aria-label="Hide the sidebar" onClick={() => setPrefs({ sidebarCollapsed: true })} className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+            <button
+              type="button"
+              aria-label="Hide the sidebar"
+              onClick={() => setPrefs({ sidebarCollapsed: true })}
+              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            >
               <PanelLeftCloseIcon className="size-3.5" />
             </button>
           </Tip>
@@ -108,20 +116,41 @@ function placeNumber(p: Place, fallback: number): number {
 }
 
 // Rail is the folded sidebar: the places as icons, each with a tooltip.
-function Rail() {
+// fixed: the window is too narrow to open it.
+function Rail({ fixed = false }: { fixed?: boolean }) {
   const view = useStore((s) => s.view);
   return (
-    <aside aria-label="Sidebar" data-testid="sidebar-rail" style={{ width: RAIL_WIDTH }} className="relative flex shrink-0 flex-col items-center border-sidebar-border border-r bg-sidebar text-sidebar-foreground">
-      <SidebarResizeHandle folded />
+    <aside
+      aria-label="Sidebar"
+      data-testid="sidebar-rail"
+      data-fixed={fixed || undefined}
+      style={{ width: RAIL_WIDTH }}
+      className="relative flex shrink-0 flex-col items-center border-sidebar-border border-r bg-sidebar text-sidebar-foreground"
+    >
+      {!fixed && <SidebarResizeHandle folded />}
       <div className="flex h-10 shrink-0 items-center">
-        <Tip label="Show the sidebar (⌘\)" side="right">
-          <button type="button" aria-label="Show the sidebar" onClick={() => setPrefs({ sidebarCollapsed: false })} className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
-            <PanelLeftOpenIcon className="size-4" />
-          </button>
-        </Tip>
+        {fixed ? (
+          <img src="/favicon.svg" alt="" className="size-4.5 rounded" />
+        ) : (
+          <Tip label="Show the sidebar (⌘\)" side="right">
+            <button
+              type="button"
+              aria-label="Show the sidebar"
+              onClick={() => setPrefs({ sidebarCollapsed: false })}
+              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <PanelLeftOpenIcon className="size-4" />
+            </button>
+          </Tip>
+        )}
       </div>
       <Tip label={`Search (${platformKeys("⌘K")})`} side="right">
-        <button type="button" aria-label="Search" onClick={() => useStore.getState().setPaletteOpen(true)} className="mb-2 inline-flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-background/50 text-muted-foreground hover:bg-sidebar-accent">
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => useStore.getState().setPaletteOpen(true)}
+          className="mb-2 inline-flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-background/50 text-muted-foreground hover:bg-sidebar-accent"
+        >
           <SearchIcon className="size-4" />
         </button>
       </Tip>
@@ -152,7 +181,10 @@ function RailButton({ place, active }: { place: Place; active: boolean }) {
         aria-current={active ? "page" : undefined}
         data-testid={`nav-${place.id}`}
         onClick={() => useStore.getState().setView({ ...place.view })}
-        className={cn("inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-4.5", active && "bg-sidebar-accent text-foreground")}
+        className={cn(
+          "inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-4.5",
+          active && "bg-sidebar-accent text-foreground",
+        )}
       >
         {place.icon}
       </button>

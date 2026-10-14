@@ -4,7 +4,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { strong } from "./apply.ts";
 import { builtinThemes } from "./builtin.ts";
+import { contrast } from "./color.ts";
 import { checks, failures } from "./contrast.ts";
 
 const report = !!process.env.THEME_REPORT;
@@ -16,6 +18,10 @@ for (const theme of builtinThemes) {
     assert.deepEqual(bad, []);
   });
 }
+
+test("white reads on every theme's destructive fill (a destructive button)", () => {
+  for (const t of builtinThemes) assert.ok(contrast("#ffffff", strong(t.colors.destructive)) >= 4.5, t.id);
+});
 
 test("theme ids are unique", () => {
   const ids = builtinThemes.map((t) => t.id);

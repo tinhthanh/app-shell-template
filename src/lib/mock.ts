@@ -71,6 +71,9 @@ export function mockClient(opts: MockOptions = fromUrl()): Client {
     },
     async updateProject(id, patch) {
       await guard();
+      // What a server would refuse: an empty name, or one another project has.
+      if (patch.name !== undefined && !patch.name.trim()) throw new ApiError("A project needs a name.", 422, "invalid");
+      if (patch.name && projects.some((p) => p.id !== id && p.name.toLowerCase() === patch.name?.toLowerCase())) throw new ApiError(`Another project is already called ${patch.name}.`, 422, "invalid");
       const next = { ...find(id), ...patch, updatedAt: new Date().toISOString() };
       projects = projects.map((p) => (p.id === id ? next : p));
       return structuredClone(next);

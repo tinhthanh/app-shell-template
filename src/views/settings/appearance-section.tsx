@@ -144,7 +144,10 @@ function ThemeCard({ theme, selected, onSelect }: { theme: Theme; selected: bool
       aria-pressed={selected}
       data-testid="theme-option"
       data-theme-id={theme.id}
-      className={cn("group overflow-hidden rounded-xl border text-left outline-none transition-[box-shadow,border-color] focus-visible:ring-2 focus-visible:ring-ring", selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25")}
+      className={cn(
+        "group overflow-hidden rounded-xl border text-left outline-none transition-[box-shadow,border-color] focus-visible:ring-2 focus-visible:ring-ring",
+        selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25",
+      )}
     >
       {/* A picture of the theme (its name says which): its sample text is in
           the theme's own colours, which the axe spec leaves out. */}
@@ -215,7 +218,11 @@ function Swatch({ theme }: { theme: Theme }) {
 function Dots({ theme }: { theme: Theme }) {
   const t = theme.terminal;
   return (
-    <span className="absolute right-2 bottom-2 flex items-center gap-[3px] rounded-full border px-1.5 py-1" style={{ background: theme.colors.background, borderColor: theme.colors.border }} aria-hidden>
+    <span
+      className="absolute right-2 bottom-2 flex items-center gap-[3px] rounded-full border px-1.5 py-1"
+      style={{ background: theme.colors.background, borderColor: theme.colors.border }}
+      aria-hidden
+    >
       {[theme.colors.primary, t.red, t.yellow, t.green, t.blue, t.magenta].map((c, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: six fixed dots.
         <span key={i} className="size-2 rounded-full" style={{ background: c }} />

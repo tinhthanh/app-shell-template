@@ -3,6 +3,7 @@ import { Suspense, useEffect } from "react";
 import { Announcer } from "@/components/announcer";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
+import { ConfirmHost } from "@/components/confirm";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ShortcutsSheet } from "@/components/shortcuts-sheet";
 import { StatusBar } from "@/components/status-bar";
@@ -20,10 +21,11 @@ import { HomeView } from "@/views/home/home-view";
 // Home loads with the app; the other views load on first use (lib/lazy-view.tsx)
 // and are fetched once the app is idle, so a first visit draws at once.
 const ProjectsView = lazyView(() => import("@/views/projects/projects-view").then((m) => m.ProjectsView));
+const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
 const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 
 // What the window is called on each view, and what an error names.
-const viewTitles: Record<string, string> = { projects: "Projects", settings: "Settings" };
+const viewTitles: Record<string, string> = { projects: "Projects", kit: "Kit", settings: "Settings" };
 
 export default function App() {
   useApplyTheme();
@@ -40,10 +42,13 @@ export default function App() {
   return (
     <TooltipProvider delay={300}>
       {/* Toasts sit bottom-right, above the status bar; a bar floating at a
-          page's bottom lifts them with --app-bar-lift (hooks/lift-toasts.ts).
+          page's bottom can lift them by setting --app-bar-lift on the root.
           With a dialog or sheet open they move to a corner clear of it
           (components/ui/toast.tsx). */}
-      <ToastProvider position="bottom-right" viewportClassName="max-w-88 data-[position=bottom-right]:bottom-[max(calc(26px+12px),var(--app-bar-lift,0px))] data-[position=bottom-right]:right-3 data-[position=bottom-left]:bottom-[calc(26px+12px)] data-[position=bottom-left]:left-3 data-[position=top-left]:top-3 data-[position=top-left]:left-3 data-[position=top-right]:top-3 data-[position=top-right]:right-3">
+      <ToastProvider
+        position="bottom-right"
+        viewportClassName="max-w-88 data-[position=bottom-right]:bottom-[max(calc(26px+12px),var(--app-bar-lift,0px))] data-[position=bottom-right]:right-3 data-[position=bottom-left]:bottom-[calc(26px+12px)] data-[position=bottom-left]:left-3 data-[position=top-left]:top-3 data-[position=top-left]:left-3 data-[position=top-right]:top-3 data-[position=top-right]:right-3"
+      >
         <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
           <div className="flex min-h-0 flex-1">
             <AppSidebar />
@@ -52,6 +57,7 @@ export default function App() {
                 <Suspense>
                   {view.kind === "home" && <HomeView />}
                   {view.kind === "projects" && <ProjectsView id={view.id} />}
+                  {view.kind === "kit" && <KitView />}
                   {view.kind === "settings" && <SettingsView />}
                 </Suspense>
               </ErrorBoundary>
@@ -62,6 +68,7 @@ export default function App() {
         <ErrorBoundary scope="a dialog">
           <CommandPalette />
           <ShortcutsSheet />
+          <ConfirmHost />
         </ErrorBoundary>
         <Announcer />
       </ToastProvider>
