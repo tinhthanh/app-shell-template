@@ -376,6 +376,21 @@ function Overlays() {
           <TrashIcon />
           Confirm something
         </Button>
+        <Button
+          variant="outline"
+          onClick={() =>
+            confirm({
+              title: "Archive the project?",
+              description: "The server will refuse this one, so the dialog stays open with the reason.",
+              confirm: "Archive",
+              run: async () => {
+                throw new ApiError("archive is not allowed while the project has open orders", 409, "conflict");
+              },
+            })
+          }
+        >
+          Confirm that fails
+        </Button>
       </Section>
       <Section title="Menu and popover">
         <Menu>

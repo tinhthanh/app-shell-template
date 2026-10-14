@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.28.5",
   "engines": {
-    "node": ">=22.6"
+    "node": ">=22.8"
   },
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
@@ -16,6 +16,7 @@
     "check:titles": "node scripts/check-titles.mjs",
     "check:themes": "node --experimental-strip-types --test src/themes/contrast.test.ts",
     "test": "node --experimental-strip-types --test \"src/lib/**/*.test.ts\"",
+    "test:coverage": "node --experimental-strip-types --experimental-test-coverage --test-coverage-include=\"src/lib/**\" --test-coverage-include=\"src/themes/**\" --test-coverage-exclude=\"**/*.test.ts\" --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=80 --test \"src/lib/**/*.test.ts\" \"src/themes/*.test.ts\"",
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:node && pnpm check:views && pnpm check:themes && pnpm test && pnpm build",
     "lint": "biome check --error-on-warnings .",

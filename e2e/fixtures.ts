@@ -6,7 +6,10 @@ import { type BrowserContext, test as base, expect, type Locator, type Page } fr
 // server (every request off the page's origin is refused).
 //
 // Mock mode runs the app on its fixtures (?mock=1, src/lib/mock.ts), which
-// are fixed: tests wait on what they expect to see, never on time.
+// are fixed: tests wait on what they expect to see, never on time. The
+// page is told it is on Linux (?platform=linux), so Ctrl is the modifier
+// wherever the suite runs; `mod` is that key, and platform=mac in params
+// switches a test to ⌘.
 //
 // Stable hooks, so tests never click text that moves: data-testid on the
 // sidebar (sidebar, sidebar-rail, sidebar-handle, nav-<id>), settings
@@ -14,6 +17,10 @@ import { type BrowserContext, test as base, expect, type Locator, type Page } fr
 // palette (command-palette), projects (projects, project-row with
 // data-project, projects-loading, -empty, -failed, project-detail), the
 // status bar, the zoom HUD and the announcer.
+
+// The modifier key the page expects: Ctrl, unless a test opens with
+// params: { platform: "mac" }.
+export const mod = (platform = "linux") => (platform === "mac" ? "Meta" : "Control");
 
 export interface OpenOptions {
   // app.prefs as an earlier run saved it (lib/prefs.ts), before the app starts.
@@ -33,16 +40,29 @@ export interface App {
   openSettings(section: string): Promise<Locator>;
   // What the app has saved, as JSON.
   stored(key: string): Promise<unknown>;
-  // Requests that tried to leave the page's origin.
+  // Requests that tried to leave the page's origin, and same-origin answers of 400 or more.
   outside: string[];
+  // Lets a test expect a console error that is the behaviour under test (the
+  // error boundary's own line).
+  allowConsoleError(pattern: RegExp): void;
 }
 
 export const test = base.extend<{ app: App }>({
   app: async ({ page, context }, use, info) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(`${e.name}: ${e.message}`));
+    // A console.error is a bug too (React's warnings, a caught render error).
+    const consoleErrors: string[] = [];
+    const allowed: RegExp[] = [];
+    page.on("console", (m) => {
+      if (m.type() === "error" && !allowed.some((r) => r.test(m.text()))) consoleErrors.push(m.text());
+    });
     const outside: string[] = [];
     const origin = new URL(info.project.use.baseURL ?? "http://localhost").origin;
+    // A chunk or an asset the page asked for and didn't get.
+    page.on("response", (r) => {
+      if (r.url().startsWith(origin) && r.status() >= 400) outside.push(`${r.status()} ${r.url()}`);
+    });
     await context.route("**/*", (route) => {
       const url = route.request().url();
       if (url.startsWith(origin) || url.startsWith("data:") || url.startsWith("blob:")) return route.continue();
@@ -54,6 +74,7 @@ export const test = base.extend<{ app: App }>({
       page,
       context,
       outside,
+      allowConsoleError: (p) => void allowed.push(p),
       async open(opts = {}) {
         if (opts.prefs || opts.theme) {
           // Seeded once, before the app's own scripts, as storage left by
@@ -68,7 +89,7 @@ export const test = base.extend<{ app: App }>({
             { prefs: opts.prefs, theme: opts.theme },
           );
         }
-        const q = new URLSearchParams({ mock: "1", ...opts.params });
+        const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
         await page.goto(`/?${q}`);
         await expect(page.getByTestId("nav-home")).toBeVisible();
       },
@@ -87,7 +108,8 @@ export const test = base.extend<{ app: App }>({
 
     if (errors.length) await info.attach("pageerrors", { body: errors.join("\n"), contentType: "text/plain" });
     expect(errors, "the page threw").toEqual([]);
-    expect(outside, "a test reached off the page").toEqual([]);
+    expect(consoleErrors, "the page logged an error").toEqual([]);
+    expect(outside, "a test reached off the page, or a request failed").toEqual([]);
   },
 });
 

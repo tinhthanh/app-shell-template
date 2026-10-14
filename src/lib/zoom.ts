@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
-import { setPrefs, usePrefs } from "@/lib/prefs";
+// Relative import: zoom.test.ts runs this in node.
+import { setPrefs, usePrefs } from "./prefs.ts";
 
 // Zoom (⌘+, ⌘−, ⌘0) makes the interface's text bigger or smaller: the
 // uiFontSize pref, which everything sized in rem follows (lib/prefs.ts).

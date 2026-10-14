@@ -10,9 +10,11 @@ import { ApiError } from "./errors.ts";
 // Everything here is invented ("acme"): nothing real goes in fixtures.
 //
 // Knobs in the URL, for working on a state by hand or in a test:
-//   ?mock=1&slow=1   every call takes a second and a half
-//   ?mock=1&fail=1   every call fails with a server error
-//   ?mock=1&empty=1  there are no projects
+//   ?mock=1&slow=1        every call takes a second and a half
+//   ?mock=1&fail=1        every call fails with a server error
+//   ?mock=1&failOnce=1    the first call fails, the rest succeed (Try again)
+//   ?mock=1&failWrites=1  reads work, writes fail (a failed save)
+//   ?mock=1&empty=1       there are no projects
 
 const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
@@ -33,6 +35,10 @@ export interface MockOptions {
   latency?: number;
   // Every call fails, as a server that is down would.
   fail?: boolean;
+  // Only the first call fails: what Try again recovers from.
+  failOnce?: boolean;
+  // Writes fail, reads don't.
+  failWrites?: boolean;
   // Start with no projects.
   empty?: boolean;
   // Seed data of your own (defaults to FIXTURES).
@@ -42,7 +48,7 @@ export interface MockOptions {
 const fromUrl = (): MockOptions => {
   if (typeof location === "undefined") return {};
   const q = new URLSearchParams(location.search);
-  return { latency: q.has("slow") ? 1500 : 250, fail: q.has("fail"), empty: q.has("empty") };
+  return { latency: q.has("slow") ? 1500 : 250, fail: q.has("fail"), failOnce: q.has("failOnce"), failWrites: q.has("failWrites"), empty: q.has("empty") };
 };
 
 // mockClient is a Client over the fixtures. Pure apart from its own state,
@@ -51,9 +57,12 @@ export function mockClient(opts: MockOptions = fromUrl()): Client {
   const latency = opts.latency ?? 0;
   let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? FIXTURES);
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
-  const guard = async () => {
+  let calls = 0;
+  const down = () => new ApiError("The server is not answering right now.", 503, "unavailable");
+  const guard = async (write = false) => {
     await wait();
-    if (opts.fail) throw new ApiError("The server is not answering right now.", 503, "unavailable");
+    calls++;
+    if (opts.fail || (opts.failOnce && calls === 1) || (write && opts.failWrites)) throw down();
   };
   const find = (id: string) => {
     const p = projects.find((x) => x.id === id);
@@ -70,7 +79,7 @@ export function mockClient(opts: MockOptions = fromUrl()): Client {
       return structuredClone(find(id));
     },
     async updateProject(id, patch) {
-      await guard();
+      await guard(true);
       // What a server would refuse: an empty name, or one another project has.
       if (patch.name !== undefined && !patch.name.trim()) throw new ApiError("A project needs a name.", 422, "invalid");
       if (patch.name && projects.some((p) => p.id !== id && p.name.toLowerCase() === patch.name?.toLowerCase())) throw new ApiError(`Another project is already called ${patch.name}.`, 422, "invalid");

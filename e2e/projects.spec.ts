@@ -69,3 +69,50 @@ test("the edit form refuses an empty name, shows the server's refusal on the fie
   await expect(dialog).toHaveCount(0);
   await expect(detail.getByRole("heading", { name: "Shop 2", exact: true })).toBeVisible();
 });
+
+test("Try again reads again after a server that was down comes back", async ({ app }) => {
+  await app.open({ params: { failOnce: "1" } });
+  await app.nav("projects").click();
+  await app.page.getByTestId("error-note").getByRole("button", { name: "Try again" }).click();
+  await expect(app.page.getByTestId("project-row")).toHaveCount(8);
+});
+
+test("a failed save is a toast in plain words, and the project is left as it was", async ({ app }) => {
+  await app.open({ params: { failWrites: "1" } });
+  await app.page.goto("/?mock=1&platform=linux&failWrites=1#/projects/p-shop");
+  const detail = app.page.getByTestId("project-detail");
+  await detail.getByRole("button", { name: "Paused", exact: true }).click();
+  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
+  await expect(app.page.locator("[data-slot=toast-description]")).toContainText("The server is busy");
+  await expect(detail.getByText("Active", { exact: true })).toBeVisible();
+});
+
+test("a project that doesn't exist says so, with a way back", async ({ app }) => {
+  await app.open();
+  await app.page.goto("/?mock=1&platform=linux#/projects/nope");
+  const note = app.page.getByTestId("error-note");
+  await expect(note).toContainText("It's gone");
+  await app.page.getByRole("button", { name: "Back to projects" }).click();
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+});
+
+test("switching projects quickly shows the last one asked for, never an earlier answer", async ({ app }) => {
+  await app.open({ params: { slow: "1" } });
+  await app.page.goto("/?mock=1&platform=linux&slow=1#/projects/p-shop");
+  // Before Shop arrives, ask for the API instead.
+  await app.page.goto("/?mock=1&platform=linux&slow=1#/projects/p-api");
+  const detail = app.page.getByTestId("project-detail");
+  await expect(detail.getByRole("heading", { name: "Public API", exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toHaveCount(0);
+});
+
+test("after a dialog closes the keyboard is somewhere, never on the page's body", async ({ app }) => {
+  await app.open();
+  await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+  await app.page.getByRole("button", { name: "Edit the project" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Shop 3");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => app.page.evaluate(() => document.activeElement !== document.body && document.activeElement !== null)).toBe(true);
+});
