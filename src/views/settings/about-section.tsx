@@ -1,5 +1,5 @@
-import { APP_COMMIT, APP_NAME, APP_VERSION } from "@/lib/app";
 import { isMock } from "@/lib/api";
+import { APP_COMMIT, APP_NAME, APP_VERSION } from "@/lib/app";
 import { SettingsGroup, SettingsPage, SettingsRow, Value } from "@/views/settings/rows";
 
 export function AboutSection() {

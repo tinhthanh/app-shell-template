@@ -33,7 +33,7 @@ export function hashTone(key: string): Tone {
     h ^= key.charCodeAt(i);
     h = Math.imul(h, 16777619) >>> 0;
   }
-  return TONES[h % TONES.length];
+  return TONES[h % TONES.length] ?? TONES[0];
 }
 
 export const TONE_TEXT = 4.5;

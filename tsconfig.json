@@ -20,6 +20,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
+    /* Node runs the unit tests with --experimental-strip-types: only syntax
+       it can erase, and type imports that are always erased. */
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
 
     "paths": {
       "@/*": ["./src/*"]

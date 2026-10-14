@@ -11,8 +11,13 @@ export interface KeyPress {
   shiftKey: boolean;
 }
 
+// The ids in shortcuts.json, as a type, so every one is handled
+// (hooks/use-shortcuts.ts) and reachable (keys.test.ts).
+export const SHORTCUT_IDS = ["palette", "place", "settings", "sidebar", "zoom-in", "zoom-out", "zoom-reset", "shortcuts"] as const;
+export type ShortcutId = (typeof SHORTCUT_IDS)[number];
+
 export interface Hit {
-  id: string;
+  id: ShortcutId;
   // The place's number (place).
   arg?: number;
 }

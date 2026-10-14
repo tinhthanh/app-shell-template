@@ -1,6 +1,5 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
-
 import { TriangleAlertIcon } from "lucide-react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
@@ -20,19 +19,19 @@ type State = { error?: Error; stack?: string; details: boolean };
 // and what threw is in a console nobody opens. Showing it on screen makes
 // a report from someone else's machine actionable.
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { details: false };
+  override state: State = { details: false };
 
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
+  override componentDidCatch(error: Error, info: ErrorInfo) {
     this.setState({ stack: info.componentStack ?? undefined });
     // Kept for anyone who does have a console attached, such as a dev build.
     console.error(`${this.props.scope ?? "The app"} hit an error it could not render through:`, error, info.componentStack);
   }
 
-  render() {
+  override render() {
     const { error, stack, details } = this.state;
     if (!error) return this.props.children;
     const { scope, onLeave, leaveLabel } = this.props;

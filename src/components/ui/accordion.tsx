@@ -43,4 +43,4 @@ export function AccordionPanel({ className, children, ...props }: AccordionPrimi
   );
 }
 
-export { AccordionPrimitive, AccordionPanel as AccordionContent };
+export { AccordionPanel as AccordionContent, AccordionPrimitive };

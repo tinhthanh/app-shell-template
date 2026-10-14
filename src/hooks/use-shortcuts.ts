@@ -2,11 +2,11 @@ import { useEffect } from "react";
 
 import { toggleShortcuts } from "@/components/shortcuts-sheet";
 import { announce } from "@/lib/announce";
-import { shortcutFor } from "@/lib/keys";
+import { type ShortcutId, shortcutFor } from "@/lib/keys";
 import { places } from "@/lib/nav";
 import { IS_MAC } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
-import { openSettings, useStore } from "@/lib/store";
+import { assertNever, openSettings, useStore } from "@/lib/store";
 import { zoom } from "@/lib/zoom";
 
 // The app's shortcuts (lib/shortcuts.json) are caught on the window, before
@@ -16,7 +16,7 @@ import { zoom } from "@/lib/zoom";
 
 // run does what the shortcut id does and says whether it did anything.
 // arg is the place's number (place).
-export function run(id: string, arg?: number): boolean {
+export function run(id: ShortcutId, arg?: number): boolean {
   const s = useStore.getState();
   switch (id) {
     case "palette":
@@ -47,7 +47,7 @@ export function run(id: string, arg?: number): boolean {
       return true;
     }
     default:
-      return false;
+      return assertNever(id);
   }
 }
 

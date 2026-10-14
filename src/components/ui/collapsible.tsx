@@ -22,4 +22,4 @@ export function CollapsiblePanel({ className, ...props }: CollapsiblePrimitive.P
   );
 }
 
-export { CollapsiblePrimitive, CollapsiblePanel as CollapsibleContent };
+export { CollapsiblePanel as CollapsibleContent, CollapsiblePrimitive };

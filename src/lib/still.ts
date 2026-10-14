@@ -24,7 +24,11 @@ export function watchStillness(): () => void {
     set(false);
     if (!document.hasFocus()) away();
   };
-  const onVisibility = () => (document.hidden ? (window.clearTimeout(timer), set(true)) : back());
+  const onVisibility = () => {
+    if (!document.hidden) return back();
+    window.clearTimeout(timer);
+    set(true);
+  };
   // The pointer over a window in the background: someone is looking.
   let moved = 0;
   const onMove = () => {

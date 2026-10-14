@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { shortcutFor } from "./keys.ts";
+import { SHORTCUT_IDS, type ShortcutId, shortcutFor } from "./keys.ts";
 import table from "./shortcuts.json" with { type: "json" };
 
 const press = (key: string, mods: Partial<{ meta: boolean; ctrl: boolean; alt: boolean; shift: boolean; code: string }> = {}) => ({
@@ -41,6 +41,10 @@ test("⌘1–9 carry the place's number; Shift with a letter is not a shortcut",
   assert.equal(shortcutFor(press("x", { meta: true }), true), undefined);
 });
 
+test("shortcuts.json and SHORTCUT_IDS name the same shortcuts", () => {
+  assert.deepEqual(new Set(table.shortcuts.map((s) => s.id)), new Set(SHORTCUT_IDS));
+});
+
 test("every shortcut in shortcuts.json has a key press that reaches it", () => {
   const presses = [
     press("k", { meta: true }),
@@ -53,5 +57,5 @@ test("every shortcut in shortcuts.json has a key press that reaches it", () => {
     press("1", { meta: true }),
   ];
   const reached = new Set(presses.map((p) => shortcutFor(p, true)?.id));
-  for (const s of table.shortcuts) assert.ok(reached.has(s.id), `${s.id} (${s.keys}) has no key press`);
+  for (const s of table.shortcuts) assert.ok(reached.has(s.id as ShortcutId), `${s.id} (${s.keys}) has no key press`);
 });

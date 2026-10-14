@@ -101,9 +101,9 @@ export function checks(t: Theme): Check[] {
   }
 
   const states = STATES.filter((s) => c[s]);
-  for (let i = 0; i < states.length; i++) {
-    for (let j = i + 1; j < states.length; j++) {
-      out.push({ what: `${states[i]} apart from ${states[j]}`, value: distance(c[states[i]] as string, c[states[j]] as string), min: APART });
+  for (const [i, a] of states.entries()) {
+    for (const b of states.slice(i + 1)) {
+      out.push({ what: `${a} apart from ${b}`, value: distance(c[a] as string, c[b] as string), min: APART });
     }
   }
   // Running and primary are often both the theme's blue; the rest are not.

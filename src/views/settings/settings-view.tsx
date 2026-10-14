@@ -14,7 +14,15 @@ export { openSettings, type SettingsSectionId };
 
 // Settings' sections. Add one: a component made of SettingsPage, SettingsGroup
 // and SettingsRow (rows.tsx), an id in lib/store.ts, and a line here.
-const SECTIONS: { id: SettingsSectionId; title: string; icon: ComponentType<{ className?: string }>; Component: ComponentType }[] = [
+interface Section {
+  id: SettingsSectionId;
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  Component: ComponentType;
+}
+
+// General first: it is the section a bad address lands on.
+const SECTIONS: readonly [Section, ...Section[]] = [
   { id: "general", title: "General", icon: SlidersHorizontalIcon, Component: GeneralSection },
   { id: "appearance", title: "Appearance", icon: PaletteIcon, Component: AppearanceSection },
   { id: "shortcuts", title: "Shortcuts", icon: KeyboardIcon, Component: ShortcutsSection },
@@ -26,7 +34,7 @@ const SECTIONS: { id: SettingsSectionId; title: string; icon: ComponentType<{ cl
 export function SettingsView() {
   const view = useStore((s) => s.view);
   const id = (view.kind === "settings" && SECTIONS.some((s) => s.id === view.section) ? view.section : "general") as SettingsSectionId;
-  const current = SECTIONS.find((s) => s.id === id)!;
+  const current = SECTIONS.find((s) => s.id === id) ?? SECTIONS[0];
 
   return (
     <div className="flex h-full flex-col">
