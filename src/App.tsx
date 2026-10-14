@@ -15,7 +15,7 @@ import { useWindowTitle } from "@/hooks/use-window-title";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
 import { lazyView, preloadViews } from "@/lib/lazy-view";
 import { watchStillness } from "@/lib/still";
-import { useStore } from "@/lib/store";
+import { assertNever, useStore, type View, type ViewKind } from "@/lib/store";
 import { HomeView } from "@/views/home/home-view";
 
 // Home loads with the app; the other views load on first use (lib/lazy-view.tsx)
@@ -24,8 +24,25 @@ const ProjectsView = lazyView(() => import("@/views/projects/projects-view").the
 const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
 const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 
-// What the window is called on each view, and what an error names.
-const viewTitles: Record<string, string> = { projects: "Projects", kit: "Kit", settings: "Settings" };
+// What the window is called on each view, and what an error names. Every
+// kind but home must be here: tsc says so.
+const viewTitles = { projects: "Projects", kit: "Kit", settings: "Settings" } satisfies Record<Exclude<ViewKind, "home">, string>;
+
+// ViewFor draws the view in front; a kind this switch leaves out fails to compile.
+function ViewFor({ view }: { view: View }) {
+  switch (view.kind) {
+    case "home":
+      return <HomeView />;
+    case "projects":
+      return <ProjectsView id={view.id} />;
+    case "kit":
+      return <KitView />;
+    case "settings":
+      return <SettingsView />;
+    default:
+      return assertNever(view);
+  }
+}
 
 export default function App() {
   useApplyTheme();
@@ -53,12 +70,13 @@ export default function App() {
           <div className="flex min-h-0 flex-1">
             <AppSidebar />
             <main className="relative min-h-0 min-w-0 flex-1">
-              <ErrorBoundary key={view.kind} scope={viewTitles[view.kind]} onLeave={view.kind === "home" ? undefined : () => useStore.getState().setView({ kind: "home" })}>
+              <ErrorBoundary
+                key={view.kind}
+                scope={view.kind === "home" ? undefined : viewTitles[view.kind]}
+                onLeave={view.kind === "home" ? undefined : () => useStore.getState().setView({ kind: "home" })}
+              >
                 <Suspense>
-                  {view.kind === "home" && <HomeView />}
-                  {view.kind === "projects" && <ProjectsView id={view.id} />}
-                  {view.kind === "kit" && <KitView />}
-                  {view.kind === "settings" && <SettingsView />}
+                  <ViewFor view={view} />
                 </Suspense>
               </ErrorBoundary>
             </main>

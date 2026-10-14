@@ -178,4 +178,4 @@ export function SelectGroupLabel(props: SelectPrimitive.GroupLabel.Props): React
   return <SelectPrimitive.GroupLabel className="px-2 py-1.5 font-medium text-muted-foreground text-xs" data-slot="select-group-label" {...props} />;
 }
 
-export { SelectPrimitive, SelectPopup as SelectContent };
+export { SelectPopup as SelectContent, SelectPrimitive };

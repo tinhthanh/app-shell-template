@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { BIG_STEP, clampWidth, dragged, FOLD_AT, SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN, sidebarMax, STEP, stepped, UNFOLD_AT } from "./sidebar-width.ts";
+import { BIG_STEP, clampWidth, dragged, FOLD_AT, SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN, STEP, sidebarMax, stepped, UNFOLD_AT } from "./sidebar-width.ts";
 
 test("a width is held between the narrowest and the widest", () => {
   assert.equal(clampWidth(300), 300);

@@ -77,7 +77,7 @@ export function SettingsRow({ label, description, children, className }: { label
   const labelledBy = `${id}-label`;
   const describedBy = description ? `${id}-description` : undefined;
   return (
-    <div className={cn("flex min-h-12 items-center gap-6 px-4 py-2.5", className)}>
+    <div className={cn("flex min-h-row items-center gap-6 px-4 py-row-pad", className)}>
       <div className="min-w-0 flex-1">
         <div id={labelledBy} className="text-sm">
           {label}

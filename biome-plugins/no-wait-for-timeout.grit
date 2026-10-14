@@ -1,0 +1,5 @@
+language js
+
+`$page.waitForTimeout($_)` where {
+  register_diagnostic(span=$page, message="Wait on what you expect (expect(...).toBeVisible(), expect.poll), never on time.", severity="error")
+}

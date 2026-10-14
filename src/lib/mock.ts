@@ -1,6 +1,6 @@
 import type { Client } from "@/lib/api";
-import { ApiError } from "./errors.ts";
 import type { Project } from "@/lib/types";
+import { ApiError } from "./errors.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
 // fixtures, so it can be worked on and tested without a server. Relative

@@ -1,7 +1,7 @@
 import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useStore, type View } from "@/lib/store";
+import { useStore, type View, type ViewKind } from "@/lib/store";
 
 // The app's places: what the sidebar lists, ⌘1–9 jump to, and the command
 // palette offers. One list, so every way around agrees. Add a view to
@@ -16,13 +16,17 @@ export interface Place {
   footer?: boolean;
 }
 
+// One entry per view kind, in the sidebar's order (⌘1–9 follow it): a kind
+// without a place fails to compile.
+const PLACES = {
+  home: { label: "Home", icon: <HouseIcon />, view: { kind: "home" } },
+  projects: { label: "Projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
+  kit: { label: "Kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
+  settings: { label: "Settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
+} satisfies Record<ViewKind, Omit<Place, "id">>;
+
 export function places(): Place[] {
-  return [
-    { id: "home", label: "Home", icon: <HouseIcon />, view: { kind: "home" } },
-    { id: "projects", label: "Projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
-    { id: "kit", label: "Kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
-    { id: "settings", label: "Settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
-  ];
+  return (Object.keys(PLACES) as ViewKind[]).map((id) => ({ id, ...PLACES[id] }));
 }
 
 // isActive says whether a place is the one in front.

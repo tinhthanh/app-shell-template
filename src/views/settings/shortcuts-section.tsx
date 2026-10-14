@@ -27,7 +27,7 @@ export function ShortcutsSection() {
       {grouped.map((g) => (
         <SettingsGroup key={g.title} title={g.title}>
           {g.items.map((s) => (
-            <SettingsRow key={s.id} label={describe(s)} className="min-h-10 py-2">
+            <SettingsRow key={s.id} label={describe(s)}>
               <Kbd>{s.keys}</Kbd>
             </SettingsRow>
           ))}

@@ -29,6 +29,10 @@ jobs:
       - run: pnpm lint
       # Tooltips are the app's own, never the HTML title attribute.
       - run: pnpm check:titles
+      # Modules the unit tests load run in node as they are.
+      - run: pnpm check:node
+      # Every view, settings section and shortcut is wired end to end.
+      - run: pnpm check:views
       # Every built-in theme's text and states meet their contrast
       # (src/themes/contrast.ts).
       - run: pnpm check:themes

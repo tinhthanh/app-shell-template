@@ -42,4 +42,4 @@ export function PreviewCardPopup({
   );
 }
 
-export { PreviewCardPrimitive, PreviewCard as HoverCard, PreviewCardTrigger as HoverCardTrigger, PreviewCardPopup as HoverCardContent };
+export { PreviewCard as HoverCard, PreviewCardPopup as HoverCardContent, PreviewCardPrimitive, PreviewCardTrigger as HoverCardTrigger };

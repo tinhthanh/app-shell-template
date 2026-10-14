@@ -18,9 +18,9 @@ import { ApiError, client } from "@/lib/api";
 import { ago } from "@/lib/format";
 import { useResource } from "@/lib/resource";
 import { useStore } from "@/lib/store";
-import { hashTone, toneVar } from "@/themes/tones";
 import type { Project, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { hashTone, toneVar } from "@/themes/tones";
 import { ViewHeader } from "@/views/view-header";
 
 // Projects is the example list view: read through the API client, drawn in
