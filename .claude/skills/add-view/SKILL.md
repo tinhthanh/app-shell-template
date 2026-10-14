@@ -15,7 +15,7 @@ half-wired one; this is the order that keeps them green. Copy
 3. **`src/lib/routes.test.ts`**: add the view to the round-trip list.
 4. **`src/views/reports/reports-view.tsx`**: the component, with `data-testid="reports"` on its root and a `<ViewHeader title>`. Reads go through `useResource` with `<PixelLoader>`, `<ErrorNote onRetry>` and an empty state.
 5. **`src/App.tsx`**: a `lazyView(() => import("@/views/reports/reports-view").then((m) => m.ReportsView))`, a case in `ViewFor`, and `reports: "Reports"` in `viewTitles`.
-6. **`src/lib/nav.tsx`**: an entry in `PLACES` (append before `settings`: ⌘1–9 follow the order).
+6. **`src/lib/nav.tsx`**: an entry in `PLACES` (append before `settings`: ⌘1–9 follow the order; `shell.spec.ts` reads the order from the sidebar, so it keeps passing).
 7. **`e2e/a11y.spec.ts`**: a scene `{ id: "reports", run: … }`, and one per state worth checking.
 8. **A behaviour test** in `e2e/reports.spec.ts`: what the user gets, on the mock knobs.
 9. **`CHANGELOG.md`**: a bullet under Unreleased.

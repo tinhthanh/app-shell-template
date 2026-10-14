@@ -89,7 +89,12 @@ The complete recipes, with every file each one touches, are in
 `AGENTS.md` ("Adding things"); this is the short version.
 
 1. **Name it**: `APP_NAME` in `src/lib/app.ts`, `<title>` in `index.html`,
-   `public/favicon.svg`, `name` in `package.json`.
+   `public/favicon.svg`, `name` and `version` in `package.json`, this
+   README's title, the Home page's heading (`src/views/home/home-view.tsx`),
+   the contributor line in `LICENSE`, the owner in `.github/CODEOWNERS`, and
+   start `CHANGELOG.md` afresh. The storage keys (`app.*`) are identifiers:
+   two apps from this template on the same origin share them unless you
+   rename them in `src/lib/store.ts`, `prefs.ts` and `themes/apply.ts`.
 2. **Your resource**: replace `Project` in `src/lib/types.ts`, the paths in
    `httpClient` (`src/lib/api.ts`) and the fixtures in `src/lib/mock.ts`;
    copy `views/projects/` for each list-and-detail view.
