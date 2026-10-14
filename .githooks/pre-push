@@ -1,0 +1,5 @@
+#!/bin/sh
+# Everything CI checks, before the push: typecheck, lint, the checks, the
+# unit tests and the build (about ten seconds). The browser suite is CI's.
+set -e
+if command -v pnpm >/dev/null 2>&1; then pnpm -s check; else npx pnpm@11 -s check; fi

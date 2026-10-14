@@ -1,0 +1,8 @@
+#!/bin/sh
+# Staged files are formatted and linted, and no title= slipped in. Fast,
+# so it runs on every commit; pnpm check runs before a push.
+set -e
+if [ -x node_modules/.bin/biome ]; then
+  node_modules/.bin/biome check --staged --no-errors-on-unmatched
+fi
+node scripts/check-titles.mjs
