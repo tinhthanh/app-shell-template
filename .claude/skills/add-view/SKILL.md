@@ -1,0 +1,28 @@
+---
+name: add-view
+description: Add a view (a page in the main area with a place in the sidebar, an address, a title and tests) to this app. Use when asked for a new page, screen or section of the app.
+---
+
+# Add a view
+
+A view is a `kind` of `View`. The compiler and `pnpm check:views` refuse a
+half-wired one; this is the order that keeps them green. Copy
+`src/views/projects/` for a list-and-detail view over a resource, or
+`src/views/home/` for a static one.
+
+1. **`src/lib/store.ts`**: add `{ kind: "reports"; id?: string }` to `View`.
+2. **`src/lib/routes.ts`**: a case in `viewToHash` (`#/reports`, `#/reports/<id>`) and in `hashToView`.
+3. **`src/lib/routes.test.ts`**: add the view to the round-trip list.
+4. **`src/views/reports/reports-view.tsx`**: the component, with `data-testid="reports"` on its root and a `<ViewHeader title>`. Reads go through `useResource` with `<PixelLoader>`, `<ErrorNote onRetry>` and an empty state.
+5. **`src/App.tsx`**: a `lazyView(() => import("@/views/reports/reports-view").then((m) => m.ReportsView))`, a case in `ViewFor`, and `reports: "Reports"` in `viewTitles`.
+6. **`src/lib/nav.tsx`**: an entry in `PLACES` (append before `settings`: ⌘1–9 follow the order).
+7. **`e2e/a11y.spec.ts`**: a scene `{ id: "reports", run: … }`, and one per state worth checking.
+8. **A behaviour test** in `e2e/reports.spec.ts`: what the user gets, on the mock knobs.
+9. **`CHANGELOG.md`**: a bullet under Unreleased.
+
+Then `pnpm check` (typecheck, lint, `check:views`) and
+`E2E_PORT=1427 pnpm test:e2e e2e/reports.spec.ts e2e/a11y.spec.ts`.
+
+A settings section instead: `SettingsSectionId` in `store.ts`, `SECTIONS`
+in `routes.ts` and `settings-view.tsx`, a component of `SettingsPage`,
+`SettingsGroup`, `SettingsRow` (`rows.tsx`), and a `settings <id>` scene.

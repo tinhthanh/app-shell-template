@@ -4,7 +4,9 @@ A frontend-only React app: Vite 8, React 19, Tailwind 4, coss ui on Base
 UI, zustand, Playwright. There is no backend here; the views read through
 `src/lib/api.ts`, which runs on the fixtures in `src/lib/mock.ts` unless
 `VITE_API_URL` is set. `docs/architecture.md` has the map and the
-vocabulary; `docs/decisions/` has why things are the way they are.
+vocabulary; `docs/decisions/` has why things are the way they are; the
+skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`,
+`add-theme`) walk through the recipes below step by step.
 
 ## Tooling
 
