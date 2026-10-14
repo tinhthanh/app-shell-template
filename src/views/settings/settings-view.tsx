@@ -12,8 +12,8 @@ import { ViewHeaderHost } from "@/views/view-header";
 
 export { openSettings, type SettingsSectionId };
 
-// Settings' sections. Add one: a component made of SettingsPage, SettingsGroup
-// and SettingsRow (rows.tsx), an id in lib/store.ts, and a line here.
+// Settings' sections. Adding one: AGENTS.md › Adding things (an id in
+// lib/store.ts, SECTIONS in lib/routes.ts and here, an axe scene).
 interface Section {
   id: SettingsSectionId;
   title: string;

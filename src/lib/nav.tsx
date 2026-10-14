@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { useStore, type View, type ViewKind } from "@/lib/store";
 
 // The app's places: what the sidebar lists, ⌘1–9 jump to, and the command
-// palette offers. One list, so every way around agrees. Add a view to
-// lib/store.ts and App.tsx, then a place here.
+// palette offers. One list, so every way around agrees. Adding one:
+// AGENTS.md › Adding things.
 
 export interface Place {
   id: string;

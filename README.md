@@ -50,6 +50,17 @@ Point it at a server with `VITE_API_URL=http://localhost:8080 pnpm dev`
 (see `.env.example`). The mock takes knobs in the URL: `?mock=1&slow=1`,
 `&fail=1`, `&empty=1`, `&platform=linux`.
 
+## Reading on
+
+- `AGENTS.md`: the rules, what "done" means, which test proves which
+  change, the recipes.
+- `docs/architecture.md`: how a read flows, where state lives, themes,
+  routing, what the browser suite guarantees, the knobs, the vocabulary.
+- `docs/decisions/`: why things are the way they are (hash routing, mock
+  by default, node tests, the system theme, the kit, the e2e contract…).
+- `.claude/skills/`: step-by-step for an agent: `e2e-tests`, `add-view`,
+  `add-resource`, `add-theme`.
+
 ## Layout
 
 ```
@@ -66,8 +77,10 @@ src/
                         platform (⌘ vs Ctrl), focus-home, announce, poll, storage, …
   themes/               builtin.ts and vscode.ts (the themes), apply.ts, tones.ts, contrast.ts + test
   views/                home/, projects/ (the example resource), kit/ (the components), settings/
-e2e/                    Playwright: fixtures.ts, shell, projects, settings and a11y specs
-scripts/check-titles.mjs
+e2e/                    Playwright: fixtures.ts, shell, projects, settings, motion and a11y specs
+scripts/                check-titles, check-node-imports, check-views, check-evidence, check-guardrails
+biome-plugins/          no hex colours, no palette classes, no waitForTimeout
+docs/                   architecture.md, decisions/
 ```
 
 ## Make it yours
@@ -87,9 +100,10 @@ The complete recipes, with every file each one touches, are in
    a `SettingsRow` in a section. Bump `PREFS_VERSION` and add a step to
    `migratePrefs` when a default changes in a way an old value shouldn't
    override.
-5. **A shortcut**: a line in `src/lib/shortcuts.json`, a key in `idOf` and a
-   case in `run` (`src/hooks/use-shortcuts.ts`). The sheet and Settings
-   list it on their own.
+5. **A shortcut**: a line in `src/lib/shortcuts.json`, an id in
+   `SHORTCUT_IDS` and a key in `shortcutFor` (`src/lib/keys.ts`), a case
+   in `run` (`src/hooks/use-shortcuts.ts`). The sheet and Settings list it
+   on their own.
 6. **A theme**: a `Theme` in `src/themes/builtin.ts`; `pnpm check:themes`
    tells you what to fix.
 7. **A browser test**: a spec in `e2e/` on the `app` fixture, on stable

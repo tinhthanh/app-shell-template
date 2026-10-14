@@ -7,8 +7,9 @@ import { load, save } from "@/lib/storage";
 // from the API (lib/api.ts, read where it is shown with lib/resource.ts):
 // which view shows, which theme, and what's open over them.
 
-// The main area shows one of the app's views. Add a kind here, a lazy view
-// in App.tsx, a place in lib/nav.tsx and its address in lib/routes.ts.
+// The main area shows one of the app's views. Adding a kind: AGENTS.md ›
+// Adding things (or the add-view skill); the compiler and check:views
+// refuse a half-wired one.
 export type View = { kind: "home" } | { kind: "projects"; id?: string } | { kind: "kit"; section?: string } | { kind: "settings"; section?: SettingsSectionId };
 
 export type SettingsSectionId = "general" | "appearance" | "shortcuts" | "about";
