@@ -15,10 +15,12 @@
     "noEmit": true,
     "skipLibCheck": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "resolveJsonModule": true
   },
   "include": [
     "*.ts",
+    "*.json",
     "../playwright.config.ts",
     "../src/vite-env.d.ts"
   ]

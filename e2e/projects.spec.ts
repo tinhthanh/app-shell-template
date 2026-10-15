@@ -245,8 +245,7 @@ test("the arrows move between rows, End reaches the last of thousands, and Enter
 
 test("on a phone the table leaves out the Updated column, so a row fits the width", async ({ app }) => {
   await app.page.setViewportSize({ width: 375, height: 740 });
-  // Not app.open(): on a phone the places are in a sheet, so no nav row shows.
-  await app.page.goto("/?mock=1&platform=linux#/projects");
+  await app.open({ hash: "/projects" });
   await expect(app.page.getByTestId("project-row").first()).toBeVisible();
   await expect(app.page.getByRole("columnheader", { name: "Updated" })).toBeHidden();
   await expect

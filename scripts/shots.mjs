@@ -1,17 +1,20 @@
 // Screenshots of the app in Default Dark and Default Light, for a PR's
 // Proof section: builds, serves dist on a free port, and writes shots/.
 //
-//   pnpm shots                      every view
+//   pnpm shots                      every scene in e2e/scenes.json (the desktop ones)
 //   pnpm shots '#/kit/buttons'      one address (any hash)
 //   E2E_PORT=1427 pnpm shots        on that port
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const out = resolve(root, "shots");
-const addresses = process.argv[2] ? [process.argv[2]] : ["", "#/projects", "#/projects/p-shop", "#/kit/buttons", "#/kit/feedback", "#/settings/appearance"];
+// A scene names the testid that says its view has its data (ready); a
+// bare address waits for the view's root and its loader to go.
+const scenes = JSON.parse(readFileSync(resolve(root, "e2e/scenes.json"), "utf8")).filter((s) => !s.width);
+const addresses = process.argv[2] ? [{ hash: process.argv[2] }] : scenes;
 
 // E2E_PORT, or a free port in 1421–1439 (1420 is the dev server's).
 async function freePort() {
@@ -48,13 +51,16 @@ try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
     await context.addInitScript((t) => localStorage.setItem("app.ui", JSON.stringify({ themeId: t })), theme);
     const page = await context.newPage();
-    for (const a of addresses) {
+    for (const { hash: a, ready } of addresses) {
       await page.goto(`http://localhost:${port}/?mock=1&platform=linux${a}`);
       await page.getByTestId("nav-home").waitFor();
       // The view's code loads after the shell, and its data after that: wait
-      // for the view's root, then for its loader to go.
-      await page.locator("main [data-testid]").first().waitFor();
-      await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
+      // for what says it is there, or for the view's root and its loader to go.
+      if (ready) await page.getByTestId(ready).first().waitFor();
+      else {
+        await page.locator("main [data-testid]").first().waitFor();
+        await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
+      }
       await page.evaluate(() => Promise.all([document.fonts.ready, ...document.getAnimations().map((x) => x.finished.catch(() => {}))]));
       const name = `${a.replace(/^#\//, "").replace(/[/?&=]/g, "-") || "home"}-${theme.replace("default-", "")}.png`;
       await page.screenshot({ path: resolve(out, name) });

@@ -1,8 +1,8 @@
-import { CheckIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import { useState } from "react";
 
+import { SearchField } from "@/components/search-field";
 import { SimpleSelect } from "@/components/simple-select";
-import { Input } from "@/components/ui/input";
 import { SYSTEM_THEME, useThemes } from "@/hooks/use-theme";
 import { IS_LINUX } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
@@ -42,10 +42,7 @@ export function AppearanceSection() {
               Add your own in <Code>src/themes/builtin.ts</Code>; <Code>pnpm check:themes</Code> keeps it readable.
             </p>
           </div>
-          <div className="relative w-48 shrink-0">
-            <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input size="sm" type="search" value={query} onChange={(e) => setQuery(e.currentTarget.value)} placeholder="Find a theme" aria-label="Find a theme" className="[&_input]:ps-7.5" />
-          </div>
+          <SearchField className="w-48 shrink-0" value={query} onChange={setQuery} placeholder="Find a theme" />
         </div>
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
         {groups.map((g) => (

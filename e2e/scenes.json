@@ -1,0 +1,38 @@
+[
+  {
+    "id": "home",
+    "hash": "",
+    "ready": "nav-home"
+  },
+  {
+    "id": "projects",
+    "hash": "#/projects",
+    "ready": "project-row"
+  },
+  {
+    "id": "project-detail",
+    "hash": "#/projects/p-shop",
+    "ready": "project-detail"
+  },
+  {
+    "id": "settings-appearance",
+    "hash": "#/settings/appearance",
+    "ready": "settings-appearance"
+  },
+  {
+    "id": "kit-buttons",
+    "hash": "#/kit/buttons",
+    "ready": "kit-buttons"
+  },
+  {
+    "id": "kit-inputs",
+    "hash": "#/kit/inputs",
+    "ready": "kit-inputs"
+  },
+  {
+    "id": "phone-projects",
+    "hash": "#/projects",
+    "ready": "project-row",
+    "width": 375
+  }
+]

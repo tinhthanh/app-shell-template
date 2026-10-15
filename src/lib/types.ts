@@ -71,7 +71,9 @@ export interface Theme {
 // Replace Project with what your API serves; lib/api.ts and lib/mock.ts
 // follow it.
 
-export type ProjectStatus = "active" | "paused" | "archived";
+// The statuses, once, for the route, the mock and the view.
+export const PROJECT_STATUSES = ["active", "paused", "archived"] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export interface Project {
   id: string;

@@ -37,6 +37,8 @@
 
 ## Screenshots
 
+<!-- Drag the files from shots/ in here (pnpm shots). An agent that cannot attach files names them here and points at the changed baselines in e2e/snapshots/, which the diff shows. -->
+
 ## Guardrail changes
 
 <!-- Only if you changed biome.json, the plugins, scripts/check-*, the Playwright config, the workflows, AGENTS.md or CLAUDE.md: say why, and add the "guardrail-change" label. -->

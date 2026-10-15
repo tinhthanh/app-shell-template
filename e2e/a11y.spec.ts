@@ -50,7 +50,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   {
     id: "edit dialog with a field error",
     run: async (app) => {
-      await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+      await app.open({ hash: "/projects/p-shop" });
       await app.page.getByRole("button", { name: "Edit the project" }).click();
       const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
       await dialog.getByRole("textbox", { name: "Name" }).fill("");
@@ -69,7 +69,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   {
     id: "sign in",
     run: async (app) => {
-      await app.page.goto("/?mock=1&platform=linux&signedOut=1");
+      await app.open({ params: { signedOut: "1" } });
       await expect(app.page.getByTestId("signin")).toBeVisible();
     },
   },
@@ -91,7 +91,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   {
     id: "projects failed with details open",
     run: async (app) => {
-      await app.page.goto("/?mock=1&platform=linux&fail=1#/projects");
+      await app.open({ params: { fail: "1" }, hash: "/projects" });
       await app.page.getByTestId("error-note").getByRole("button", { name: "Details" }).click();
       await expect(app.page.getByLabel("Full output")).toBeVisible();
     },
@@ -99,7 +99,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   {
     id: "projects empty",
     run: async (app) => {
-      await app.page.goto("/?mock=1&platform=linux&empty=1#/projects");
+      await app.open({ params: { empty: "1" }, hash: "/projects" });
       await expect(app.page.getByTestId("projects-empty")).toBeVisible();
     },
   },
