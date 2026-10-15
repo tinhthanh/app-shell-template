@@ -51,7 +51,11 @@ try {
     for (const a of addresses) {
       await page.goto(`http://localhost:${port}/?mock=1&platform=linux${a}`);
       await page.getByTestId("nav-home").waitFor();
-      await page.evaluate(() => Promise.all(document.getAnimations().map((x) => x.finished.catch(() => {}))));
+      // The view's code loads after the shell, and its data after that: wait
+      // for the view's root, then for its loader to go.
+      await page.locator("main [data-testid]").first().waitFor();
+      await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
+      await page.evaluate(() => Promise.all([document.fonts.ready, ...document.getAnimations().map((x) => x.finished.catch(() => {}))]));
       const name = `${a.replace(/^#\//, "").replace(/[/?&=]/g, "-") || "home"}-${theme.replace("default-", "")}.png`;
       await page.screenshot({ path: resolve(out, name) });
       console.log(`shots/${name}`);
