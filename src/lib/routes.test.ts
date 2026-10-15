@@ -12,6 +12,7 @@ test("every view has an address, and the address reads back to the view", () => 
     { kind: "projects", id: "p-shop" },
     { kind: "projects", q: "shop", status: "active", tags: ["web", "ops"] },
     { kind: "projects", id: "p-shop", tags: ["web"] },
+    { kind: "projects", sort: "updated:desc" },
     { kind: "kit" },
     { kind: "kit", section: "buttons" },
     { kind: "settings" },

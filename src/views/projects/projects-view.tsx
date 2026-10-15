@@ -2,6 +2,7 @@ import { ArrowLeftIcon, PencilIcon, PlusIcon, RefreshCwIcon, SearchIcon, Trash2I
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { confirm } from "@/components/confirm";
+import { type Column, DataTable } from "@/components/data-table";
 import { toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { PickOne } from "@/components/pick-one";
@@ -16,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { ApiError, client } from "@/lib/api";
-import { ago } from "@/lib/format";
+import { ago, number } from "@/lib/format";
+import { parseSort, sortToString } from "@/lib/list-keys";
 import { useResource } from "@/lib/resource";
 import { cached, forget, mutate } from "@/lib/resource-cache";
 import { useStore, type View } from "@/lib/store";
@@ -40,6 +42,48 @@ const STATUSES: { value: StatusFilter; label: string }[] = [
 ];
 
 type ProjectsView = Extract<View, { kind: "projects" }>;
+
+// The list's columns (components/data-table.tsx): what sorts, what hides on
+// a narrow window, and what sits at the end.
+const COLUMNS: Column<Project>[] = [
+  {
+    id: "name",
+    label: "Name",
+    sort: (a, b) => a.name.localeCompare(b.name),
+    cell: (p) => (
+      <span className="block min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="truncate font-medium text-sm">{p.name}</span>
+          <StatusBadge status={p.status} />
+        </span>
+        <span className="mt-0.5 block truncate text-muted-foreground text-xs">{p.description}</span>
+      </span>
+    ),
+  },
+  { id: "owner", label: "Owner", sort: (a, b) => a.owner.localeCompare(b.owner), from: "lg", className: "w-28", cell: (p) => <span className="text-muted-foreground">{p.owner}</span> },
+  {
+    id: "tags",
+    label: "Tags",
+    from: "md",
+    className: "w-56",
+    cell: (p) => (
+      <span className="flex flex-wrap gap-1">
+        {p.tags.map((t) => (
+          <Tag key={t} name={t} />
+        ))}
+      </span>
+    ),
+  },
+  {
+    id: "updated",
+    label: "Updated",
+    sort: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+    align: "end",
+    className: "w-32",
+    cell: (p) => <span className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>,
+  },
+];
+const SORTABLE = COLUMNS.filter((c) => c.sort).map((c) => c.id);
 const LIST_KEY = "projects";
 const key = (id: string) => `project:${id}`;
 
@@ -67,12 +111,15 @@ function ProjectList() {
   const q = query.trim().toLowerCase();
   const shown = all.filter((p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!status || p.status === status) && [...tags].every((t) => p.tags.includes(t)));
 
-  // Back from a project: the keyboard lands on its row.
+  // Back from a project: the keyboard lands on its row, once the table has
+  // drawn it (the rows come a render after the data).
   useEffect(() => {
-    if (!returnTo || projects.status !== "ready") return;
-    document.querySelector<HTMLElement>(`[data-project="${returnTo}"]`)?.focus();
+    if (!returnTo) return;
+    const row = document.querySelector<HTMLElement>(`[data-project="${returnTo}"]`);
+    if (!row) return;
+    row.focus();
     returnTo = undefined;
-  }, [projects.status]);
+  });
 
   const open = (p: Project) => useStore.getState().setView({ ...view, id: p.id });
 
@@ -80,7 +127,7 @@ function ProjectList() {
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
         title="Projects"
-        description={projects.status === "ready" ? `${all.length} in all` : undefined}
+        description={projects.status === "ready" ? `${number(all.length)} in all` : undefined}
         actions={
           <>
             <Button size="sm" variant="outline" onClick={projects.reload} disabled={projects.loading} aria-label="Reload">
@@ -142,33 +189,17 @@ function ProjectList() {
             shown.length === 0 ? (
               <p className="px-6 py-8 text-muted-foreground text-sm">Nothing matches.</p>
             ) : (
-              <ul className="divide-y" aria-label="Projects">
-                {shown.map((p) => (
-                  <li key={p.id}>
-                    <button
-                      type="button"
-                      data-testid="project-row"
-                      data-project={p.id}
-                      onClick={() => open(p)}
-                      className="flex min-h-row w-full items-center gap-4 px-6 py-row-pad text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2">
-                          <span className="truncate font-medium text-sm">{p.name}</span>
-                          <StatusBadge status={p.status} />
-                        </span>
-                        <span className="mt-0.5 block truncate text-muted-foreground text-xs">{p.description}</span>
-                      </span>
-                      <span className="hidden items-center gap-1 md:flex">
-                        {p.tags.map((t) => (
-                          <Tag key={t} name={t} />
-                        ))}
-                      </span>
-                      <span className="w-20 shrink-0 text-right text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <DataTable
+                rows={shown}
+                columns={COLUMNS}
+                rowKey={(p) => p.id}
+                sort={parseSort(view.sort, SORTABLE)}
+                onSort={(sort) => set({ sort: sortToString(sort) })}
+                onOpen={open}
+                label="Projects"
+                rowTestId="project-row"
+                rowProps={(p) => ({ "data-project": p.id })}
+              />
             )
           }
         </ResourceView>

@@ -10,11 +10,12 @@ const SECTIONS: SettingsSectionId[] = ["general", "appearance", "shortcuts", "ab
 const STATUSES: ProjectStatus[] = ["active", "paused", "archived"];
 
 // query writes a view's filters after the path, leaving out what is unset.
-function query(v: { q?: string; status?: string; tags?: string[] }): string {
+function query(v: { q?: string; status?: string; tags?: string[]; sort?: string }): string {
   const p = new URLSearchParams();
   if (v.q) p.set("q", v.q);
   if (v.status) p.set("status", v.status);
   if (v.tags?.length) p.set("tags", v.tags.join(","));
+  if (v.sort) p.set("sort", v.sort);
   const s = p.toString();
   return s ? `?${s}` : "";
 }
@@ -58,6 +59,7 @@ export function hashToView(hash: string): View {
         ...(p.get("q") ? { q: p.get("q") as string } : {}),
         ...(status && (STATUSES as string[]).includes(status) ? { status: status as ProjectStatus } : {}),
         ...(tags.length ? { tags } : {}),
+        ...(p.get("sort") ? { sort: p.get("sort") as string } : {}),
       };
     }
     case "kit":

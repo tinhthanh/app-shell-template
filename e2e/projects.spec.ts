@@ -200,3 +200,41 @@ test("closing the edit dialog with unsaved changes asks first", async ({ app }) 
   await expect(dialog).toHaveCount(0);
   await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
 });
+
+test("a header sorts the list up, down, then not at all, and the sort is in the address", async ({ app }) => {
+  await app.open();
+  await app.nav("projects").click();
+  const table = app.page.getByRole("table", { name: "Projects" });
+  const first = () => table.getByTestId("project-row").first().getAttribute("data-project");
+  await table.getByRole("button", { name: "Name" }).click();
+  await expect(app.page).toHaveURL(/sort=name(:|%3A)asc$/);
+  await expect(table.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "ascending");
+  await expect.poll(first).toBe("p-android");
+  await table.getByRole("button", { name: "Name" }).click();
+  await expect.poll(first).toBe("p-warehouse");
+  await table.getByRole("button", { name: "Name" }).click();
+  await expect(app.page).not.toHaveURL(/sort=/);
+  await expect.poll(first).toBe("p-shop");
+});
+
+test("the arrows move between rows, End reaches the last of thousands, and Enter opens one", async ({ app }) => {
+  await app.open({ params: { many: "1" } });
+  await app.nav("projects").click();
+  const rows = app.page.getByTestId("project-row");
+  await expect(rows.first()).toBeVisible();
+  await expect(app.page.getByText("5,000 in all")).toBeVisible();
+  // Only what fits is in the DOM.
+  expect(await rows.count()).toBeLessThan(120);
+  await rows.first().focus();
+  await app.page.keyboard.press("ArrowDown");
+  await app.page.keyboard.press("ArrowDown");
+  await expect(app.page.locator("[data-testid=project-row][data-project=p-3]")).toBeFocused();
+  await app.page.keyboard.press("End");
+  await expect(app.page.locator("[data-testid=project-row][data-project=p-5000]")).toBeFocused();
+  await app.page.keyboard.press("PageUp");
+  await expect(app.page.locator("[data-testid=project-row]:focus")).toHaveCount(1);
+  await app.page.keyboard.press("Home");
+  await expect(app.page.locator("[data-testid=project-row][data-project=p-1]")).toBeFocused();
+  await app.page.keyboard.press("Enter");
+  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop 1", exact: true })).toBeVisible();
+});
