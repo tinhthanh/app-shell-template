@@ -37,6 +37,10 @@ const GUARDRAILS = [
   /^\.githooks\//,
   /^tsconfig.*\.json$/,
   /^e2e\/fixtures\.ts$/,
+  /^vite\.config\.ts$/,
+  /^package\.json$/,
+  /^index\.html$/,
+  /^deploy\//,
 ];
 const changed = execFileSync("git", ["diff", "--name-only", `${base}...HEAD`], { encoding: "utf8" })
   .split("\n")

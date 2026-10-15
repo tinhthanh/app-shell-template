@@ -2,6 +2,7 @@ import { TriangleAlertIcon } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { report } from "@/lib/report";
 
 type Props = {
   children: ReactNode;
@@ -27,8 +28,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
     this.setState({ stack: info.componentStack ?? undefined });
-    // Kept for anyone who does have a console attached, such as a dev build.
-    console.error(`${this.props.scope ?? "The app"} hit an error it could not render through:`, error, info.componentStack);
+    // To the reporter (the console until one is set, lib/report.ts).
+    report(error, { scope: this.props.scope ?? "the app", componentStack: info.componentStack ?? "" });
   }
 
   override render() {
