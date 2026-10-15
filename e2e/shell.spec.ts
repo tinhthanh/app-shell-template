@@ -250,3 +250,40 @@ test("signed out, the sign-in page covers the app; signing in returns to the add
   await app.page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(app.page.getByTestId("signin")).toBeVisible();
 });
+
+test("⌘K finds a project by a few letters and opens it", async ({ app }) => {
+  await app.open();
+  await app.page.keyboard.press(`${mod()}+k`);
+  const palette = app.page.getByTestId("command-palette");
+  await palette.getByRole("combobox").fill("ware");
+  await palette.getByRole("option", { name: /Warehouse/ }).click();
+  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Warehouse", exact: true })).toBeVisible();
+  await expect(app.page).toHaveTitle(`Warehouse — Projects — ${APP_NAME}`);
+  // The breadcrumb goes back to the list.
+  await app.page.getByRole("navigation", { name: "breadcrumb" }).getByRole("button", { name: "Projects" }).click();
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+  await expect(app.page).toHaveTitle(`Projects — ${APP_NAME}`);
+});
+
+test("What's new shows once after an update, is kept as seen, and opens again from the palette", async ({ app }) => {
+  await app.open({ prefs: { whatsNewSeen: "0.0.1" } });
+  const dialog = app.page.getByTestId("whats-new");
+  await expect(dialog).toContainText("What's new in 0.1.0");
+  await dialog.getByRole("button", { name: "Got it" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => ((await app.stored("app.prefs")) as { whatsNewSeen?: string }).whatsNewSeen).toBe("0.1.0");
+  await app.page.reload();
+  await expect(app.page.getByTestId("nav-home")).toBeVisible();
+  expect(await dialog.count()).toBe(0);
+  await app.page.keyboard.press(`${mod()}+k`);
+  await app.page.getByTestId("command-palette").getByRole("combobox").fill("what's new");
+  await app.page.getByRole("option", { name: /What's new/ }).click();
+  await expect(dialog).toBeVisible();
+});
+
+test("a first run shows no What's new, and counts the version as seen", async ({ app }) => {
+  await app.open();
+  await expect(app.page.getByTestId("nav-home")).toBeVisible();
+  expect(await app.page.getByTestId("whats-new").count()).toBe(0);
+  await expect.poll(async () => ((await app.stored("app.prefs")) as { whatsNewSeen?: string }).whatsNewSeen).toBe("0.1.0");
+});

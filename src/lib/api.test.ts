@@ -36,6 +36,12 @@ test("reads GET their path and writes PATCH JSON, ids escaped", async () => {
   assert.deepEqual(calls[1]?.init.headers, { "Content-Type": "application/json" });
 });
 
+test("search asks the server with the query escaped", async () => {
+  answer = { status: 200, json: [] };
+  await client.search("a b");
+  assert.equal(calls[0]?.url, "http://api.test/search?q=a%20b");
+});
+
 test("create POSTs the project and delete DELETEs it, with nothing to parse", async () => {
   answer = { status: 200, json: { id: "p-x" } };
   await client.createProject({ name: "X", description: "" });

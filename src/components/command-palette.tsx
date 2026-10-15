@@ -1,5 +1,5 @@
-import { KeyboardIcon, PaletteIcon, PanelLeftIcon } from "lucide-react";
-import { type ReactNode, useMemo, useRef, useState } from "react";
+import { FolderKanbanIcon, KeyboardIcon, PaletteIcon, PanelLeftIcon, SparklesIcon } from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { openShortcuts } from "@/components/shortcuts-sheet";
 import {
@@ -17,11 +17,14 @@ import {
   CommandPanel,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
+import { openWhatsNew } from "@/components/whats-new/whats-new-dialog";
 import { useThemes } from "@/hooks/use-theme";
+import { client } from "@/lib/api";
 import { places } from "@/lib/nav";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { keysFor } from "@/lib/shortcuts";
 import { paletteOpenedFrom, useStore } from "@/lib/store";
+import type { SearchHit } from "@/lib/types";
 
 // The command palette (⌘K): the app's places, its commands and its themes,
 // in one searchable list. Highlighting a theme previews it; closing without
@@ -51,6 +54,27 @@ export function CommandPalette() {
   const themeId = useStore((s) => s.themeId);
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
   const [query, setQuery] = useState("");
+  // The records that match what was typed (client.search), a moment after
+  // the typing pauses; an answer to an older query is dropped.
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setHits([]);
+      return;
+    }
+    let live = true;
+    const t = window.setTimeout(() => {
+      client.search(q).then(
+        (h) => live && setHits(h),
+        () => live && setHits([]),
+      );
+    }, 150);
+    return () => {
+      live = false;
+      window.clearTimeout(t);
+    };
+  }, [query]);
   // The theme before a preview, to put back on close.
   const before = useRef<string>(undefined);
 
@@ -84,7 +108,15 @@ export function CommandPalette() {
         run: () => setPrefs({ sidebarCollapsed: !collapsed }),
       },
       { value: "cmd:shortcuts", label: "Keyboard shortcuts", icon: <KeyboardIcon />, shortcut: keysFor("shortcuts"), run: openShortcuts },
+      { value: "cmd:whats-new", label: "What's new", icon: <SparklesIcon />, search: "release version changelog", run: openWhatsNew },
     ];
+    const records: Item[] = hits.map((h) => ({
+      value: `record:${h.kind}:${h.id}`,
+      label: h.name,
+      icon: <FolderKanbanIcon />,
+      detail: h.detail,
+      run: () => useStore.getState().setView({ kind: "projects", id: h.id }),
+    }));
     const themeItems: Item[] = themes.map((t) => ({
       value: `theme:${t.id}`,
       label: t.name,
@@ -94,12 +126,8 @@ export function CommandPalette() {
       theme: t.id,
       run: () => useStore.getState().setTheme(t.id),
     }));
-    return [
-      { value: "Go to", items: goTo },
-      { value: "Commands", items: commands },
-      { value: "Themes", items: themeItems },
-    ];
-  }, [themes, themeId, collapsed]);
+    return [...(records.length ? [{ value: "Projects", items: records }] : []), { value: "Go to", items: goTo }, { value: "Commands", items: commands }, { value: "Themes", items: themeItems }];
+  }, [themes, themeId, collapsed, hits]);
 
   return (
     <CommandDialog
@@ -124,7 +152,7 @@ export function CommandPalette() {
             useStore.getState().setTheme(t);
           }}
         >
-          <CommandInput aria-label="Search places, commands and themes" placeholder="Go to a place, run a command, pick a theme…" />
+          <CommandInput aria-label="Search places, commands and themes" placeholder="Find a project, go to a place, run a command, pick a theme…" />
           <CommandPanel>
             <CommandEmpty>Nothing matches.</CommandEmpty>
             <CommandList>

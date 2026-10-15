@@ -2,7 +2,7 @@
 import { ApiError } from "./errors.ts";
 import { mockClient } from "./mock.ts";
 import { signedOut } from "./session.ts";
-import type { Project, User } from "./types.ts";
+import type { Project, SearchHit, User } from "./types.ts";
 
 export type * from "@/lib/types";
 export { ApiError };
@@ -18,6 +18,8 @@ export interface Client {
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
   createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+  // The records that match a few letters, best first (the palette).
+  search(query: string): Promise<SearchHit[]>;
   // Who is signed in (401 when nobody is), signing in, and out.
   me(): Promise<User>;
   signIn(email: string, password: string): Promise<User>;
@@ -119,6 +121,7 @@ export function httpClient(base: string, o: ClientOptions = {}): Client {
     updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
     createProject: (input) => c("POST", "/projects", input),
     deleteProject: (id) => c("DELETE", `/projects/${encodeURIComponent(id)}`),
+    search: (query) => c("GET", `/search?q=${encodeURIComponent(query)}`),
     me: () => c("GET", "/session"),
     signIn: (email, password) => c("POST", "/session", { email, password }),
     signOut: () => c("DELETE", "/session"),

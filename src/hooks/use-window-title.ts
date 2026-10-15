@@ -2,13 +2,16 @@ import { useEffect } from "react";
 
 import { APP_NAME } from "@/lib/app";
 import { useStore } from "@/lib/store";
+import { useTitleDetail } from "@/lib/title";
 
-// useWindowTitle names the window after the view in front ("Settings — App").
+// useWindowTitle names the window after what is in front: the record, then
+// the view, then the app ("Shop — Projects — App Shell"), for tabs, history
+// and screen readers.
 export function useWindowTitle(titles: Record<string, string>) {
   const kind = useStore((s) => s.view.kind);
+  const detail = useTitleDetail((s) => s.detail);
   useEffect(() => {
-    const label = titles[kind];
-    const title = label ? `${label} — ${APP_NAME}` : APP_NAME;
+    const title = [detail, titles[kind], APP_NAME].filter(Boolean).join(" — ");
     if (document.title !== title) document.title = title;
-  }, [kind, titles]);
+  }, [kind, titles, detail]);
 }

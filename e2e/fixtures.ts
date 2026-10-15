@@ -24,6 +24,7 @@ export const mod = (platform = "linux") => (platform === "mac" ? "Meta" : "Contr
 
 export interface OpenOptions {
   // app.prefs as an earlier run saved it (lib/prefs.ts), before the app starts.
+  // Seeded prefs count What's new as seen unless whatsNewSeen is given.
   prefs?: Record<string, unknown>;
   // app.ui's theme (lib/store.ts).
   theme?: string;
@@ -86,7 +87,9 @@ export const test = base.extend<{ app: App }>({
               if (prefs) localStorage.setItem("app.prefs", JSON.stringify(prefs));
               if (theme) localStorage.setItem("app.ui", JSON.stringify({ themeId: theme }));
             },
-            { prefs: opts.prefs, theme: opts.theme },
+            // Prefs from an earlier run would get the What's new dialog after
+            // an update; it stays away unless a test asks for it.
+            { prefs: opts.prefs && { whatsNewSeen: "999.0.0", ...opts.prefs }, theme: opts.theme },
           );
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });

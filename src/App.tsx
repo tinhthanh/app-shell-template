@@ -9,6 +9,7 @@ import { ShortcutsSheet } from "@/components/shortcuts-sheet";
 import { StatusBar } from "@/components/status-bar";
 import { ToastProvider } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useWhatsNewAfterUpdate, WhatsNewDialog } from "@/components/whats-new/whats-new-dialog";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
@@ -64,6 +65,8 @@ export default function App() {
   useEffect(preloadViews, []);
   // The keyboard is never dropped on <body> by what had it going away.
   useRescueRemovedFocus();
+  // Once after an update: the release's notes (lib/whats-new.ts).
+  useWhatsNewAfterUpdate();
   // Who is signed in: a 401 means nobody (the sign-in view); any other
   // failure lets the app open, and its reads say what is wrong.
   useEffect(() => {
@@ -120,6 +123,7 @@ export default function App() {
           <CommandPalette />
           <ShortcutsSheet />
           <ConfirmHost />
+          <WhatsNewDialog />
         </ErrorBoundary>
         <Announcer />
       </ToastProvider>
