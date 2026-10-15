@@ -1,18 +1,30 @@
 import type { SettingsSectionId, View } from "./store.ts";
+import type { ProjectStatus } from "./types.ts";
 
 // Each view's address, as the URL's hash: #/projects, #/projects/p-shop,
-// #/settings/appearance. The hash, not the path, so the app is one file
+// #/projects?q=shop&status=active&tags=web,ops, #/settings/appearance. The hash, not the path, so the app is one file
 // that any static host serves without a rewrite rule. lib/store.ts keeps
 // the hash and the view in step. Pure, so routes.test.ts runs it in node.
 
 const SECTIONS: SettingsSectionId[] = ["general", "appearance", "shortcuts", "about"];
+const STATUSES: ProjectStatus[] = ["active", "paused", "archived"];
+
+// query writes a view's filters after the path, leaving out what is unset.
+function query(v: { q?: string; status?: string; tags?: string[] }): string {
+  const p = new URLSearchParams();
+  if (v.q) p.set("q", v.q);
+  if (v.status) p.set("status", v.status);
+  if (v.tags?.length) p.set("tags", v.tags.join(","));
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
 
 export function viewToHash(v: View): string {
   switch (v.kind) {
     case "home":
       return "";
     case "projects":
-      return v.id ? `#/projects/${encodeURIComponent(v.id)}` : "#/projects";
+      return `${v.id ? `#/projects/${encodeURIComponent(v.id)}` : "#/projects"}${query(v)}`;
     case "kit":
       return v.section ? `#/kit/${encodeURIComponent(v.section)}` : "#/kit";
     case "settings":
@@ -22,7 +34,8 @@ export function viewToHash(v: View): string {
 
 // hashToView reads an address; anything it doesn't know is Home.
 export function hashToView(hash: string): View {
-  const parts = hash
+  const [path = "", search = ""] = hash.split("?", 2);
+  const parts = path
     .replace(/^#\/?/, "")
     .split("/")
     .filter(Boolean)
@@ -35,8 +48,18 @@ export function hashToView(hash: string): View {
     });
   const [kind, arg] = parts;
   switch (kind) {
-    case "projects":
-      return arg ? { kind: "projects", id: arg } : { kind: "projects" };
+    case "projects": {
+      const p = new URLSearchParams(search);
+      const status = p.get("status");
+      const tags = (p.get("tags") ?? "").split(",").filter(Boolean);
+      return {
+        kind: "projects",
+        ...(arg ? { id: arg } : {}),
+        ...(p.get("q") ? { q: p.get("q") as string } : {}),
+        ...(status && (STATUSES as string[]).includes(status) ? { status: status as ProjectStatus } : {}),
+        ...(tags.length ? { tags } : {}),
+      };
+    }
     case "kit":
       return arg ? { kind: "kit", section: arg } : { kind: "kit" };
     case "settings":

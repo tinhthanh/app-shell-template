@@ -15,6 +15,8 @@ export interface Client {
   projects(): Promise<Project[]>;
   project(id: string): Promise<Project>;
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
+  createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
+  deleteProject(id: string): Promise<void>;
 }
 
 const search = () => (typeof location === "undefined" ? "" : location.search);
@@ -97,6 +99,8 @@ export function httpClient(base: string): Client {
     projects: () => call(base, "GET", "/projects"),
     project: (id) => call(base, "GET", `/projects/${encodeURIComponent(id)}`),
     updateProject: (id, patch) => call(base, "PATCH", `/projects/${encodeURIComponent(id)}`, patch),
+    createProject: (input) => call(base, "POST", "/projects", input),
+    deleteProject: (id) => call(base, "DELETE", `/projects/${encodeURIComponent(id)}`),
   };
 }
 

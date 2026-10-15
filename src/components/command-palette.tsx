@@ -21,7 +21,7 @@ import { useThemes } from "@/hooks/use-theme";
 import { places } from "@/lib/nav";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { keysFor } from "@/lib/shortcuts";
-import { useStore } from "@/lib/store";
+import { paletteOpenedFrom, useStore } from "@/lib/store";
 
 // The command palette (⌘K): the app's places, its commands and its themes,
 // in one searchable list. Highlighting a theme previews it; closing without
@@ -109,7 +109,8 @@ export function CommandPalette() {
         else close();
       }}
     >
-      <CommandDialogPopup aria-label="Search and commands" data-testid="command-palette">
+      {/* Closed, the keyboard goes back to the button or key that opened it, else home. */}
+      <CommandDialogPopup aria-label="Search and commands" data-testid="command-palette" finalFocus={() => (paletteOpenedFrom()?.isConnected ? (paletteOpenedFrom() as HTMLElement) : true)}>
         <Command
           items={groups}
           value={query}

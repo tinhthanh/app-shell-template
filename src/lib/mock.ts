@@ -87,5 +87,23 @@ export function mockClient(opts: MockOptions = fromUrl()): Client {
       projects = projects.map((p) => (p.id === id ? next : p));
       return structuredClone(next);
     },
+    async createProject(input) {
+      await guard(true);
+      const name = input.name.trim();
+      if (!name) throw new ApiError("A project needs a name.", 422, "invalid");
+      if (projects.some((p) => p.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`Another project is already called ${name}.`, 422, "invalid");
+      const id = `p-${name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")}`;
+      const p: Project = { id, name, description: input.description.trim(), status: "active", owner: "you", tags: [], updatedAt: new Date().toISOString() };
+      projects = [p, ...projects];
+      return structuredClone(p);
+    },
+    async deleteProject(id) {
+      await guard(true);
+      find(id);
+      projects = projects.filter((p) => p.id !== id);
+    },
   };
 }

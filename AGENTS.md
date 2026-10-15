@@ -153,8 +153,10 @@ behaviour is proven in `e2e/`.
 - **A resource:** a type in `src/lib/types.ts` (import-free), methods on
   `Client` with their paths in `httpClient` (`src/lib/api.ts`), fixtures and
   the mock methods (through `guard()`, cloning what they return) in
-  `src/lib/mock.ts`, cases in `mock.test.ts`; a view copied from
-  `views/projects/` with its three states and empty.
+  `src/lib/mock.ts` (read, read one, create, update, delete), cases in
+  `mock.test.ts` and `api.test.ts`; a view copied from `views/projects/`:
+  keyed reads, filters on the `View`, optimistic writes through `mutate`,
+  create and delete, the dirty-check on its dialog.
 - **A component in the kit:** show it on the Kit page (`src/views/kit/`); a
   new section goes in its `SECTIONS` and in the list in `e2e/a11y.spec.ts`.
 

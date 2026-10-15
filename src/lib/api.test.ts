@@ -36,6 +36,17 @@ test("reads GET their path and writes PATCH JSON, ids escaped", async () => {
   assert.deepEqual(calls[1]?.init.headers, { "Content-Type": "application/json" });
 });
 
+test("create POSTs the project and delete DELETEs it, with nothing to parse", async () => {
+  answer = { status: 200, json: { id: "p-x" } };
+  await client.createProject({ name: "X", description: "" });
+  assert.equal(calls[0]?.init.method, "POST");
+  assert.equal(calls[0]?.url, "http://api.test/projects");
+  answer = { status: 204, body: "" };
+  assert.equal(await client.deleteProject("p x"), undefined);
+  assert.equal(calls[1]?.url, "http://api.test/projects/p%20x");
+  assert.equal(calls[1]?.init.method, "DELETE");
+});
+
 test("a failed response is an ApiError with the server's message and code", async () => {
   answer = { status: 404, json: { error: "No project is called x.", code: "not_found" } };
   await assert.rejects(client.project("x"), (e: unknown) => e instanceof ApiError && e.status === 404 && e.code === "not_found" && e.message === "No project is called x.");
