@@ -16,6 +16,10 @@ export type ResourceEvent<T> = { type: "start" } | { type: "loaded"; data: T } |
 
 export const initial = <T>(): ResourceState<T> => ({ status: "loading", loading: true });
 
+// initialFrom starts ready on what was kept from last time (lib/resource-cache.ts),
+// reading again behind it.
+export const initialFrom = <T>(data: T | undefined): ResourceState<T> => (data === undefined ? initial<T>() : { status: "ready", data, loading: true });
+
 export function next<T>(s: ResourceState<T>, e: ResourceEvent<T>): ResourceState<T> {
   switch (e.type) {
     case "start":

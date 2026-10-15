@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { initial, next } from "./resource-state.ts";
+import { initial, initialFrom, next } from "./resource-state.ts";
 
 test("the first read: loading, then ready or failed", () => {
   const s0 = initial<number[]>();
@@ -20,6 +20,11 @@ test("a reload keeps the data on screen, and a failed reload keeps it too with t
   // Trying again clears the old error while it runs.
   assert.deepEqual(next(failed, { type: "start" }), { status: "ready", data: [1], loading: true });
   assert.deepEqual(next(failed, { type: "loaded", data: [2] }), { status: "ready", data: [2], loading: false });
+});
+
+test("starting from what was kept is ready and reading again; from nothing, loading", () => {
+  assert.deepEqual(initialFrom([1]), { status: "ready", data: [1], loading: true });
+  assert.deepEqual(initialFrom(undefined), { status: "loading", loading: true });
 });
 
 test("trying again after a first failure goes back to loading, with nothing to show", () => {

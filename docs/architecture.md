@@ -19,10 +19,14 @@ a write         await client.updateProject(...); reload()     toastError on fail
 ```
 
 `client` is chosen once, at load: the fixtures when `?mock=1` is in the
-URL or `VITE_API_URL` is unset (`isMock()`), else HTTP. Views never call
+URL or no API is configured (`isMock()`), else HTTP. Views never call
 `fetch` (Biome refuses it outside `api.ts`). `useResource` keeps the old
 data while reloading and drops an answer that arrives after a newer
-request, so a late reply never overtakes a later one.
+request, so a late reply never overtakes a later one. With a `key`, the
+answer is kept for the page's life (`lib/resource-cache.ts`): the list
+draws at once when you come back, and a write calls `mutate(key, …)` to
+show its result before the server confirms, putting it back on refusal.
+A list's filters are part of its `View`, so the URL carries them.
 
 ## Where state lives
 

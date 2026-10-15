@@ -59,6 +59,14 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "new project dialog",
+    run: async (app) => {
+      await app.nav("projects").click();
+      await app.page.getByRole("button", { name: "New project" }).click();
+      await expect(app.page.getByRole("dialog", { name: "New project" })).toBeVisible();
+    },
+  },
+  {
     id: "shortcuts sheet",
     run: async (app) => {
       await app.page.keyboard.press(`${mod()}+/`);

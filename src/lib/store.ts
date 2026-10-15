@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { hashToView, viewToHash } from "@/lib/routes";
 import { load, save } from "@/lib/storage";
+import type { ProjectStatus } from "@/lib/types";
 
 // The app's state that isn't a preference (lib/prefs.ts) and isn't data
 // from the API (lib/api.ts, read where it is shown with lib/resource.ts):
@@ -10,7 +11,13 @@ import { load, save } from "@/lib/storage";
 // The main area shows one of the app's views. Adding a kind: AGENTS.md ›
 // Adding things (or the add-view skill); the compiler and check:views
 // refuse a half-wired one.
-export type View = { kind: "home" } | { kind: "projects"; id?: string } | { kind: "kit"; section?: string } | { kind: "settings"; section?: SettingsSectionId };
+// Projects carries its list's filters, so they survive a reload, the back
+// button and a shared link; id opens one project, over the same filters.
+export type View =
+  | { kind: "home" }
+  | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[] }
+  | { kind: "kit"; section?: string }
+  | { kind: "settings"; section?: SettingsSectionId };
 
 export type SettingsSectionId = "general" | "appearance" | "shortcuts" | "about";
 
@@ -29,7 +36,8 @@ interface State {
 }
 
 interface Actions {
-  setView(view: View): void;
+  // replace: the address changes without a history entry (typing a filter).
+  setView(view: View, opts?: { replace?: boolean }): void;
   setTheme(id: string): void;
   setPaletteOpen(open: boolean): void;
 }
@@ -44,24 +52,38 @@ export const useStore = create<State & Actions>()((set) => ({
   themeId: persisted.themeId ?? "system",
   paletteOpen: false,
 
-  setView: (view) => set({ view }),
+  setView: (view, opts) => {
+    // The hash follows the view (so reload, the back button and links work);
+    // popstate below does the reverse.
+    if (typeof window !== "undefined") {
+      const hash = viewToHash(view);
+      const url = hash || location.pathname + location.search;
+      if (location.hash !== hash) {
+        if (opts?.replace) history.replaceState(null, "", url);
+        else history.pushState(null, "", url);
+      }
+    }
+    set({ view });
+  },
   setTheme: (themeId) => set({ themeId }),
-  setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  setPaletteOpen: (paletteOpen) => {
+    // Where the keyboard was, to put it back when the palette closes.
+    if (paletteOpen && typeof document !== "undefined") paletteOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    set({ paletteOpen });
+  },
 }));
+
+let paletteOpener: HTMLElement | null = null;
+// paletteOpenedFrom is the element that had the keyboard when the palette opened.
+export const paletteOpenedFrom = (): HTMLElement | null => paletteOpener;
 
 useStore.subscribe((s, prev) => {
   if (s.themeId !== prev.themeId) save("app.ui", { themeId: s.themeId });
 });
 
-// The view and the URL's hash follow each other: a view change writes the
-// hash (so reload and the back button work, and a view can be linked to),
-// and the back button, or an edited address, changes the view.
+// The back button, or an edited address, changes the view (setView does
+// the reverse).
 if (typeof window !== "undefined") {
-  useStore.subscribe((s, prev) => {
-    if (s.view === prev.view) return;
-    const hash = viewToHash(s.view);
-    if (location.hash !== hash) history.pushState(null, "", hash || location.pathname + location.search);
-  });
   window.addEventListener("popstate", () => {
     const view = hashToView(location.hash);
     if (viewToHash(useStore.getState().view) !== viewToHash(view)) useStore.setState({ view });

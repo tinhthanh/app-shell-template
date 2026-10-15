@@ -222,3 +222,13 @@ test("the appearance kept from last time is set before the first paint", async (
   await app.open();
   await expect.poll(() => app.page.evaluate(() => (window as unknown as { __firstPaintDark?: boolean }).__firstPaintDark)).toBe(false);
 });
+
+test("the palette closed gives the keyboard back to what opened it", async ({ app }) => {
+  await app.open();
+  const search = app.page.getByTestId("sidebar").getByRole("button", { name: "Search" });
+  await search.click();
+  await expect(app.page.getByTestId("command-palette")).toBeVisible();
+  await app.page.keyboard.press("Escape");
+  await expect(app.page.getByTestId("command-palette")).toHaveCount(0);
+  await expect(search).toBeFocused();
+});

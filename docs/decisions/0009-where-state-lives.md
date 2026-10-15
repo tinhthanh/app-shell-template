@@ -7,15 +7,19 @@ store: stale caches, settings that reset, and components that can't be
 tested alone.
 
 **Decision.** Three homes. `store.ts` holds what the app shows (view,
-theme, palette), mirrored to the URL and `app.ui`. `prefs.ts` holds the
-person's settings, saved whole under `app.prefs` with a version and a
-migration. Server data is read where it is shown with `useResource` and
-never cached in a store. Storage keys are identifiers: renaming the app
-doesn't rename them.
+theme, palette, and a view's filters, so they survive reload and Back),
+mirrored to the URL and `app.ui`. `prefs.ts` holds the person's settings,
+saved whole under `app.prefs` with a version and a migration. Server data
+is read where it is shown with `useResource` and kept by key in
+`lib/resource-cache.ts` for the page's life, never in the store: a view
+that comes back starts on what was kept and reads again behind, and a
+write shows its result at once through `mutate` and goes back if the
+server refuses. Storage keys are identifiers: renaming the app doesn't
+rename them.
 
 **Consequences.** A reload rebuilds everything from the URL, storage and
 the API. A setting change is one `setPrefs` call. Two apps from this
 template on the same origin share storage keys unless renamed.
 
-**Revisit if.** The app needs an offline cache (then: a query library,
-still outside the store).
+**Revisit if.** The app needs the cache to outlive the page, or
+invalidation across tabs (then: a query library, still outside the store).
