@@ -18,7 +18,7 @@ a write         await client.updateProject(...); reload()     toastError on fail
                 a 422 with code "invalid" lands on the field   views/projects (the edit form)
 ```
 
-`client` is chosen once, at load: the fixtures when `?mock=1` is in the
+`client` is chosen once, at load (the fixtures' code comes as its own chunk, at the first call, only in mock mode): the fixtures when `?mock=1` is in the
 URL or no API is configured (`isMock()`), else HTTP. Views never call
 `fetch` (Biome refuses it outside `api.ts`). `useResource` keeps the old
 data while reloading and drops an answer that arrives after a newer
