@@ -164,8 +164,8 @@ export function CommandPalette() {
                       <CommandItem key={item.value} value={item} className="gap-2" onClick={() => pick(item.run)}>
                         {item.icon}
                         <span className="truncate">{item.label}</span>
-                        {item.detail && <span className="ml-auto min-w-0 shrink truncate text-muted-foreground text-xs">{item.detail}</span>}
-                        {item.shortcut && <Kbd className={item.detail ? "" : "ml-auto"}>{item.shortcut}</Kbd>}
+                        {item.detail && <span className="ms-auto min-w-0 shrink truncate text-muted-foreground text-xs">{item.detail}</span>}
+                        {item.shortcut && <Kbd className={item.detail ? "" : "ms-auto"}>{item.shortcut}</Kbd>}
                       </CommandItem>
                     )}
                   </CommandCollection>

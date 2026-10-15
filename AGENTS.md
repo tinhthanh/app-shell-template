@@ -88,6 +88,9 @@ configs or these rules without the `guardrail-change` label.
 - **Fixtures are synthetic** ("acme"). Nothing real goes in `src/lib/mock.ts`.
 - **No secrets** in code, URLs or logs. Configuration goes through `VITE_*`
   env vars (`.env.example`).
+- **Sides are logical:** `start`/`end`, `ps`/`pe`, `ms`/`me`, `border-s`/`border-e`,
+  `text-start`/`text-end`, never `left`/`right` (a Biome plugin refuses them
+  outside the kit), so `?dir=rtl` mirrors the whole app.
 - **Density and tokens:** rows use `h-row`/`py-row-pad`/`h-side-row`;
   colours use the theme's tokens or a tone, never a hard-coded hex or a
   Tailwind palette class.

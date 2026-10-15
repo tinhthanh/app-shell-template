@@ -23,7 +23,7 @@ export function StatusBar() {
           </button>
         </Tip>
       )}
-      <span className="ml-auto" />
+      <span className="ms-auto" />
       <button type="button" className="h-5 rounded px-1 hover:bg-accent hover:text-foreground" aria-label={`Theme: ${theme.name}. Open Appearance settings`} onClick={() => openSettings("appearance")}>
         {theme.name}
       </button>

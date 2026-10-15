@@ -8,8 +8,8 @@ fixtures until you point it at a server.
 
 What you get, wired and working:
 
-- **Shell**: a resizable sidebar that folds to a rail (and on a narrow
-  window), a command palette (⌘K), a status bar, a settings view with four
+- **Shell**: a resizable sidebar that folds to a rail on a narrow window
+  and becomes a top bar with a menu sheet on a phone, a command palette (⌘K), a status bar, a settings view with four
   sections, keyboard shortcuts from one table, error boundaries per view,
   lazy-loaded views that preload when idle, and every view at a hash
   address (`#/projects/p-shop`), so reload, the back button and links work.
@@ -27,6 +27,8 @@ What you get, wired and working:
   `confirm()` you can call from anywhere, a validated form that shows the
   server's refusal on the field, and a Kit page that shows every component
   in the theme in use.
+- **Right-to-left and print**: every width-wise style is logical, so
+  `?dir=rtl` mirrors the app; printing a view leaves out the chrome.
 - **Accessibility by design**: focus never falls to `<body>` when what had
   it goes away, tooltips show on keyboard focus, a live region announces
   changes, and axe runs over every screen in CI.

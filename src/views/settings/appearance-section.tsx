@@ -43,8 +43,8 @@ export function AppearanceSection() {
             </p>
           </div>
           <div className="relative w-48 shrink-0">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input size="sm" type="search" value={query} onChange={(e) => setQuery(e.currentTarget.value)} placeholder="Find a theme" aria-label="Find a theme" className="[&_input]:pl-7.5" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input size="sm" type="search" value={query} onChange={(e) => setQuery(e.currentTarget.value)} placeholder="Find a theme" aria-label="Find a theme" className="[&_input]:ps-7.5" />
           </div>
         </div>
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
@@ -103,16 +103,16 @@ function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }
   };
   const options = (appearance: "light" | "dark") => themes.filter((t) => (t.appearance === "dark") === (appearance === "dark")).map((t) => ({ value: t.id, label: t.name }));
   return (
-    <div className={cn("flex flex-wrap items-center overflow-hidden rounded-xl border transition-[box-shadow,border-color]", selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25")}>
+    <div className={cn("flex flex-wrap items-center overflow-hidden rounded-xl border transition-[box-shadow,border-color]", selected ? "border-eing ring-1 ring-ring" : "hover:border-foreground/25")}>
       <button
         type="button"
         onClick={() => useStore.getState().setTheme(SYSTEM_THEME)}
         aria-pressed={selected}
         data-testid="theme-option"
         data-theme-id={SYSTEM_THEME}
-        className="flex min-w-0 flex-1 items-center self-stretch text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="flex min-w-0 flex-1 items-center self-stretch text-start outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
-        <div className="relative h-14 w-28 shrink-0 border-r">
+        <div className="relative h-14 w-28 shrink-0 border-e">
           <Swatch theme={light} />
           <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
             <Swatch theme={dark} />
@@ -146,8 +146,8 @@ function ThemeCard({ theme, selected, onSelect }: { theme: Theme; selected: bool
       data-testid="theme-option"
       data-theme-id={theme.id}
       className={cn(
-        "group overflow-hidden rounded-xl border text-left outline-none transition-[box-shadow,border-color] focus-visible:ring-2 focus-visible:ring-ring",
-        selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25",
+        "group overflow-hidden rounded-xl border text-start outline-none transition-[box-shadow,border-color] focus-visible:ring-2 focus-visible:ring-ring",
+        selected ? "border-eing ring-1 ring-ring" : "hover:border-foreground/25",
       )}
     >
       {/* A picture of the theme (its name says which): its sample text is in
@@ -170,7 +170,7 @@ function Preview({ theme }: { theme: Theme }) {
   const t = theme.terminal;
   return (
     <div className="flex h-full" style={{ background: c.background }}>
-      <div className="flex w-[38%] flex-col gap-1.5 border-r px-2.5 py-3" style={{ background: c.sidebar, borderColor: c.border }}>
+      <div className="flex w-[38%] flex-col gap-1.5 border-e px-2.5 py-3" style={{ background: c.sidebar, borderColor: c.border }}>
         <div className="h-1.5 w-4/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.55 }} />
         <div className="h-1.5 w-3/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.3 }} />
         <div className="flex items-center gap-1">
@@ -188,7 +188,7 @@ function Preview({ theme }: { theme: Theme }) {
         </div>
         <div>
           <span style={{ color: t.magenta }}>❯</span> <span style={{ color: t.cyan }}>build</span>
-          <span className="ml-0.5 inline-block h-2.5 w-1 align-middle" style={{ background: t.cursor }} />
+          <span className="ms-0.5 inline-block h-2.5 w-1 align-middle" style={{ background: t.cursor }} />
         </div>
       </div>
     </div>
@@ -219,11 +219,7 @@ function Swatch({ theme }: { theme: Theme }) {
 function Dots({ theme }: { theme: Theme }) {
   const t = theme.terminal;
   return (
-    <span
-      className="absolute right-2 bottom-2 flex items-center gap-[3px] rounded-full border px-1.5 py-1"
-      style={{ background: theme.colors.background, borderColor: theme.colors.border }}
-      aria-hidden
-    >
+    <span className="absolute end-2 bottom-2 flex items-center gap-[3px] rounded-full border px-1.5 py-1" style={{ background: theme.colors.background, borderColor: theme.colors.border }} aria-hidden>
       {[theme.colors.primary, t.red, t.yellow, t.green, t.blue, t.magenta].map((c, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: six fixed dots.
         <span key={i} className="size-2 rounded-full" style={{ background: c }} />

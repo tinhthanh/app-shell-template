@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 // element under it, 60 ms a frame with 300 rows.
 
 const root = () => document.documentElement;
+const rtl = () => getComputedStyle(root()).direction === "rtl";
 const sidebars = () => document.querySelectorAll<HTMLElement>("[data-testid=sidebar]");
 
 // live sets the width the sidebar shows, during a drag; undefined puts
@@ -64,7 +65,8 @@ function onMove(e: PointerEvent) {
 function apply() {
   if (!drag) return;
   drag.frame = 0;
-  const dx = drag.x - drag.startX;
+  // In a right-to-left page the sidebar sits on the right: dragging left widens it.
+  const dx = (drag.x - drag.startX) * (rtl() ? -1 : 1);
   if (!drag.moved && Math.abs(dx) < 2) return;
   drag.moved = true;
   const next = dragged(drag.startWidth + dx, drag.folded, window.innerWidth);
@@ -172,14 +174,16 @@ export function SidebarResizeHandle({ folded = false }: { folded?: boolean }) {
         onKeyDown={(e) => {
           if (folded) {
             // → opens it; the rest of the keys are the open sidebar's.
-            if (e.key === "ArrowRight" || e.key === "Enter") {
+            if (e.key === (rtl() ? "ArrowLeft" : "ArrowRight") || e.key === "Enter") {
               e.preventDefault();
               usePrefs.setState({ sidebarCollapsed: false });
               requestAnimationFrame(settled);
             }
             return;
           }
-          const next = stepped(width, e.key, e.shiftKey, window.innerWidth);
+          // ← and → follow the page's direction: → widens where the edge is on the right.
+          const flipped = rtl() ? ({ ArrowLeft: "ArrowRight", ArrowRight: "ArrowLeft" }[e.key] ?? e.key) : e.key;
+          const next = stepped(width, flipped, e.shiftKey, window.innerWidth);
           if (next !== undefined) {
             e.preventDefault();
             usePrefs.setState({ sidebarWidth: clampWidth(next, window.innerWidth) });
@@ -190,9 +194,9 @@ export function SidebarResizeHandle({ folded = false }: { folded?: boolean }) {
           }
         }}
         className={cn(
-          "group/handle absolute inset-y-0 -right-[4px] z-30 w-[8px] cursor-col-resize touch-none outline-none",
+          "group/handle absolute inset-y-0 -end-[4px] z-30 w-[8px] cursor-col-resize touch-none outline-none",
           // A line at the edge on hover, focus and while dragging.
-          "after:absolute after:inset-y-0 after:left-[3px] after:w-[2px] after:rounded-full after:bg-transparent after:transition-colors after:delay-75 hover:after:bg-ring focus-visible:after:bg-ring data-dragging:after:bg-ring data-dragging:after:delay-0",
+          "after:absolute after:inset-y-0 after:start-[3px] after:w-[2px] after:rounded-full after:bg-transparent after:transition-colors after:delay-75 hover:after:bg-ring focus-visible:after:bg-ring data-dragging:after:bg-ring data-dragging:after:delay-0",
         )}
       />
     </Tip>

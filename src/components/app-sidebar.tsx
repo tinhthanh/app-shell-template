@@ -1,13 +1,14 @@
-import { LogOutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
-import { useMemo } from "react";
+import { LogOutIcon, MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toastError } from "@/components/error-note";
 import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { Tip } from "@/components/tip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Kbd } from "@/components/ui/kbd";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import { Sheet, SheetDescription, SheetHeader, SheetPanel, SheetPopup, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-media-query";
+import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
 import { isActive, type Place, places } from "@/lib/nav";
@@ -34,10 +35,16 @@ const alwaysOpen: SidebarContextProps = {
 // places (lib/nav.tsx), and Settings at the bottom. Folded (⌘\), or in a
 // window narrower than 800px, it is a rail of icons. Its width is dragged
 // by its edge (sidebar-resize-handle.tsx).
+// usePhone says the window is a phone's (under 640px): the sidebar becomes
+// a bar across the top with the places in a sheet (PhoneBar).
+export const usePhone = () => useMediaQuery("max-sm");
+
 export function AppSidebar() {
   const context = useMemo(() => alwaysOpen, []);
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
   const narrow = useIsMobile();
+  const phone = usePhone();
+  if (phone) return null;
   if (collapsed || narrow) return <Rail fixed={narrow} />;
 
   return (
@@ -49,7 +56,7 @@ export function AppSidebar() {
         aria-label="Sidebar"
         data-testid="sidebar"
         style={{ width: `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))` }}
-        className="@container/side relative flex shrink-0 flex-col border-sidebar-border border-r bg-sidebar text-sidebar-foreground"
+        className="@container/side relative flex shrink-0 flex-col border-sidebar-border border-e bg-sidebar text-sidebar-foreground"
       >
         <div className="flex h-10 shrink-0 items-center gap-2 px-3">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
@@ -73,7 +80,7 @@ export function AppSidebar() {
             className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-[0.8125rem] text-muted-foreground hover:bg-sidebar-accent"
           >
             <SearchIcon className="size-3.5" />
-            <span className="flex-1 text-left">Search</span>
+            <span className="flex-1 text-start">Search</span>
             <Kbd className="h-4.5 text-[0.625rem]">⌘K</Kbd>
           </button>
           <Places footer={false} />
@@ -91,7 +98,8 @@ export function AppSidebar() {
 }
 
 // Places lists the sidebar's rows: the top group, or the bottom one.
-function Places({ footer }: { footer: boolean }) {
+// onGo is told when one is chosen (the phone's sheet closes).
+function Places({ footer, onGo }: { footer: boolean; onGo?: () => void }) {
   const view = useStore((s) => s.view);
   const list = places().filter((p) => !!p.footer === footer);
   return (
@@ -107,7 +115,10 @@ function Places({ footer }: { footer: boolean }) {
                 aria-current={active ? "page" : undefined}
                 aria-keyshortcuts={footer ? undefined : `${IS_MAC ? "Meta" : "Control"}+${placeNumber(p, i)}`}
                 data-testid={`nav-${p.id}`}
-                onClick={() => useStore.getState().setView({ ...p.view })}
+                onClick={() => {
+                  useStore.getState().setView({ ...p.view });
+                  onGo?.();
+                }}
                 className="h-side-row gap-2.5 text-[0.8125rem] [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
               >
                 {p.icon}
@@ -144,7 +155,7 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
       data-testid="sidebar-rail"
       data-fixed={fixed || undefined}
       style={{ width: RAIL_WIDTH }}
-      className="relative flex shrink-0 flex-col items-center border-sidebar-border border-r bg-sidebar text-sidebar-foreground"
+      className="relative flex shrink-0 flex-col items-center border-sidebar-border border-e bg-sidebar text-sidebar-foreground"
     >
       <div className="flex h-10 shrink-0 items-center">
         {fixed ? (
@@ -249,7 +260,7 @@ function Account({ compact = false }: { compact?: boolean }) {
         <Avatar className="size-5">
           <AvatarFallback className="text-[0.625rem]">{initials}</AvatarFallback>
         </Avatar>
-        {!compact && <span className="min-w-0 flex-1 truncate text-left">{user.name}</span>}
+        {!compact && <span className="min-w-0 flex-1 truncate text-start">{user.name}</span>}
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-48">
         <div className="px-2 py-1.5 text-muted-foreground text-xs">{user.email}</div>
@@ -259,5 +270,43 @@ function Account({ compact = false }: { compact?: boolean }) {
         </MenuItem>
       </MenuPopup>
     </Menu>
+  );
+}
+
+// PhoneBar is the shell on a phone (App.tsx, under 640px): the app's name,
+// a menu that opens the places in a sheet from the start edge, and search.
+export function PhoneBar() {
+  const context = useMemo(() => alwaysOpen, []);
+  const [open, setOpen] = useState(false);
+  return (
+    <header data-testid="phone-bar" className="flex h-11 shrink-0 items-center gap-1 border-b bg-sidebar px-2 text-sidebar-foreground">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger render={<button type="button" aria-label="Menu" className="inline-flex size-9 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground" />}>
+          <MenuIcon className="size-5" />
+        </SheetTrigger>
+        <SheetPopup side="left" className="w-72 max-w-[85vw]">
+          <SheetHeader>
+            <SheetTitle>{APP_NAME}</SheetTitle>
+            <SheetDescription className="sr-only">Where to go</SheetDescription>
+          </SheetHeader>
+          <SheetPanel className="flex flex-col gap-4 px-2">
+            <SidebarContext.Provider value={context}>
+              <Places footer={false} onGo={() => setOpen(false)} />
+              <Places footer onGo={() => setOpen(false)} />
+              <Account />
+            </SidebarContext.Provider>
+          </SheetPanel>
+        </SheetPopup>
+      </Sheet>
+      <span className="min-w-0 flex-1 truncate ps-1 font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
+      <button
+        type="button"
+        aria-label="Search"
+        onClick={() => useStore.getState().setPaletteOpen(true)}
+        className="inline-flex size-9 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground"
+      >
+        <SearchIcon className="size-4.5" />
+      </button>
+    </header>
   );
 }

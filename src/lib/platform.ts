@@ -13,6 +13,19 @@ const forced = (() => {
 
 const nav = typeof navigator === "undefined" ? "" : `${navigator.platform} ${navigator.userAgent}`;
 
+// The page's writing direction: ?dir=rtl for a right-to-left language, else
+// the document's own (index.html). Every width-wise style is logical
+// (start/end), so the layout mirrors on its own; the resize handle flips
+// its drag and arrows.
+const dir = (() => {
+  try {
+    return new URLSearchParams(location.search).get("dir");
+  } catch {
+    return null;
+  }
+})();
+if (typeof document !== "undefined" && (dir === "rtl" || dir === "ltr")) document.documentElement.dir = dir;
+
 export const IS_MAC = forced ? forced === "mac" : /Mac|iPhone|iPad/.test(nav);
 export const IS_LINUX = !IS_MAC;
 

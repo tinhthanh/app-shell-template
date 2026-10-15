@@ -57,7 +57,11 @@ function Strip({ leading, crumbs, title, description, actions, children }: ViewH
         {description && <p className="hidden min-w-0 truncate text-muted-foreground text-xs md:block">{description}</p>}
       </div>
       {children}
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex shrink-0 items-center gap-2" data-print="hide">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }

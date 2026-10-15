@@ -104,6 +104,14 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "phone with the menu open",
+    run: async (app) => {
+      await app.page.setViewportSize({ width: 375, height: 740 });
+      await app.page.getByRole("button", { name: "Menu" }).click();
+      await expect(app.page.getByRole("dialog")).toBeVisible();
+    },
+  },
+  {
     id: "narrow window",
     run: async (app) => {
       await app.page.setViewportSize({ width: 700, height: 800 });

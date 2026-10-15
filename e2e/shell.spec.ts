@@ -287,3 +287,56 @@ test("a first run shows no What's new, and counts the version as seen", async ({
   expect(await app.page.getByTestId("whats-new").count()).toBe(0);
   await expect.poll(async () => ((await app.stored("app.prefs")) as { whatsNewSeen?: string }).whatsNewSeen).toBe("0.1.0");
 });
+
+test("on a phone the sidebar is a top bar whose menu opens the places in a sheet, and nothing scrolls sideways", async ({ app }) => {
+  await app.page.setViewportSize({ width: 375, height: 740 });
+  // Not app.open(): the places are in the sheet, so no nav row shows at first.
+  await app.page.goto("/?mock=1&platform=linux");
+  await expect(app.page.getByTestId("phone-bar")).toBeVisible();
+  await expect(app.page.getByTestId("sidebar")).toHaveCount(0);
+  await app.page.getByRole("button", { name: "Menu" }).click();
+  const sheet = app.page.getByRole("dialog", { name: APP_NAME });
+  await expect(sheet).toBeVisible();
+  await sheet.getByTestId("nav-projects").click();
+  await expect(sheet).toHaveCount(0);
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+  await expect.poll(() => app.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  // Settings picks its section from a list.
+  await app.page.getByRole("button", { name: "Menu" }).click();
+  await app.page.getByRole("dialog", { name: APP_NAME }).getByTestId("nav-settings").click();
+  await app.page.getByRole("combobox", { name: "Settings section" }).click();
+  await app.page.getByRole("option", { name: "Appearance" }).click();
+  await expect(app.page.getByTestId("settings-appearance")).toBeVisible();
+});
+
+test("printed, a page is its content: no sidebar, status bar or buttons", async ({ app }) => {
+  await app.open();
+  await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+  await app.page.emulateMedia({ media: "print" });
+  await expect(app.page.getByTestId("sidebar")).toBeHidden();
+  await expect(app.page.getByTestId("status-bar")).toBeHidden();
+  await expect(app.page.getByRole("button", { name: "Delete" })).toBeHidden();
+  await expect(app.page.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+  await app.page.emulateMedia({ media: "screen" });
+  await expect(app.page.getByTestId("sidebar")).toBeVisible();
+});
+
+test("a right-to-left page mirrors: the sidebar sits on the right, and its edge's keys follow", async ({ app }) => {
+  await app.open({ params: { dir: "rtl" } });
+  await expect(app.page.locator("html")).toHaveAttribute("dir", "rtl");
+  const side = (await app.page.getByTestId("sidebar").boundingBox())!;
+  const main = (await app.page.locator("main").boundingBox())!;
+  expect(side.x).toBeGreaterThan(main.x);
+  const handle = app.page.getByRole("separator", { name: "Resize the sidebar" });
+  await handle.focus();
+  await app.page.keyboard.press("ArrowLeft");
+  await expect(handle).toHaveAttribute("aria-valuenow", "256");
+  await app.page.keyboard.press("ArrowRight");
+  await expect(handle).toHaveAttribute("aria-valuenow", "240");
+  // The search field's icon sits at the start, which is the right.
+  await app.nav("projects").click();
+  const box = (await app.page.getByRole("searchbox", { name: "Find a project" }).boundingBox())!;
+  const icon = (await app.page.locator("[data-testid=projects] svg.lucide-search").first().boundingBox())!;
+  expect(icon.x + icon.width / 2).toBeGreaterThan(box.x + box.width / 2);
+});

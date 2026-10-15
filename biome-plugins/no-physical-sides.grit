@@ -1,0 +1,15 @@
+language js
+
+// Width-wise styles are logical (start/end, ps/pe, ms/me, border-s/e,
+// text-start/end), so a right-to-left page mirrors on its own. Only the
+// app's components are held to it (src/**/*.tsx): the vendored kit, the zoom
+// HUD (centred) and the toast positions (physical by nature) are left alone,
+// and prose in tests may say "left".
+or { JsStringLiteralExpression(), JsxString(), JsTemplateChunkElement() } as $s where {
+  $filename <: r".*/src/.*\.tsx",
+  not $filename <: r".*/components/ui/.*",
+  not $filename <: r".*/zoom-hud\.tsx",
+  not $filename <: r".*/App\.tsx",
+  $s <: r"(?s).*(?:^|[\s\[:\"'`])-?(?:(?:pl|pr|ml|mr|left|right)-[\w\[\]./%-]+|(?:border|rounded)-[lr](?:-[\w\[\]./%-]+)?|text-(?:left|right))(?:$|[\s\]\"'`]).*",
+  register_diagnostic(span=$s, message="A physical side (left-*/right-*, pl/pr, ml/mr, border-l/r, text-left/right): use the logical one (start/end, ps/pe, ms/me, border-s/e, text-start/end), so a right-to-left page mirrors.", severity="error")
+}

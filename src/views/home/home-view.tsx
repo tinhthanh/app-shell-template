@@ -73,14 +73,14 @@ function Card({ icon, title, description, keys, onClick }: { icon: ReactNode; ti
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-start gap-3 rounded-xl border bg-card/40 p-4 text-left outline-none transition-colors hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex items-start gap-3 rounded-xl border bg-card/40 p-4 text-start outline-none transition-colors hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground [&_svg]:size-4">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="font-medium text-sm">{title}</span>
           {keys && <Kbd>{keys}</Kbd>}
-          <ArrowRightIcon className="ml-auto size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          <ArrowRightIcon className="ms-auto size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
         </span>
         <span className="mt-1 block text-muted-foreground text-xs leading-relaxed">{description}</span>
       </span>
