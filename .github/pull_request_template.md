@@ -10,6 +10,7 @@
 - [ ] `E2E_PORT=14xx pnpm test:e2e e2e/<area>.spec.ts` passes for what I touched
 - [ ] Every behaviour I changed has a test, named below; a bug fix's test failed before the fix
 - [ ] A UI change has screenshots in Default Dark and Default Light below, and its Kit section or axe scene is updated
+- [ ] A change to how a view looks updates `e2e/snapshots/` (`pnpm test:visual --update`)
 - [ ] `CHANGELOG.md` has a bullet under `## Unreleased` (or the title says it isn't user-visible)
 
 ```

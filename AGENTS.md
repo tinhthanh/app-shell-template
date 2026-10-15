@@ -34,6 +34,8 @@ pnpm check                                   # typecheck, lint, titles, themes, 
 pnpm test:coverage                           # the node-run modules: lines 90%, branches and functions 80% (CI runs it)
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds first, then Playwright
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
+pnpm test:visual                             # when the look changed: the screenshots against e2e/snapshots/ (Docker on a Mac)
+pnpm test:visual --update                    # …and the new baselines, committed with the change
 ```
 
 `pnpm exec playwright test` alone serves whatever is in `dist/`, which is
@@ -46,14 +48,16 @@ suite included, in both appearances.
 1. `pnpm check` is green, and the specs for what you touched pass.
 2. Every behaviour you changed has a test that proves it (the table below),
    named in the PR. A bug fix has a test that failed before the fix.
-3. A UI change has a screenshot in Default Dark and Default Light
+3. A UI change that alters a view in `e2e/visual.spec.ts` updates its
+   baselines (`pnpm test:visual --update`), and the PR shows them.
+4. A UI change has a screenshot in Default Dark and Default Light
    (`pnpm shots` writes them to `shots/`), and its axe scene is updated; a
    new kit component gets a Kit section, a new view or settings section an
    axe scene.
-4. A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`.
-5. No new `biome-ignore`, `test.skip`, `test.fixme` or `ALLOW` entry without
+5. A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`.
+6. No new `biome-ignore`, `test.skip`, `test.fixme` or `ALLOW` entry without
    a reason beside it.
-6. The work is on a branch, as a PR against `main`, with a lowercase
+7. The work is on a branch, as a PR against `main`, with a lowercase
    conventional subject (`feat: …`, `fix: …`, `test: …`, `docs: …`,
    `ci: …`, `chore: …`) that says what the user gets. The PR template's
    Proof section is filled in.
