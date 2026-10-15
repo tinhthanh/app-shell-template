@@ -138,4 +138,4 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | evidence | What a PR shows: tests named, checks pasted, screenshots (`AGENTS.md › Done means`) |
 | scenes | `e2e/scenes.json`: the addresses and ready marks that `visual.spec.ts` and `pnpm shots` share |
 | baselines | `e2e/snapshots/`: every view's picture, Linux's, compared by `e2e/visual.spec.ts`; `pnpm test:visual --update` rewrites them |
-| the trial | Walking "Make it yours" on a copy of the template is how the recipes are checked; a gap found there is a doc bug |
+| the trial | A fresh agent on a product task in a worktree, scored against the rules (`.claude/skills/trial`, `docs/trials.md`); a gap found there is a template bug |

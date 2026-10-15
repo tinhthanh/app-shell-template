@@ -5,7 +5,7 @@ UI, zustand, Playwright. There is no backend here; the views read through
 `src/lib/api.ts`, which runs on the fixtures in `src/lib/mock.ts` unless
 `VITE_API_URL` is set. `docs/architecture.md` has the map and the
 vocabulary; `docs/decisions/` has why things are the way they are; the
-skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`,
+skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`, `trial`,
 `add-theme`) walk through the recipes below step by step.
 
 ## Tooling
@@ -64,7 +64,9 @@ suite included, in both appearances.
    task left open and you decided, and under Not done what you left out
    (CI refuses a `feat:` without them).
 
-CI holds you to this: the `evidence` job refuses a change under `src/`
+CI holds you to this, and when it fails it says what in one comment on
+the PR (the failed tests by name, with the command to run them) and in
+the job summary. The `evidence` job refuses a change under `src/`
 with no changed test (write `no-test: <why>` in the PR body when none is
 possible) and a user-visible change with no changelog bullet; the
 `guardrails` job refuses `test.skip`, `test.fixme`, `test.only`,
