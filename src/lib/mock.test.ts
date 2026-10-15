@@ -64,6 +64,14 @@ test("signed out, every call is a 401 that says so, until a sign-in with a passw
   await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
 });
 
+test("many gives thousands of projects, the same every time", async () => {
+  const a = await mockClient({ latency: 0, many: true }).projects();
+  const b = await mockClient({ latency: 0, many: true }).projects();
+  assert.equal(a.length, 5000);
+  assert.deepEqual(a[4999], b[4999]);
+  assert.equal(new Set(a.map((p) => p.id)).size, 5000);
+});
+
 test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
   assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), []);

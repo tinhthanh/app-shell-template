@@ -15,7 +15,7 @@ import type { ProjectStatus } from "@/lib/types";
 // button and a shared link; id opens one project, over the same filters.
 export type View =
   | { kind: "home" }
-  | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[] }
+  | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[]; sort?: string }
   | { kind: "kit"; section?: string }
   | { kind: "settings"; section?: SettingsSectionId };
 

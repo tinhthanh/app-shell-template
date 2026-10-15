@@ -2,6 +2,7 @@ import { CheckIcon, ChevronDownIcon, InfoIcon, MailIcon, PlusIcon, SearchIcon, S
 import { type ReactNode, useState } from "react";
 
 import { confirm } from "@/components/confirm";
+import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { PickOne } from "@/components/pick-one";
@@ -30,7 +31,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
@@ -441,47 +441,55 @@ function Overlays() {
   );
 }
 
-const ROWS = [
-  { name: "Shop", owner: "alex", status: "active", updated: "12m ago" },
-  { name: "Public API", owner: "sam", status: "active", updated: "45m ago" },
-  { name: "Android app", owner: "priya", status: "paused", updated: "1d ago" },
-];
+// Sixty rows, so the table has something to scroll and sort.
+const KIT_ROWS = Array.from({ length: 60 }, (_, i) => ({
+  name: `${["Shop", "Ledger", "Beacon", "Harbour", "Atlas", "Relay"][i % 6]} ${Math.floor(i / 6) + 1}`,
+  owner: ["alex", "sam", "priya", "jordan", "mina"][i % 5] as string,
+  status: i % 4 === 3 ? "paused" : "active",
+  n: (i * 37) % 101,
+}));
 
 function Data() {
+  const [kitSort, setKitSort] = useState<Sort | undefined>({ by: "name", dir: "asc" });
   return (
     <>
-      <Section title="Table" description="Rows take their height from density (Settings › Appearance).">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Updated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ROWS.map((r) => (
-              <TableRow key={r.name} className="h-row">
-                <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell>
+      <Section title="DataTable" description="Sort by a header; move with the arrows, PageUp/Down, Home and End; thousands of rows stay quick (components/data-table.tsx).">
+        <div className="h-64 w-full rounded-lg border">
+          <DataTable
+            rows={KIT_ROWS}
+            columns={[
+              { id: "name", label: "Name", sort: (a, b) => a.name.localeCompare(b.name), cell: (r) => <span className="font-medium">{r.name}</span> },
+              {
+                id: "owner",
+                label: "Owner",
+                sort: (a, b) => a.owner.localeCompare(b.owner),
+                cell: (r) => (
                   <span className="flex items-center gap-2">
                     <Avatar className="size-5">
                       <AvatarFallback className="text-[0.625rem]">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     {r.owner}
                   </span>
-                </TableCell>
-                <TableCell>
+                ),
+              },
+              {
+                id: "status",
+                label: "Status",
+                cell: (r) => (
                   <Badge variant={r.status === "active" ? "success" : "warning"} className="capitalize">
                     {r.status}
                   </Badge>
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground tabular-nums">{r.updated}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                ),
+              },
+              { id: "n", label: "Rows", align: "end", sort: (a, b) => a.n - b.n, cell: (r) => <span className="tabular-nums">{r.n}</span> },
+            ]}
+            rowKey={(r) => r.name}
+            sort={kitSort}
+            onSort={setKitSort}
+            onOpen={(r) => toastManager.add({ title: `Opened ${r.name}` })}
+            label="Example rows"
+          />
+        </div>
       </Section>
       <Section title="Cards">
         <Card className="w-72">

@@ -16,6 +16,7 @@ import { ApiError } from "./errors.ts";
 //   ?mock=1&failWrites=1  reads work, writes fail (a failed save)
 //   ?mock=1&empty=1       there are no projects
 //   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
+//   ?mock=1&many=1        5,000 projects, for the list's scrolling and keys
 
 const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
@@ -30,6 +31,23 @@ export const FIXTURES: Project[] = [
   { id: "p-legacy", name: "Legacy admin", description: "The old back office, read only since the move.", status: "archived", owner: "sam", tags: ["web", "ops"], updatedAt: ago(60 * 24 * 40) },
   { id: "p-design", name: "Design system", description: "Tokens, components and the Figma library.", status: "active", owner: "mina", tags: ["web", "design"], updatedAt: ago(60 * 24 * 3) },
 ];
+
+// many is 5,000 invented projects, the same every time.
+export function many(count = 5000): Project[] {
+  const words = ["Shop", "Ledger", "Beacon", "Harbour", "Atlas", "Relay", "Quill", "Orbit", "Meadow", "Signal"];
+  const owners = ["alex", "sam", "priya", "jordan", "mina"];
+  const tags = ["web", "mobile", "backend", "ops", "design", "payments"];
+  const statuses: Project["status"][] = ["active", "active", "paused", "archived"];
+  return Array.from({ length: count }, (_, i) => ({
+    id: `p-${i + 1}`,
+    name: `${words[i % words.length]} ${Math.floor(i / words.length) + 1}`,
+    description: `Project number ${i + 1} of the acme fleet.`,
+    status: statuses[i % statuses.length] as Project["status"],
+    owner: owners[i % owners.length] as string,
+    tags: [tags[i % tags.length] as string, ...(i % 3 === 0 ? [tags[(i + 2) % tags.length] as string] : [])],
+    updatedAt: ago(i * 7),
+  }));
+}
 
 export interface MockOptions {
   // Milliseconds each call takes; the UI's loading states are seen at 1500.
@@ -46,6 +64,8 @@ export interface MockOptions {
   projects?: Project[];
   // Start signed out: every call is a 401 until signIn.
   signedOut?: boolean;
+  // Thousands of projects, for a long list.
+  many?: boolean;
   // Called on a 401, as the HTTP client does (lib/session.ts signedOut).
   onUnauthorized?: () => void;
 }
@@ -55,7 +75,15 @@ export const ALEX: User = { id: "u-alex", name: "Alex Rivera", email: "alex@acme
 const fromUrl = (): MockOptions => {
   if (typeof location === "undefined") return {};
   const q = new URLSearchParams(location.search);
-  return { latency: q.has("slow") ? 1500 : 250, fail: q.has("fail"), failOnce: q.has("failOnce"), failWrites: q.has("failWrites"), empty: q.has("empty"), signedOut: q.has("signedOut") };
+  return {
+    latency: q.has("slow") ? 1500 : 250,
+    fail: q.has("fail"),
+    failOnce: q.has("failOnce"),
+    failWrites: q.has("failWrites"),
+    empty: q.has("empty"),
+    signedOut: q.has("signedOut"),
+    many: q.has("many"),
+  };
 };
 
 // mockClient is a Client over the fixtures. Pure apart from its own state,
@@ -63,7 +91,7 @@ const fromUrl = (): MockOptions => {
 export function mockClient(given: MockOptions = {}): Client {
   const opts = { ...fromUrl(), ...given };
   const latency = opts.latency ?? 0;
-  let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? FIXTURES);
+  let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? (opts.many ? many() : FIXTURES));
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
   let user: User | null = opts.signedOut ? null : ALEX;
   let calls = 0;
