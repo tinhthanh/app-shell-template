@@ -109,6 +109,7 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
 | URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
+| URL | `?dir=rtl` / `ltr` | The page's writing direction (the layout mirrors) |
 | test env | `E2E_PORT`, `E2E_WORKERS`, `E2E_REPORT`, `A11Y_FULL` | The suite's port, workers, HTML/JUnit report, light theme too |
 | test env | `THEME_REPORT=1` | `check:themes` prints every margin |
 

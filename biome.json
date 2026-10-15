@@ -8,7 +8,7 @@
   "files": {
     "includes": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.ts", "scripts/**/*.mjs", "*.ts", "*.json", "!pnpm-lock.yaml"]
   },
-  "plugins": ["./biome-plugins/no-hex-colour.grit", "./biome-plugins/no-palette-class.grit", "./biome-plugins/no-wait-for-timeout.grit"],
+  "plugins": ["./biome-plugins/no-hex-colour.grit", "./biome-plugins/no-palette-class.grit", "./biome-plugins/no-wait-for-timeout.grit", "./biome-plugins/no-physical-sides.grit"],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

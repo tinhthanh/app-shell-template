@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from "react";
 
 import { Announcer } from "@/components/announcer";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, PhoneBar, usePhone } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { ConfirmHost } from "@/components/confirm";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -74,6 +74,7 @@ export default function App() {
   }, []);
   const session = useSession((s) => s.status);
   const view = useStore((s) => s.view);
+  const phone = usePhone();
   // Away from a developer's machine, fixtures mean the API was never configured.
   const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
 
@@ -103,6 +104,7 @@ export default function App() {
               Showing made-up data: no API is configured. Set apiUrl in config.js, or VITE_API_URL at build time (docs/deploy.md).
             </div>
           )}
+          {phone && <PhoneBar />}
           <div className="flex min-h-0 flex-1">
             <AppSidebar />
             <main className="relative min-h-0 min-w-0 flex-1">

@@ -11,9 +11,9 @@
     --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
     --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
     --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
-    --font-heading: 'Inter Variable', sans-serif;
+    --font-heading: 'Inter Variable', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
-    --font-sans: 'Inter Variable', sans-serif;
+    --font-sans: 'Inter Variable', system-ui, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -389,4 +389,32 @@
 :root[data-app-still] :is(.animate-spin, .animate-ping, .animate-pulse, .shimmer)::before,
 :root[data-app-still] :is(.animate-spin, .animate-ping, .animate-pulse, .shimmer)::after {
   animation-play-state: paused !important;
+}
+
+/* Printed, a view is the page: no sidebar, status bar, filters or buttons,
+   and the window-high, scrolling frame lets go so the content runs over as
+   many pages as it needs. A table drawn on screen shows the rows that were
+   on screen (components/data-table.tsx keeps only those in the DOM). */
+@media print {
+  aside,
+  [data-testid="status-bar"],
+  [data-testid="mock-banner"],
+  [data-print="hide"],
+  [data-slot="toast-portal"] {
+    display: none !important;
+  }
+  .h-svh,
+  .overflow-hidden,
+  .overflow-y-auto,
+  .overflow-auto,
+  main,
+  [data-slot="data-table"] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
 }

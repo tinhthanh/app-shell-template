@@ -1,6 +1,6 @@
 import { CheckIcon, ChevronDownIcon, InfoIcon, MailIcon, PlusIcon, SearchIcon, SettingsIcon, TrashIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
-
+import { usePhone } from "@/components/app-sidebar";
 import { confirm } from "@/components/confirm";
 import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
@@ -49,11 +49,23 @@ import { ViewHeader } from "@/views/view-header";
 export function KitView() {
   const view = useStore((s) => s.view);
   const current = (view.kind === "kit" && SECTIONS.some((s) => s.id === view.section) ? view.section : "buttons") as KitSectionId;
+  const phone = usePhone();
   return (
     <div className="flex h-full flex-col" data-testid="kit">
       <ViewHeader title="Kit" description="The components, in the theme in use" />
-      <div className="flex min-h-0 flex-1">
-        <nav aria-label="Kit sections" className="flex w-40 shrink-0 flex-col gap-px border-r px-2 pt-4 max-[900px]:hidden">
+      <div className={cn("flex min-h-0 flex-1", phone && "flex-col")}>
+        {phone && (
+          <div className="border-b px-4 py-2">
+            <SimpleSelect
+              aria-label="Kit section"
+              className="w-full"
+              value={current}
+              options={SECTIONS.map((s) => ({ value: s.id, label: s.title }))}
+              onChange={(v) => v && useStore.getState().setView({ kind: "kit", section: v })}
+            />
+          </div>
+        )}
+        <nav aria-label="Kit sections" className="flex w-40 shrink-0 flex-col gap-px border-e px-2 pt-4 max-sm:hidden">
           {SECTIONS.map((s) => (
             <button
               key={s.id}
@@ -62,7 +74,7 @@ export function KitView() {
               data-testid={`kit-nav-${s.id}`}
               onClick={() => useStore.getState().setView({ kind: "kit", section: s.id })}
               className={cn(
-                "flex h-7.5 w-full items-center rounded-md px-2.5 text-left text-[0.8125rem] transition-colors",
+                "flex h-7.5 w-full items-center rounded-md px-2.5 text-start text-[0.8125rem] transition-colors",
                 s.id === current ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               )}
             >

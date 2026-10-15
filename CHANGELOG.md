@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- On a phone the sidebar is a bar across the top with the places in a menu, and Settings and the Kit pick their section from a list; printing a page leaves out the sidebar, status bar and buttons; a right-to-left language (`?dir=rtl`) mirrors the whole app, the resize handle included.
+
 - ⌘K finds projects by a few letters; a project's page has a breadcrumb back to the list and names the window after it; What's new shows a version's notes once after an update, and from ⌘K or Settings › About.
 
 - Projects is a table: sort by name, owner or updated from the header (the sort is in the address), move between rows with the arrows, PageUp/Down, Home and End, open one with Enter; thousands of rows stay quick.

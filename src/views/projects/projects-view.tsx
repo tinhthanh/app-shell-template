@@ -139,9 +139,9 @@ function ProjectList() {
           </>
         }
       />
-      <div className="flex flex-wrap items-center gap-2 border-b px-6 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b px-6 py-2" data-print="hide">
         <div className="relative w-56">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             size="sm"
             type="search"
@@ -149,7 +149,7 @@ function ProjectList() {
             onChange={(e) => set({ q: e.currentTarget.value || undefined })}
             placeholder="Find a project"
             aria-label="Find a project"
-            className="[&_input]:pl-7.5"
+            className="[&_input]:ps-7.5"
           />
         </div>
         <PickOne<StatusFilter> label="Status" value={status} options={STATUSES} onChange={(v) => set({ status: v || undefined })} />
@@ -281,7 +281,7 @@ function ProjectDetail({ id }: { id: string }) {
                 <ProjectForm
                   project={p}
                   onSaved={(saved) => mutate<Project>(key(id), () => saved)}
-                  trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ml-auto" />}
+                  trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ms-auto" />}
                   label={<PencilIcon />}
                 />
               </div>
