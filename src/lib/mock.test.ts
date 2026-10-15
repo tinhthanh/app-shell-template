@@ -64,6 +64,19 @@ test("signed out, every call is a 401 that says so, until a sign-in with a passw
   await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
 });
 
+test("search finds projects by a few letters, best first", async () => {
+  const c = mockClient({ latency: 0 });
+  assert.deepEqual(
+    (await c.search("ware")).map((h) => h.name),
+    ["Warehouse"],
+  );
+  assert.deepEqual(
+    (await c.search("app")).map((h) => h.name),
+    ["Android app", "iOS app"],
+  );
+  assert.deepEqual(await c.search(""), []);
+});
+
 test("many gives thousands of projects, the same every time", async () => {
   const a = await mockClient({ latency: 0, many: true }).projects();
   const b = await mockClient({ latency: 0, many: true }).projects();

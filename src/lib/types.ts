@@ -91,3 +91,13 @@ export interface User {
   name: string;
   email: string;
 }
+
+// ---- Search (the palette's record search) ---------------------------------
+
+export interface SearchHit {
+  kind: "project";
+  id: string;
+  name: string;
+  // A line under the name: the owner, the status.
+  detail?: string;
+}

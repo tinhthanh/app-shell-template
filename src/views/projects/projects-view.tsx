@@ -22,6 +22,7 @@ import { parseSort, sortToString } from "@/lib/list-keys";
 import { useResource } from "@/lib/resource";
 import { cached, forget, mutate } from "@/lib/resource-cache";
 import { useStore, type View } from "@/lib/store";
+import { useTitle } from "@/lib/title";
 import type { Project, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { hashTone, toneVar } from "@/themes/tones";
@@ -212,6 +213,7 @@ function ProjectDetail({ id }: { id: string }) {
   const view = useStore((s) => s.view) as ProjectsView;
   const project = useResource(() => client.project(id), [id], { key: key(id) });
   const p = project.status === "ready" ? project.data : undefined;
+  useTitle(p?.name);
   // Back to the list, with the filters it had; the row gets the keyboard.
   const back = () => {
     returnTo = id;
@@ -258,15 +260,8 @@ function ProjectDetail({ id }: { id: string }) {
             <ArrowLeftIcon />
           </Button>
         }
-        title={
-          <span className="flex items-center gap-2">
-            <span className="text-muted-foreground">Projects</span>
-            <span aria-hidden className="text-muted-foreground/60">
-              /
-            </span>
-            {p?.name ?? "…"}
-          </span>
-        }
+        crumbs={[{ label: "Projects", view: { ...view, id: undefined } }]}
+        title={p?.name ?? "…"}
         actions={
           p && (
             <Button size="sm" variant="destructive-outline" onClick={remove}>
@@ -280,8 +275,8 @@ function ProjectDetail({ id }: { id: string }) {
         <ResourceView resource={project} label="Reading the project…" testid="project">
           {(p) => (
             <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
+              {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
               <div className="flex items-start gap-3">
-                <h2 className="font-semibold text-xl tracking-tight">{p.name}</h2>
                 <StatusBadge status={p.status} />
                 <ProjectForm
                   project={p}
@@ -290,7 +285,7 @@ function ProjectDetail({ id }: { id: string }) {
                   label={<PencilIcon />}
                 />
               </div>
-              <p className="mt-2 text-muted-foreground text-sm">{p.description}</p>
+              <p className="mt-3 text-base">{p.description}</p>
               <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
                 <dt className="text-muted-foreground">Owner</dt>
                 <dd>{p.owner}</dd>

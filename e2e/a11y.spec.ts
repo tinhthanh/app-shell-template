@@ -74,6 +74,14 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "what's new",
+    run: async (app) => {
+      await app.openSettings("about");
+      await app.page.getByRole("button", { name: "What's new" }).click();
+      await expect(app.page.getByTestId("whats-new")).toBeVisible();
+    },
+  },
+  {
     id: "shortcuts sheet",
     run: async (app) => {
       await app.page.keyboard.press(`${mod()}+/`);

@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- ⌘K finds projects by a few letters; a project's page has a breadcrumb back to the list and names the window after it; What's new shows a version's notes once after an update, and from ⌘K or Settings › About.
+
 - Projects is a table: sort by name, owner or updated from the header (the sort is in the address), move between rows with the arrows, PageUp/Down, Home and End, open one with Enter; thousands of rows stay quick.
 
 - Sign in: the app asks who is signed in, shows a sign-in page while nobody is, sends the session with every call, and signs out on a 401 or from the account menu in the sidebar.

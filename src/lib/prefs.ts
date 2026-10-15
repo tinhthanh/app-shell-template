@@ -18,6 +18,9 @@ export interface Prefs {
   sidebarWidth: number;
   // The themes "Match system" uses by day and when the OS is dark.
   systemThemes: { light: string; dark: string };
+  // The newest version whose What's new was shown, or that was running when
+  // there was nothing to show (lib/whats-new.ts).
+  whatsNewSeen: string | null;
 }
 
 export const DEFAULTS: Prefs = {
@@ -26,6 +29,7 @@ export const DEFAULTS: Prefs = {
   sidebarCollapsed: false,
   sidebarWidth: SIDEBAR_DEFAULT,
   systemThemes: { light: "default-light", dark: "default-dark" },
+  whatsNewSeen: null,
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to
@@ -46,6 +50,8 @@ export function migratePrefs(saved: Saved): Saved {
 }
 
 const stored = load<Saved>("app.prefs", {});
+// Nothing saved before: a first run (What's new shows nothing then).
+export const firstRun = !Object.keys(stored).length;
 const saved = migratePrefs(stored);
 const { version: _version, ...savedPrefs } = saved;
 

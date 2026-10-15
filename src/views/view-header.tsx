@@ -1,11 +1,15 @@
 import { createContext, type ReactNode, useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { useStore, type View } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 interface ViewHeaderProps {
   // Before the title, outside the heading: a back button, say.
   leading?: ReactNode;
+  // Where this page sits, each a link (a detail under its list).
+  crumbs?: { label: string; view: View }[];
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -28,11 +32,27 @@ export function ViewHeader(props: ViewHeaderProps) {
   return host.el ? createPortal(<Strip {...props} />, host.el) : null;
 }
 
-function Strip({ leading, title, description, actions, children }: ViewHeaderProps) {
+function Strip({ leading, crumbs, title, description, actions, children }: ViewHeaderProps) {
   return (
     <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b bg-sidebar/40 px-6 py-2">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {leading}
+        {crumbs?.length ? (
+          <Breadcrumb>
+            <BreadcrumbList className="text-sm">
+              {crumbs.map((c) => (
+                <BreadcrumbItem key={c.label} className="contents">
+                  <BreadcrumbLink
+                    render={<button type="button" className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => useStore.getState().setView(c.view)} />}
+                  >
+                    {c.label}
+                  </BreadcrumbLink>
+                  <BreadcrumbSeparator />
+                </BreadcrumbItem>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        ) : null}
         <h1 className="shrink-0 font-medium text-sm">{title}</h1>
         {description && <p className="hidden min-w-0 truncate text-muted-foreground text-xs md:block">{description}</p>}
       </div>
