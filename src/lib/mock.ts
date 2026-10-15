@@ -1,5 +1,5 @@
 import type { Client } from "@/lib/api";
-import type { Project } from "@/lib/types";
+import type { Project, User } from "@/lib/types";
 import { ApiError } from "./errors.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
@@ -15,6 +15,7 @@ import { ApiError } from "./errors.ts";
 //   ?mock=1&failOnce=1    the first call fails, the rest succeed (Try again)
 //   ?mock=1&failWrites=1  reads work, writes fail (a failed save)
 //   ?mock=1&empty=1       there are no projects
+//   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
 
 const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
@@ -43,26 +44,39 @@ export interface MockOptions {
   empty?: boolean;
   // Seed data of your own (defaults to FIXTURES).
   projects?: Project[];
+  // Start signed out: every call is a 401 until signIn.
+  signedOut?: boolean;
+  // Called on a 401, as the HTTP client does (lib/session.ts signedOut).
+  onUnauthorized?: () => void;
 }
+
+export const ALEX: User = { id: "u-alex", name: "Alex Rivera", email: "alex@acme.test" };
 
 const fromUrl = (): MockOptions => {
   if (typeof location === "undefined") return {};
   const q = new URLSearchParams(location.search);
-  return { latency: q.has("slow") ? 1500 : 250, fail: q.has("fail"), failOnce: q.has("failOnce"), failWrites: q.has("failWrites"), empty: q.has("empty") };
+  return { latency: q.has("slow") ? 1500 : 250, fail: q.has("fail"), failOnce: q.has("failOnce"), failWrites: q.has("failWrites"), empty: q.has("empty"), signedOut: q.has("signedOut") };
 };
 
 // mockClient is a Client over the fixtures. Pure apart from its own state,
 // so mock.test.ts runs it in node.
-export function mockClient(opts: MockOptions = fromUrl()): Client {
+export function mockClient(given: MockOptions = {}): Client {
+  const opts = { ...fromUrl(), ...given };
   const latency = opts.latency ?? 0;
   let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? FIXTURES);
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
+  let user: User | null = opts.signedOut ? null : ALEX;
   let calls = 0;
   const down = () => new ApiError("The server is not answering right now.", 503, "unavailable");
+  const unauthorized = () => {
+    opts.onUnauthorized?.();
+    return new ApiError("You're signed out.", 401, "unauthorized");
+  };
   const guard = async (write = false) => {
     await wait();
     calls++;
     if (opts.fail || (opts.failOnce && calls === 1) || (write && opts.failWrites)) throw down();
+    if (!user) throw unauthorized();
   };
   const find = (id: string) => {
     const p = projects.find((x) => x.id === id);
@@ -104,6 +118,24 @@ export function mockClient(opts: MockOptions = fromUrl()): Client {
       await guard(true);
       find(id);
       projects = projects.filter((p) => p.id !== id);
+    },
+    async me() {
+      // Asked once at start: it doesn't count as failOnce's first call, which
+      // is for the read the person is looking at.
+      await wait();
+      if (opts.fail) throw down();
+      if (!user) throw unauthorized();
+      return structuredClone(user);
+    },
+    async signIn(email, password) {
+      await wait();
+      if (!email.trim() || !password) throw new ApiError("That email and password don't match.", 401, "unauthorized");
+      user = { ...ALEX, email: email.trim() };
+      return structuredClone(user);
+    },
+    async signOut() {
+      await wait();
+      user = null;
     },
   };
 }

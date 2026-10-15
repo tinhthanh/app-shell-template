@@ -10,7 +10,7 @@ import { openSettings } from "@/lib/store";
 export function StatusBar() {
   const theme = useActiveTheme();
   return (
-    <footer data-testid="status-bar" className="flex h-6.5 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-t bg-sidebar px-3 text-[11px] text-muted-foreground">
+    <footer data-testid="status-bar" className="flex h-6.5 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-t bg-sidebar px-3 text-[0.6875rem] text-muted-foreground">
       {isMock() && (
         <Tip label="Showing made-up data (?mock=1, or no VITE_API_URL)">
           <button

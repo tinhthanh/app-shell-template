@@ -1,7 +1,8 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
 import { ApiError } from "./errors.ts";
 import { mockClient } from "./mock.ts";
-import type { Project } from "./types.ts";
+import { signedOut } from "./session.ts";
+import type { Project, User } from "./types.ts";
 
 export type * from "@/lib/types";
 export { ApiError };
@@ -17,6 +18,10 @@ export interface Client {
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
   createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+  // Who is signed in (401 when nobody is), signing in, and out.
+  me(): Promise<User>;
+  signIn(email: string, password: string): Promise<User>;
+  signOut(): Promise<void>;
 }
 
 const search = () => (typeof location === "undefined" ? "" : location.search);
@@ -68,15 +73,25 @@ function errorBody(text: string, fallback: string): { message: string; code?: st
   }
 }
 
-async function call<T>(base: string, method: string, path: string, body?: unknown): Promise<T> {
+// How the HTTP client reaches the server: a session cookie by default
+// (credentials "include"); headers() for a bearer token kept in memory;
+// onUnauthorized when any call answers 401 (docs/decisions/0011-sessions.md).
+export interface ClientOptions {
+  headers?: () => Record<string, string>;
+  credentials?: RequestCredentials;
+  onUnauthorized?: () => void;
+}
+
+async function call<T>(base: string, method: string, path: string, body?: unknown, o: ClientOptions = {}): Promise<T> {
   const ctrl = method === "GET" ? new AbortController() : undefined;
   const timer = ctrl ? setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : undefined;
   let res: Response;
   try {
     res = await fetch(`${base}${path}`, {
       method,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...o.headers?.() },
       body: body === undefined ? undefined : JSON.stringify(body),
+      credentials: o.credentials ?? "include",
       signal: ctrl?.signal,
     });
   } catch (err) {
@@ -87,25 +102,32 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
   }
   if (!res.ok) {
     const { message, code } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
+    if (res.status === 401) o.onUnauthorized?.();
     throw new ApiError(message, res.status, code);
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
 // httpClient talks to a JSON API at base: GET /projects, GET /projects/:id,
-// PATCH /projects/:id. Change the paths to your server's.
-export function httpClient(base: string): Client {
+// PATCH /projects/:id, GET/POST/DELETE /session. Change the paths to your
+// server's.
+export function httpClient(base: string, o: ClientOptions = {}): Client {
+  const c = <T>(method: string, path: string, body?: unknown) => call<T>(base, method, path, body, o);
   return {
-    projects: () => call(base, "GET", "/projects"),
-    project: (id) => call(base, "GET", `/projects/${encodeURIComponent(id)}`),
-    updateProject: (id, patch) => call(base, "PATCH", `/projects/${encodeURIComponent(id)}`, patch),
-    createProject: (input) => call(base, "POST", "/projects", input),
-    deleteProject: (id) => call(base, "DELETE", `/projects/${encodeURIComponent(id)}`),
+    projects: () => c("GET", "/projects"),
+    project: (id) => c("GET", `/projects/${encodeURIComponent(id)}`),
+    updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
+    createProject: (input) => c("POST", "/projects", input),
+    deleteProject: (id) => c("DELETE", `/projects/${encodeURIComponent(id)}`),
+    me: () => c("GET", "/session"),
+    signIn: (email, password) => c("POST", "/session", { email, password }),
+    signOut: () => c("DELETE", "/session"),
   };
 }
 
-// client is the one the app uses: the fixtures, or the HTTP client.
-export const client: Client = isMock() ? mockClient() : httpClient(apiBase());
+// client is the one the app uses: the fixtures, or the HTTP client. A 401
+// from either signs the person out (lib/session.ts).
+export const client: Client = isMock() ? mockClient({ onUnauthorized: signedOut }) : httpClient(apiBase(), { onUnauthorized: signedOut });
 
 // For the tests: the pieces on their own.
 export { errorBody };

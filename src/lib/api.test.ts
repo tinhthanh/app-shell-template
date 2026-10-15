@@ -47,6 +47,19 @@ test("create POSTs the project and delete DELETEs it, with nothing to parse", as
   assert.equal(calls[1]?.init.method, "DELETE");
 });
 
+test("the session cookie travels, a headers hook adds its own, and a 401 signs out once", async () => {
+  const { httpClient: make } = await import("./api.ts");
+  const out: number[] = [];
+  const c = make("http://api.test", { headers: () => ({ Authorization: "Bearer t" }), onUnauthorized: () => out.push(1) });
+  answer = { status: 200, json: [] };
+  await c.projects();
+  assert.equal(calls[0]?.init.credentials, "include");
+  assert.deepEqual(calls[0]?.init.headers, { Authorization: "Bearer t" });
+  answer = { status: 401, json: { error: "signed out" } };
+  await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
+  assert.deepEqual(out, [1]);
+});
+
 test("a failed response is an ApiError with the server's message and code", async () => {
   answer = { status: 404, json: { error: "No project is called x.", code: "not_found" } };
   await assert.rejects(client.project("x"), (e: unknown) => e instanceof ApiError && e.status === 404 && e.code === "not_found" && e.message === "No project is called x.");

@@ -37,7 +37,7 @@ export function AppearanceSection() {
       <section>
         <div className="mb-2 flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="font-medium text-[13px] text-muted-foreground">Theme</h2>
+            <h2 className="font-medium text-[0.8125rem] text-muted-foreground">Theme</h2>
             <p className="mt-0.5 text-muted-foreground text-xs">
               Add your own in <Code>src/themes/builtin.ts</Code>; <Code>pnpm check:themes</Code> keeps it readable.
             </p>
@@ -50,7 +50,7 @@ export function AppearanceSection() {
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
         {groups.map((g) => (
           <div key={g.title} className="mt-4">
-            <h3 className="mb-2 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">{g.title}</h3>
+            <h3 className="mb-2 font-medium text-[0.6875rem] text-muted-foreground uppercase tracking-wide">{g.title}</h3>
             <div className="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
               {g.themes.map((t) => (
                 <ThemeCard key={t.id} theme={t} selected={t.id === themeId} onSelect={() => useStore.getState().setTheme(t.id)} />
@@ -103,7 +103,7 @@ function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }
   };
   const options = (appearance: "light" | "dark") => themes.filter((t) => (t.appearance === "dark") === (appearance === "dark")).map((t) => ({ value: t.id, label: t.name }));
   return (
-    <div className={cn("flex items-center overflow-hidden rounded-xl border transition-[box-shadow,border-color]", selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25")}>
+    <div className={cn("flex flex-wrap items-center overflow-hidden rounded-xl border transition-[box-shadow,border-color]", selected ? "border-ring ring-1 ring-ring" : "hover:border-foreground/25")}>
       <button
         type="button"
         onClick={() => useStore.getState().setTheme(SYSTEM_THEME)}
@@ -118,15 +118,16 @@ function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }
             <Swatch theme={dark} />
           </div>
         </div>
-        <span className="flex min-w-0 flex-1 items-center gap-2 px-3.5 text-[13px]">
+        <span className="flex min-w-0 flex-1 items-center gap-2 px-3.5 text-[0.8125rem]">
           <span className="min-w-0 flex-1">
             <span className="block">Match system</span>
-            <span className="block truncate text-[11px] text-muted-foreground">{IS_LINUX ? "Follows your desktop" : "Follows macOS"}</span>
+            <span className="block truncate text-[0.6875rem] text-muted-foreground">{IS_LINUX ? "Follows your desktop" : "Follows macOS"}</span>
           </span>
           {selected && <CheckIcon className="size-3.5" />}
         </span>
       </button>
-      <div className="flex shrink-0 items-center gap-2 px-3 max-[800px]:hidden">
+      {/* On a narrow card (a small window, a big text size) the pickers take a row of their own. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2 max-[900px]:basis-full max-[900px]:border-t">
         <SimpleSelect size="sm" className="w-40" aria-label="Theme by day" value={light.id} options={options("light")} onChange={(id) => id && pick("light", id)} />
         <SimpleSelect size="sm" className="w-40" aria-label="Theme when the system is dark" value={dark.id} options={options("dark")} onChange={(id) => id && pick("dark", id)} />
       </div>
@@ -155,7 +156,7 @@ function ThemeCard({ theme, selected, onSelect }: { theme: Theme; selected: bool
         <Preview theme={theme} />
         <Dots theme={theme} />
       </div>
-      <div className="flex items-center gap-2 border-t bg-card px-3 py-2 text-[13px]">
+      <div className="flex items-center gap-2 border-t bg-card px-3 py-2 text-[0.8125rem]">
         <span className="min-w-0 flex-1 truncate">{theme.name}</span>
         {selected && <CheckIcon className="size-3.5 shrink-0" />}
       </div>
@@ -178,7 +179,7 @@ function Preview({ theme }: { theme: Theme }) {
         </div>
         <div className="h-1.5 w-2/3 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.3 }} />
       </div>
-      <div className="flex-1 px-2.5 py-2.5 font-mono text-[10px] leading-[1.5]" style={{ background: t.background, color: t.foreground }}>
+      <div className="flex-1 px-2.5 py-2.5 font-mono text-[0.625rem] leading-[1.5]" style={{ background: t.background, color: t.foreground }}>
         <div>
           <span style={{ color: t.green }}>●</span> tests pass
         </div>

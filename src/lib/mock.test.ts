@@ -51,6 +51,19 @@ test("failOnce fails the first call only, and failWrites only the writes", async
   await assert.rejects(writes.updateProject("p-shop", { status: "paused" }), (e: unknown) => e instanceof ApiError && e.status === 503);
 });
 
+test("signed out, every call is a 401 that says so, until a sign-in with a password", async () => {
+  const seen: number[] = [];
+  const c = mockClient({ latency: 0, signedOut: true, onUnauthorized: () => seen.push(1) });
+  await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
+  await assert.rejects(c.projects(), (e: unknown) => e instanceof ApiError && e.status === 401);
+  assert.equal(seen.length, 2);
+  await assert.rejects(c.signIn("alex@acme.test", ""), (e: unknown) => e instanceof ApiError && e.status === 401);
+  assert.equal((await c.signIn("alex@acme.test", "x")).name, "Alex Rivera");
+  assert.equal((await c.me()).email, "alex@acme.test");
+  await c.signOut();
+  await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
+});
+
 test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
   assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), []);

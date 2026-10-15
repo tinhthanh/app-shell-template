@@ -20,7 +20,7 @@ export function HomeView() {
           <h2 className="font-semibold text-xl tracking-tight">A desktop-style app shell, no backend required</h2>
           <p className="mt-2 max-w-prose text-muted-foreground text-sm leading-relaxed">
             Sidebar, command palette, settings, {builtinThemes.length} themes, keyboard shortcuts and a mock API, all wired. Views read data through one client (
-            <code className="rounded bg-muted px-1 py-px font-mono text-[11px] text-foreground">src/lib/api.ts</code>) that runs on fixtures until you point it at a server.
+            <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">src/lib/api.ts</code>) that runs on fixtures until you point it at a server.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
             <Card
@@ -45,7 +45,7 @@ export function HomeView() {
             />
           </div>
           <section className="mt-10">
-            <h3 className="font-medium text-[13px] text-muted-foreground">Try the states</h3>
+            <h3 className="font-medium text-[0.8125rem] text-muted-foreground">Try the states</h3>
             <p className="mt-1 text-muted-foreground text-xs">The mock takes knobs in the URL, so each state is a link away.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="outline" render={<a href="?mock=1&slow=1" />}>

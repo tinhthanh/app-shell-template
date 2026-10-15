@@ -46,7 +46,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           <pre
             role="region"
             aria-label="Full output"
-            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 font-mono text-[12px] text-foreground/90 leading-relaxed"
+            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 font-mono text-[0.75rem] text-foreground/90 leading-relaxed"
           >
             {text}
           </pre>

@@ -22,7 +22,7 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 
 ## The fixture (`e2e/fixtures.ts`)
 
-- `app.open({ prefs, theme, params })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `platform`).
+- `app.open({ prefs, theme, params })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `signedOut`, `platform`).
 - `app.nav(id)`, `app.openSettings(section)`, `app.stored(key)`, `mod()` (`Control`, or `mod("mac")`).
 - A test fails if the page throws, logs a `console.error` (`app.allowConsoleError(/pattern/)` when that is the behaviour), asks for anything off its origin, or gets a 4xx/5xx. `retries: 0`.
 - Hooks: `data-testid` on roots (`sidebar`, `sidebar-rail`, `nav-<id>`, `settings-<id>`, `theme-option[data-theme-id]`, `command-palette`, `projects`, `project-row[data-project]`, `projects-loading|empty|failed`, `project-detail`, `error-note`, `confirm`, `status-bar`, `zoom-hud`, `announce-polite`), roles and names for controls, `[data-slot=toast-title]` for toasts.
