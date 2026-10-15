@@ -53,7 +53,7 @@ export function SettingsView() {
                     aria-current={s.id === id ? "page" : undefined}
                     aria-label={s.title}
                     className={cn(
-                      "flex h-7.5 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[13px] transition-colors max-[1200px]:justify-center max-[1200px]:px-0",
+                      "flex h-7.5 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[0.8125rem] transition-colors max-[1200px]:justify-center max-[1200px]:px-0",
                       s.id === id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                     )}
                   >

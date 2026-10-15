@@ -232,3 +232,21 @@ test("the palette closed gives the keyboard back to what opened it", async ({ ap
   await expect(app.page.getByTestId("command-palette")).toHaveCount(0);
   await expect(search).toBeFocused();
 });
+
+test("signed out, the sign-in page covers the app; signing in returns to the address asked for; the account menu signs out", async ({ app }) => {
+  await app.page.goto("/?mock=1&platform=linux&signedOut=1#/projects?status=paused");
+  const signin = app.page.getByTestId("signin");
+  await expect(signin).toBeVisible();
+  await signin.getByRole("textbox", { name: "Email" }).fill("sam@acme.test");
+  await signin.getByRole("button", { name: "Sign in" }).click();
+  await expect(signin.getByText("A password, please.")).toBeVisible();
+  await signin.getByLabel("Password").fill("hunter2");
+  await signin.getByRole("button", { name: "Sign in" }).click();
+  await expect(signin).toHaveCount(0);
+  // Where the address pointed, filters included.
+  await expect(app.page.getByTestId("project-row")).toHaveCount(1);
+  await expect(app.page).toHaveURL(/#\/projects\?status=paused$/);
+  await app.page.getByTestId("account").click();
+  await app.page.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(app.page.getByTestId("signin")).toBeVisible();
+});

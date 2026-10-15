@@ -67,6 +67,13 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "sign in",
+    run: async (app) => {
+      await app.page.goto("/?mock=1&platform=linux&signedOut=1");
+      await expect(app.page.getByTestId("signin")).toBeVisible();
+    },
+  },
+  {
     id: "shortcuts sheet",
     run: async (app) => {
       await app.page.keyboard.press(`${mod()}+/`);

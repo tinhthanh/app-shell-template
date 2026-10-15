@@ -36,6 +36,7 @@ A list's filters are part of its `View`, so the URL carries them.
 | The person's settings: density, text size, sidebar, system themes | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
+| Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011) |
 
 `src/lib/storage.ts` wraps `localStorage` in try/catch: storage can be
 missing or throw, and the app must work without it.
@@ -106,6 +107,7 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
 | URL | `?empty=1` | No projects |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
+| URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
 | test env | `E2E_PORT`, `E2E_WORKERS`, `E2E_REPORT`, `A11Y_FULL` | The suite's port, workers, HTML/JUnit report, light theme too |
 | test env | `THEME_REPORT=1` | `check:themes` prints every margin |

@@ -5,6 +5,10 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Sign in: the app asks who is signed in, shows a sign-in page while nobody is, sends the session with every call, and signs out on a 401 or from the account menu in the sidebar.
+- Dates and numbers read in your language ("12 minutes ago", "14 Oct 2026").
+- The sidebar, status bar, tags and settings text grow with the text size (⌘+), and the Match system card wraps on a narrow window instead of hiding its pickers.
+
 - Projects: the search, status and tag filters are in the address, so reload, Back and a shared link keep them; coming back to the list shows it at once; a status change shows before the server answers and goes back if it refuses; a project can be created (from the empty page too) and deleted after a confirm; closing the edit dialog with unsaved changes asks first; Back puts the keyboard on the row you came from; the palette gives the keyboard back to what opened it.
 
 - The app can be published to GitHub Pages or run in a container (docs/deploy.md), and a tag makes a GitHub release with the changelog as its notes.

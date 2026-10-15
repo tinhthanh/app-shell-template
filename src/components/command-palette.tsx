@@ -145,7 +145,7 @@ export function CommandPalette() {
               )}
             </CommandList>
           </CommandPanel>
-          <CommandFooter className="text-[11px] text-muted-foreground">
+          <CommandFooter className="text-[0.6875rem] text-muted-foreground">
             <span className="flex items-center gap-1">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> to move, <Kbd>↵</Kbd> to open

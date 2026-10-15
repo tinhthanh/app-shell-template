@@ -62,7 +62,7 @@ export function KitView() {
               data-testid={`kit-nav-${s.id}`}
               onClick={() => useStore.getState().setView({ kind: "kit", section: s.id })}
               className={cn(
-                "flex h-7.5 w-full items-center rounded-md px-2.5 text-left text-[13px] transition-colors",
+                "flex h-7.5 w-full items-center rounded-md px-2.5 text-left text-[0.8125rem] transition-colors",
                 s.id === current ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               )}
             >
@@ -89,7 +89,7 @@ export function KitView() {
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <section className="mb-10">
-      <h2 className="font-medium text-[13px] text-muted-foreground">{title}</h2>
+      <h2 className="font-medium text-[0.8125rem] text-muted-foreground">{title}</h2>
       {description && <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border bg-card/40 p-4">{children}</div>
     </section>
@@ -467,7 +467,7 @@ function Data() {
                 <TableCell>
                   <span className="flex items-center gap-2">
                     <Avatar className="size-5">
-                      <AvatarFallback className="text-[10px]">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-[0.625rem]">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     {r.owner}
                   </span>

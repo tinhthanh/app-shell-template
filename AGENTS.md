@@ -91,6 +91,12 @@ configs or these rules without the `guardrail-change` label.
 - **Density and tokens:** rows use `h-row`/`py-row-pad`/`h-side-row`;
   colours use the theme's tokens or a tone, never a hard-coded hex or a
   Tailwind palette class.
+- **Dates and numbers go through `src/lib/format.ts`** (`ago`, `date`,
+  `dateTime`, `number`): Intl, in the person's language; never a
+  hand-written format.
+- **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
+  call signs out (`docs/decisions/0011-sessions.md`); never a token in
+  storage.
 - **Key hints** are written for a Mac (`⌘K`) and shown through `<Kbd>`, which
   rewrites them for other platforms.
 - **Reads go through `useResource`** and are drawn by `<ResourceView>`

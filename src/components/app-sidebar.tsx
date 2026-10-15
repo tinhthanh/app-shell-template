@@ -1,15 +1,19 @@
-import { PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
+import { LogOutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
 import { useMemo } from "react";
-
+import { toastError } from "@/components/error-note";
 import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { Tip } from "@/components/tip";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Kbd } from "@/components/ui/kbd";
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
 import { isActive, type Place, places } from "@/lib/nav";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
+import { signedOut, useSession } from "@/lib/session";
 import { RAIL_WIDTH, SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN } from "@/lib/sidebar-width";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -49,7 +53,7 @@ export function AppSidebar() {
       >
         <div className="flex h-10 shrink-0 items-center gap-2 px-3">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
-          <span className="min-w-0 flex-1 truncate font-medium text-[13px] text-foreground">{APP_NAME}</span>
+          <span className="min-w-0 flex-1 truncate font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
           <Tip label="Hide the sidebar (⌘\)" side="right">
             <button
               type="button"
@@ -66,17 +70,18 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={() => useStore.getState().setPaletteOpen(true)}
-            className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-[13px] text-muted-foreground hover:bg-sidebar-accent"
+            className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-[0.8125rem] text-muted-foreground hover:bg-sidebar-accent"
           >
             <SearchIcon className="size-3.5" />
             <span className="flex-1 text-left">Search</span>
-            <Kbd className="h-4.5 text-[10px]">⌘K</Kbd>
+            <Kbd className="h-4.5 text-[0.625rem]">⌘K</Kbd>
           </button>
           <Places footer={false} />
         </div>
 
         <div className="mt-auto px-2 pb-2">
           <Places footer />
+          <Account />
         </div>
         {/* Last in the Tab order: the edge is reached after the places, not before the app's name. */}
         <SidebarResizeHandle />
@@ -103,13 +108,13 @@ function Places({ footer }: { footer: boolean }) {
                 aria-keyshortcuts={footer ? undefined : `${IS_MAC ? "Meta" : "Control"}+${placeNumber(p, i)}`}
                 data-testid={`nav-${p.id}`}
                 onClick={() => useStore.getState().setView({ ...p.view })}
-                className="h-side-row gap-2.5 text-[13px] [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
+                className="h-side-row gap-2.5 text-[0.8125rem] [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
               >
                 {p.icon}
                 <span className="min-w-0 flex-1 truncate">{p.label}</span>
                 {/* The hint is decoration: the name is the label, the key is aria-keyshortcuts. */}
                 {!footer && (
-                  <Kbd aria-hidden className="h-4.5 text-[10px] opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
+                  <Kbd aria-hidden className="h-4.5 text-[0.625rem] opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
                     {`⌘${placeNumber(p, i)}`}
                   </Kbd>
                 )}
@@ -174,12 +179,13 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
             <RailButton key={p.id} place={p} active={isActive(p, view)} />
           ))}
       </nav>
-      <div className="mt-auto pb-2">
+      <div className="mt-auto flex flex-col items-center gap-1 pb-2">
         {places()
           .filter((p) => p.footer)
           .map((p) => (
             <RailButton key={p.id} place={p} active={isActive(p, view)} />
           ))}
+        <Account compact />
       </div>
       {!fixed && <SidebarResizeHandle folded />}
     </aside>
@@ -203,5 +209,55 @@ function RailButton({ place, active }: { place: Place; active: boolean }) {
         {place.icon}
       </button>
     </Tip>
+  );
+}
+
+// Account is who is signed in, with Sign out in its menu (lib/session.ts);
+// nothing while the app has no session yet or runs without one.
+function Account({ compact = false }: { compact?: boolean }) {
+  const user = useSession((s) => s.user);
+  if (!user) return null;
+  const initials = user.name
+    .split(/\s+/)
+    .map((w) => w.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const signOut = async () => {
+    try {
+      await client.signOut();
+      signedOut();
+    } catch (err) {
+      toastError(err, "Couldn't sign out");
+    }
+  };
+  return (
+    <Menu>
+      <MenuTrigger
+        data-testid="account"
+        aria-label={`${user.name}, account menu`}
+        render={
+          <button
+            type="button"
+            className={cn(
+              "mt-1 flex h-side-row items-center gap-2 rounded-md px-2 text-[0.8125rem] text-sidebar-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+              compact ? "size-9 justify-center px-0" : "w-full",
+            )}
+          />
+        }
+      >
+        <Avatar className="size-5">
+          <AvatarFallback className="text-[0.625rem]">{initials}</AvatarFallback>
+        </Avatar>
+        {!compact && <span className="min-w-0 flex-1 truncate text-left">{user.name}</span>}
+      </MenuTrigger>
+      <MenuPopup align="start" className="min-w-48">
+        <div className="px-2 py-1.5 text-muted-foreground text-xs">{user.email}</div>
+        <MenuItem onClick={() => void signOut()}>
+          <LogOutIcon />
+          Sign out
+        </MenuItem>
+      </MenuPopup>
+    </Menu>
   );
 }

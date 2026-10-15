@@ -392,7 +392,7 @@ function StatusBadge({ status }: { status: ProjectStatus }) {
 function Tag({ name }: { name: string }) {
   const tone = toneVar(hashTone(name));
   return (
-    <span className="rounded-full px-2 py-px text-[11px]" style={{ color: tone, background: `color-mix(in srgb, ${tone} 15%, transparent)` }}>
+    <span className="rounded-full px-2 py-px text-[0.6875rem]" style={{ color: tone, background: `color-mix(in srgb, ${tone} 15%, transparent)` }}>
       {name}
     </span>
   );

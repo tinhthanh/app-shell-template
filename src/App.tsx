@@ -12,12 +12,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
-import { isMock, knobsOn } from "@/lib/api";
+import { client, isMock, knobsOn } from "@/lib/api";
+import { ApiError } from "@/lib/errors";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
 import { lazyView, preloadViews } from "@/lib/lazy-view";
+import { signedIn, signedOut, useSession } from "@/lib/session";
 import { watchStillness } from "@/lib/still";
 import { assertNever, useStore, type View, type ViewKind } from "@/lib/store";
 import { HomeView } from "@/views/home/home-view";
+import { SignInView } from "@/views/signin/signin-view";
 
 // Home loads with the app; the other views load on first use (lib/lazy-view.tsx)
 // and are fetched once the app is idle, so a first visit draws at once.
@@ -61,9 +64,25 @@ export default function App() {
   useEffect(preloadViews, []);
   // The keyboard is never dropped on <body> by what had it going away.
   useRescueRemovedFocus();
+  // Who is signed in: a 401 means nobody (the sign-in view); any other
+  // failure lets the app open, and its reads say what is wrong.
+  useEffect(() => {
+    client.me().then(signedIn, (err) => (err instanceof ApiError && err.status === 401 ? signedOut() : signedIn()));
+  }, []);
+  const session = useSession((s) => s.status);
   const view = useStore((s) => s.view);
   // Away from a developer's machine, fixtures mean the API was never configured.
   const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
+
+  if (session === "signed-out")
+    return (
+      <TooltipProvider delay={300}>
+        <ToastProvider position="bottom-right">
+          <SignInView />
+          <Announcer />
+        </ToastProvider>
+      </TooltipProvider>
+    );
 
   return (
     <TooltipProvider delay={300}>

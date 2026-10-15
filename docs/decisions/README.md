@@ -16,5 +16,6 @@ no longer hold, write a new record that supersedes it.
 | [0008](0008-biome-wide-lines.md) | Biome, at a line width of 200 |
 | [0009](0009-where-state-lives.md) | Store, prefs and resources are three different homes |
 | [0010](0010-the-e2e-contract.md) | The browser suite's contract |
+| [0011](0011-sessions.md) | Sessions are a cookie by default, and never in storage |
 
 Format: Status, Context, Decision, Consequences, Revisit if. Under 40 lines.

@@ -83,3 +83,11 @@ export interface Project {
   // ISO 8601.
   updatedAt: string;
 }
+
+// ---- Who is signed in (lib/session.ts) ------------------------------------
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
