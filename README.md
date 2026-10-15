@@ -61,7 +61,9 @@ Point it at a server with `VITE_API_URL=http://localhost:8080 pnpm dev`
 - `docs/decisions/`: why things are the way they are (hash routing, mock
   by default, node tests, the system theme, the kit, the e2e contract…).
 - `.claude/skills/`: step-by-step for an agent: `e2e-tests`, `add-view`,
-  `add-resource`, `add-form`, `add-theme`. `CONTRIBUTING.md` is the page for people.
+  `add-resource`, `add-form`, `add-theme`, `trial` (how the template is
+  measured; the scores are in `docs/trials.md`). `CONTRIBUTING.md` is the
+  page for people.
 
 ## Layout
 

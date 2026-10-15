@@ -10,6 +10,10 @@ on:
 
 permissions:
   contents: read
+  # The app job writes one comment on a pull request when something fails
+  # (scripts/ci-comment.mjs); a fork's token stays read-only, and the
+  # summary is in the job summary either way.
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -55,13 +59,25 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium-shell
       - run: pnpm exec playwright install --with-deps --only-shell chromium
-      - run: pnpm exec playwright test
+      - id: e2e
+        run: pnpm exec playwright test
         env:
           E2E_WORKERS: "2"
           # axe in the light theme too (e2e/a11y.spec.ts).
           A11Y_FULL: "1"
           # The HTML report and JUnit file are the run's evidence (playwright.config.ts).
           E2E_REPORT: "1"
+      # What failed, in words: the job summary, and one comment on the PR
+      # (scripts/ci-failures.mjs, scripts/ci-comment.mjs). The failed step's
+      # name comes from the job's steps, nothing from the PR's text.
+      - if: failure()
+        run: |
+          node scripts/ci-failures.mjs node_modules/.e2e-results/junit.xml "$FAILED_STEP" | tee -a "$GITHUB_STEP_SUMMARY" | node scripts/ci-comment.mjs
+        env:
+          FAILED_STEP: ${{ steps.e2e.outcome == 'failure' && 'Run pnpm exec playwright test' || 'an earlier check (see the job log)' }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
       # The report and, on failure, the traces: what a PR links to as proof.
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
