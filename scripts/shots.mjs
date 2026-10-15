@@ -3,6 +3,7 @@
 //
 //   pnpm shots                      every view
 //   pnpm shots '#/kit/buttons'      one address (any hash)
+//   E2E_PORT=1427 pnpm shots        on that port
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { createServer } from "node:net";
@@ -12,8 +13,9 @@ const root = resolve(import.meta.dirname, "..");
 const out = resolve(root, "shots");
 const addresses = process.argv[2] ? [process.argv[2]] : ["", "#/projects", "#/projects/p-shop", "#/kit/buttons", "#/kit/feedback", "#/settings/appearance"];
 
-// A free port in 1421–1439 (1420 is the dev server's).
+// E2E_PORT, or a free port in 1421–1439 (1420 is the dev server's).
 async function freePort() {
+  if (process.env.E2E_PORT) return Number(process.env.E2E_PORT);
   for (let p = 1421; p <= 1439; p++) {
     const ok = await new Promise((r) => {
       const s = createServer()

@@ -26,7 +26,7 @@ test("an unknown id is a 404 with a code", async () => {
 
 test("a name that is empty or taken is refused as invalid", async () => {
   const c = mockClient({ latency: 0 });
-  await assert.rejects(c.updateProject("p-shop", { name: " " }), (e: unknown) => e instanceof ApiError && e.code === "invalid");
+  await assert.rejects(c.updateProject("p-shop", { name: " " }), (e: unknown) => e instanceof ApiError && e.code === "invalid" && e.field === "name");
   await assert.rejects(c.updateProject("p-shop", { name: "docs" }), (e: unknown) => e instanceof ApiError && e.status === 422);
   assert.equal((await c.updateProject("p-shop", { name: "Shop 2" })).name, "Shop 2");
 });

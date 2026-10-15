@@ -124,8 +124,9 @@ export function mockClient(given: MockOptions = {}): Client {
     async updateProject(id, patch) {
       await guard(true);
       // What a server would refuse: an empty name, or one another project has.
-      if (patch.name !== undefined && !patch.name.trim()) throw new ApiError("A project needs a name.", 422, "invalid");
-      if (patch.name && projects.some((p) => p.id !== id && p.name.toLowerCase() === patch.name?.toLowerCase())) throw new ApiError(`Another project is already called ${patch.name}.`, 422, "invalid");
+      if (patch.name !== undefined && !patch.name.trim()) throw new ApiError("A project needs a name.", 422, "invalid", "name");
+      if (patch.name && projects.some((p) => p.id !== id && p.name.toLowerCase() === patch.name?.toLowerCase()))
+        throw new ApiError(`Another project is already called ${patch.name}.`, 422, "invalid", "name");
       const next = { ...find(id), ...patch, updatedAt: new Date().toISOString() };
       projects = projects.map((p) => (p.id === id ? next : p));
       return structuredClone(next);
@@ -133,8 +134,8 @@ export function mockClient(given: MockOptions = {}): Client {
     async createProject(input) {
       await guard(true);
       const name = input.name.trim();
-      if (!name) throw new ApiError("A project needs a name.", 422, "invalid");
-      if (projects.some((p) => p.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`Another project is already called ${name}.`, 422, "invalid");
+      if (!name) throw new ApiError("A project needs a name.", 422, "invalid", "name");
+      if (projects.some((p) => p.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`Another project is already called ${name}.`, 422, "invalid", "name");
       const id = `p-${name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")

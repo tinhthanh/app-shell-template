@@ -26,7 +26,7 @@ export interface Column<T> {
   // A width for the column, else it shares what is left.
   className?: string;
   // Shown from this breakpoint up; narrower windows leave it out.
-  from?: "md" | "lg";
+  from?: "sm" | "md" | "lg";
   cell: (row: T) => ReactNode;
 }
 
@@ -96,7 +96,7 @@ export function DataTable<T>({
   const items = virtualizer.getVirtualItems();
   const top = items[0]?.start ?? 0;
   const bottom = virtualizer.getTotalSize() - (items.at(-1)?.end ?? 0);
-  const visible = (c: Column<T>) => (c.from === "md" ? "max-md:hidden" : c.from === "lg" ? "max-lg:hidden" : "");
+  const visible = (c: Column<T>) => (c.from === "sm" ? "max-sm:hidden" : c.from === "md" ? "max-md:hidden" : c.from === "lg" ? "max-lg:hidden" : "");
   return (
     <div ref={scroller} className={cn("h-full overflow-auto", className)} data-slot="data-table">
       <table className="w-full border-separate border-spacing-0 text-sm" aria-label={label} aria-rowcount={sorted.length}>

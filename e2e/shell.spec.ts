@@ -178,8 +178,7 @@ test("a view that throws is caught by its boundary; the rest of the app and the 
 });
 
 test("a confirm whose action fails stays open with the reason, and can be cancelled", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/kit/overlays");
+  await app.open({ hash: "/kit/overlays" });
   await app.page.getByRole("button", { name: "Confirm that fails" }).click();
   const confirm = app.page.getByTestId("confirm");
   // Not destructive: the keyboard starts on the action.
@@ -310,8 +309,7 @@ test("on a phone the sidebar is a top bar whose menu opens the places in a sheet
 });
 
 test("printed, a page is its content: no sidebar, status bar or buttons", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+  await app.open({ hash: "/projects/p-shop" });
   await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
   await app.page.emulateMedia({ media: "print" });
   await expect(app.page.getByTestId("sidebar")).toBeHidden();

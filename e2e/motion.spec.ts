@@ -6,8 +6,7 @@ import { expect, test } from "./fixtures";
 
 test("with reduce motion on, the loader's grid and shimmer don't animate", async ({ app }) => {
   await app.page.emulateMedia({ reducedMotion: "reduce" });
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/kit/feedback");
+  await app.open({ hash: "/kit/feedback" });
   const cell = app.page.locator(".px-grid i").first();
   await expect(cell).toBeVisible();
   await expect.poll(() => cell.evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
@@ -22,8 +21,7 @@ test("with reduce motion on, the loader's grid and shimmer don't animate", async
 });
 
 test("a hidden window pauses the decorative animations, and a visible one starts them again", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/kit/feedback");
+  await app.open({ hash: "/kit/feedback" });
   const shimmer = app.page.locator(".shimmer").first();
   await expect(shimmer).toBeVisible();
   await expect.poll(() => shimmer.evaluate((el) => getComputedStyle(el).animationPlayState)).toBe("running");

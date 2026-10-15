@@ -88,8 +88,7 @@ test("a failed save is a toast in plain words, and the project is left as it was
 });
 
 test("a project that doesn't exist says so, with a way back", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/projects/nope");
+  await app.open({ hash: "/projects/nope" });
   const note = app.page.getByTestId("error-note");
   await expect(note).toContainText("It's gone");
   await app.page.getByRole("button", { name: "Back to projects" }).click();
@@ -107,8 +106,7 @@ test("switching projects quickly shows the last one asked for, never an earlier 
 });
 
 test("after a dialog closes the keyboard is somewhere, never on the page's body", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+  await app.open({ hash: "/projects/p-shop" });
   await app.page.getByRole("button", { name: "Edit the project" }).click();
   const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
   await dialog.getByRole("textbox", { name: "Name" }).fill("Shop 3");
@@ -152,8 +150,7 @@ test("coming back to the list draws it at once from what was kept, and reads aga
 });
 
 test("a status change shows at once, and goes back with a toast when the server refuses", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux&failWrites=1&slow=1#/projects/p-shop");
+  await app.open({ params: { failWrites: "1", slow: "1" }, hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
   await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible({ timeout: 15_000 });
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
@@ -184,8 +181,7 @@ test("the first project is created from the empty state, and a project is delete
 });
 
 test("closing the edit dialog with unsaved changes asks first", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1&platform=linux#/projects/p-shop");
+  await app.open({ hash: "/projects/p-shop" });
   await app.page.getByRole("button", { name: "Edit the project" }).click();
   const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
   await dialog.getByRole("textbox", { name: "Name" }).fill("Shop 9");
@@ -237,4 +233,20 @@ test("the arrows move between rows, End reaches the last of thousands, and Enter
   await expect(app.page.locator("[data-testid=project-row][data-project=p-1]")).toBeFocused();
   await app.page.keyboard.press("Enter");
   await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop 1", exact: true })).toBeVisible();
+});
+
+test("on a phone the table leaves out the Updated column, so a row fits the width", async ({ app }) => {
+  await app.page.setViewportSize({ width: 375, height: 740 });
+  // Not app.open(): on a phone the places are in a sheet, so no nav row shows.
+  await app.page.goto("/?mock=1&platform=linux#/projects");
+  await expect(app.page.getByTestId("project-row").first()).toBeVisible();
+  await expect(app.page.getByRole("columnheader", { name: "Updated" })).toBeHidden();
+  await expect
+    .poll(() =>
+      app.page.evaluate(() => {
+        const t = document.querySelector("[data-slot=data-table]");
+        return t ? t.scrollWidth <= t.clientWidth : false;
+      }),
+    )
+    .toBe(true);
 });
