@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { rank, score } from "./search-rank.ts";
+import { rank, rankEach, score } from "./search-rank.ts";
 
 test("a name that starts with the words beats a word that does, which beats anywhere, which beats the text", () => {
   const items = [
@@ -23,4 +23,12 @@ test("a name that starts with the words beats a word that does, which beats anyw
   assert.equal(score({ name: "Shop" }, ""), 0);
   assert.deepEqual(rank(items, "zzz"), []);
   assert.equal(rank(items, "a", 2).length, 2);
+});
+
+test("rankEach keeps some of every kind: eight matching projects leave room for the people", () => {
+  const projects = Array.from({ length: 8 }, (_, i) => ({ name: `Alpha ${i}`, text: "" }));
+  const people = [{ name: "Alpha Jones", text: "" }];
+  const hits = rankEach([projects, people], "alpha");
+  assert.equal(hits.length, 6);
+  assert.ok(hits.some((h) => h.name === "Alpha Jones"));
 });

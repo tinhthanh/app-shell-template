@@ -1,6 +1,5 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
 import { ApiError } from "./errors.ts";
-import { mockClient } from "./mock.ts";
 import { signedOut } from "./session.ts";
 import type { Project, SearchHit, User } from "./types.ts";
 
@@ -128,9 +127,23 @@ export function httpClient(base: string, o: ClientOptions = {}): Client {
   };
 }
 
+// deferred is a Client whose real one comes from load, once, at the first
+// call: the mock and its fixtures are their own chunk, loaded only in mock
+// mode, so a build that talks to an API never carries them.
+function deferred(load: () => Promise<Client>): Client {
+  let loading: Promise<Client> | undefined;
+  const get = () => (loading ??= load());
+  return new Proxy({} as Client, {
+    get:
+      (_, method: keyof Client) =>
+      (...args: unknown[]) =>
+        get().then((c) => (c[method] as (...a: unknown[]) => unknown)(...args)),
+  });
+}
+
 // client is the one the app uses: the fixtures, or the HTTP client. A 401
 // from either signs the person out (lib/session.ts).
-export const client: Client = isMock() ? mockClient({ onUnauthorized: signedOut }) : httpClient(apiBase(), { onUnauthorized: signedOut });
+export const client: Client = isMock() ? deferred(() => import("./mock.ts").then((m) => m.mockClient({ onUnauthorized: signedOut }))) : httpClient(apiBase(), { onUnauthorized: signedOut });
 
 // For the tests: the pieces on their own.
 export { errorBody };

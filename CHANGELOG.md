@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The app starts without the fixtures' code when it talks to an API; searching from the palette shows some of every kind of record.
+
 - The shortcuts search is a search box like the others, so Esc clears it.
 
 - On a phone the projects table leaves out the Updated column, so a row fits the width; a refusal from the server lands on the field it names in a form.

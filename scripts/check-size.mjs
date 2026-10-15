@@ -8,7 +8,11 @@ import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 
-const BUDGET = { js: 210_000, css: 45_000 };
+// The budget sits some 15% above what the app needs today (198 KB of
+// JS on 2026-10-15, the libraries 165 KB of it), so a new view or
+// resource, which loads on demand, fits, and a dependency that doubles
+// the bundle does not. Raising it is a PR with the reason here.
+const BUDGET = { js: 230_000, css: 45_000 };
 const dist = resolve(import.meta.dirname, "../dist");
 const html = readFileSync(resolve(dist, "index.html"), "utf8");
 const refs = [...html.matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1]);

@@ -1,7 +1,7 @@
 import type { Client } from "@/lib/api";
 import type { Project, SearchHit, User } from "@/lib/types";
 import { ApiError } from "./errors.ts";
-import { rank } from "./search-rank.ts";
+import { rankEach } from "./search-rank.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
 // fixtures, so it can be worked on and tested without a server. Relative
@@ -151,10 +151,10 @@ export function mockClient(given: MockOptions = {}): Client {
     },
     async search(query) {
       await guard();
-      return rank(
-        projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, p })),
-        query,
-      ).map(({ p }): SearchHit => ({ kind: "project", id: p.id, name: p.name, detail: `${p.owner} · ${p.status}` }));
+      // One kind today; a second goes in as another group, ranked on its own.
+      return rankEach([projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, p }))], query).map(
+        ({ p }): SearchHit => ({ kind: "project", id: p.id, name: p.name, detail: `${p.owner} · ${p.status}` }),
+      );
     },
     async me() {
       // Asked once at start: it doesn't count as failOnce's first call, which

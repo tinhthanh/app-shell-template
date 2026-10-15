@@ -20,6 +20,13 @@ export function score(item: Searchable, query: string): number {
   return 0;
 }
 
+// rankEach ranks each kind of thing on its own, perKind of each at most,
+// and joins them in order: a search over projects and people shows some
+// of both, and eight matching projects can't crowd the people out.
+export function rankEach<T extends Searchable>(groups: T[][], query: string, perKind = 5): T[] {
+  return groups.flatMap((g) => rank(g, query, perKind));
+}
+
 // rank is the items that match, best first, at most limit.
 export function rank<T extends Searchable>(items: T[], query: string, limit = 8): T[] {
   return items
