@@ -62,6 +62,8 @@ export default function App() {
   // The keyboard is never dropped on <body> by what had it going away.
   useRescueRemovedFocus();
   const view = useStore((s) => s.view);
+  // Away from a developer's machine, fixtures mean the API was never configured.
+  const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
 
   return (
     <TooltipProvider delay={300}>
@@ -74,6 +76,11 @@ export default function App() {
         viewportClassName="max-w-88 data-[position=bottom-right]:bottom-[max(calc(26px+12px),var(--app-bar-lift,0px))] data-[position=bottom-right]:right-3 data-[position=bottom-left]:bottom-[calc(26px+12px)] data-[position=bottom-left]:left-3 data-[position=top-left]:top-3 data-[position=top-left]:left-3 data-[position=top-right]:top-3 data-[position=top-right]:right-3"
       >
         <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
+          {unconfigured && (
+            <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-xs">
+              Showing made-up data: no API is configured. Set apiUrl in config.js, or VITE_API_URL at build time (docs/deploy.md).
+            </div>
+          )}
           <div className="flex min-h-0 flex-1">
             <AppSidebar />
             <main className="relative min-h-0 min-w-0 flex-1">

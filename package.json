@@ -19,11 +19,12 @@
     "test:coverage": "node --experimental-strip-types --experimental-test-coverage --test-coverage-include=\"src/lib/**\" --test-coverage-include=\"src/themes/**\" --test-coverage-exclude=\"**/*.test.ts\" --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=80 --test \"src/lib/**/*.test.ts\" \"src/themes/*.test.ts\"",
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "shots": "node scripts/shots.mjs",
-    "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:node && pnpm check:views && pnpm check:themes && pnpm test && pnpm build",
+    "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:node && pnpm check:views && pnpm check:csp && pnpm check:themes && pnpm test && pnpm build",
     "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
     "check:node": "node scripts/check-node-imports.mjs",
-    "check:views": "node scripts/check-views.mjs"
+    "check:views": "node scripts/check-views.mjs",
+    "check:csp": "node scripts/check-csp.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

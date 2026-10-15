@@ -35,6 +35,8 @@ jobs:
       - run: pnpm check:node
       # Every view, settings section and shortcut is wired end to end.
       - run: pnpm check:views
+      # The CSP in deploy/csp.txt names the inline script's hash (scripts/check-csp.mjs).
+      - run: pnpm check:csp
       # Every built-in theme's text and states meet their contrast
       # (src/themes/contrast.ts).
       - run: pnpm check:themes

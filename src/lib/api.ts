@@ -27,19 +27,29 @@ export interface Env {
   VITE_KNOBS?: string;
 }
 
+// The host's runtime configuration (public/config.js, loaded by index.html
+// before the app): one build, any API. It wins over the build's env.
+export interface RuntimeConfig {
+  apiUrl?: string;
+  // Force the fixtures, for a demo deployment.
+  mock?: boolean;
+}
+const runtime = (): RuntimeConfig => (globalThis as { __APP_CONFIG__?: RuntimeConfig }).__APP_CONFIG__ ?? {};
+
 // knobsOn says whether the URL may change where the app reads from (?mock,
 // ?api=): in development, or in a build made with VITE_KNOBS=1 (a demo). A
 // production build ignores them: a link must not be able to point the app
 // at another server.
 export const knobsOn = (e: Env = env): boolean => e.DEV === true || e.DEV === "true" || e.VITE_KNOBS === "1";
 
-// apiBase is where the HTTP client sends requests: VITE_API_URL, or ?api=
-// while knobs are on. Empty means there is no API, so the fixtures.
-export const apiBase = (s: string = search(), e: Env = env): string => (knobsOn(e) ? new URLSearchParams(s).get("api") : null) || e.VITE_API_URL || "";
+// apiBase is where the HTTP client sends requests: ?api= while knobs are
+// on, else the host's config.js, else VITE_API_URL. Empty means there is no
+// API, so the fixtures.
+export const apiBase = (s: string = search(), e: Env = env, r: RuntimeConfig = runtime()): string => (knobsOn(e) ? new URLSearchParams(s).get("api") : null) || r.apiUrl || e.VITE_API_URL || "";
 
-// isMock says whether the app runs on its fixtures: asked for (?mock=1,
-// while knobs are on), or no API to read from.
-export const isMock = (s: string = search(), e: Env = env): boolean => (knobsOn(e) && new URLSearchParams(s).get("mock") === "1") || !apiBase(s, e);
+// isMock says whether the app runs on its fixtures: asked for (?mock=1
+// while knobs are on, or config.js says mock), or no API to read from.
+export const isMock = (s: string = search(), e: Env = env, r: RuntimeConfig = runtime()): boolean => (knobsOn(e) && new URLSearchParams(s).get("mock") === "1") || r.mock === true || !apiBase(s, e, r);
 
 // A read gets this long before it fails as "didn't answer", so nothing
 // spins forever. Writes are left alone: they must not be cut off midway.

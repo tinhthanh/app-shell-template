@@ -343,6 +343,16 @@
   pointer-events: none;
 }
 
+/* Base UI hides a scroll area's native scrollbar with this class; the style
+   lives here instead of a <style> element it would inject (main.tsx
+   CSPProvider), so a strict CSP holds. */
+.base-ui-disable-scrollbar {
+  scrollbar-width: none;
+}
+.base-ui-disable-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Text that shimmers while something loads (components/pixel-loader.tsx). */
 .shimmer {
   background: linear-gradient(90deg, var(--muted-foreground) 0%, var(--muted-foreground) 40%, var(--foreground) 50%, var(--muted-foreground) 60%, var(--muted-foreground) 100%) 0 0 / 300% 100%;

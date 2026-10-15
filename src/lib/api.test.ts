@@ -88,3 +88,12 @@ test("the URL may pick the mock or the API only while the knobs are on", async (
   assert.equal(isMock("?mock=0", dev), false);
   assert.equal(isMock("?mock=1", { VITE_KNOBS: "1", VITE_API_URL: "x" }), true);
 });
+
+test("the host's config.js wins over the build's env, and can force the fixtures", async () => {
+  const { apiBase, isMock } = await import("./api.ts");
+  const env = { VITE_API_URL: "https://built.test" };
+  assert.equal(apiBase("", env, { apiUrl: "https://host.test" }), "https://host.test");
+  assert.equal(apiBase("", env, {}), "https://built.test");
+  assert.equal(isMock("", env, { mock: true }), true);
+  assert.equal(isMock("", env, { apiUrl: "https://host.test" }), false);
+});

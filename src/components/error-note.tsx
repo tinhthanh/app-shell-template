@@ -5,7 +5,9 @@ import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toastManager } from "@/components/ui/toast";
+import { ApiError } from "@/lib/errors";
 import { explain } from "@/lib/explain";
+import { report } from "@/lib/report";
 import { cn } from "@/lib/utils";
 
 // How errors look (lib/explain.ts): a title, one sentence, a Try again
@@ -98,6 +100,8 @@ export function ErrorNote({ error, onRetry, className }: { error: unknown; onRet
 // toastError shows an error as a toast, in the same words. title names
 // what was being done ("Couldn't save the project").
 export function toastError(error: unknown, title?: string) {
+  // A server's refusal is expected; anything else is a bug worth reporting.
+  if (!(error instanceof ApiError)) report(error, { where: title ?? "toastError" });
   const e = explain(error);
   toastManager.add({ type: "error", title: title ?? e.title, description: title ? `${e.title}. ${e.message}` : e.message });
 }

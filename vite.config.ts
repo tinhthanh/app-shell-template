@@ -56,6 +56,9 @@ export default defineConfig(() => ({
     alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },
   build: {
+    // SOURCEMAPS=1: hidden maps for an error reporter, never referenced by
+    // the bundle; upload them, then delete them from dist (docs/deploy.md).
+    sourcemap: process.env.SOURCEMAPS ? "hidden" : false,
     // Vendor is about 470 KB; a chunk past this is worth a look.
     chunkSizeWarningLimit: 600,
     // Fonts stay files: an inlined data: font would need font-src data: in a CSP.
