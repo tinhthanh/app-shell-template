@@ -13,14 +13,21 @@ export function StatusBar() {
     <footer data-testid="status-bar" className="flex h-6.5 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-t bg-sidebar px-3 text-[11px] text-muted-foreground">
       {isMock() && (
         <Tip label="Showing made-up data (?mock=1, or no VITE_API_URL)">
-          <span className="rounded border border-warning/40 px-1 text-warning-foreground">mock</span>
+          <button
+            type="button"
+            className="rounded border border-warning/40 px-1 text-warning-foreground"
+            aria-label="Showing made-up data: the mock fixtures, not an API"
+            onClick={() => openSettings("about")}
+          >
+            mock
+          </button>
         </Tip>
       )}
       <span className="ml-auto" />
-      <button type="button" className="rounded px-1 hover:bg-accent hover:text-foreground" onClick={() => openSettings("appearance")}>
+      <button type="button" className="h-5 rounded px-1 hover:bg-accent hover:text-foreground" aria-label={`Theme: ${theme.name}. Open Appearance settings`} onClick={() => openSettings("appearance")}>
         {theme.name}
       </button>
-      <button type="button" className="rounded px-1 hover:bg-accent hover:text-foreground" onClick={() => openSettings("about")}>
+      <button type="button" className="h-5 rounded px-1 hover:bg-accent hover:text-foreground" aria-label={`Version ${APP_VERSION}. Open About`} onClick={() => openSettings("about")}>
         v{APP_VERSION}
       </button>
     </footer>

@@ -113,7 +113,7 @@ function ProjectList() {
                       data-testid="project-row"
                       data-project={p.id}
                       onClick={() => useStore.getState().setView({ kind: "projects", id: p.id })}
-                      className="flex min-h-row w-full items-center gap-4 px-6 py-row-pad text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50"
+                      className="flex min-h-row w-full items-center gap-4 px-6 py-row-pad text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                     >
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2">
@@ -156,13 +156,17 @@ function ProjectDetail({ id }: { id: string }) {
   return (
     <div className="flex h-full flex-col" data-testid="project-detail">
       <ViewHeader
+        leading={
+          <Button size="icon-xs" variant="ghost" aria-label="Back to projects" data-autofocus onClick={back}>
+            <ArrowLeftIcon />
+          </Button>
+        }
         title={
           <span className="flex items-center gap-2">
-            <Button size="icon-xs" variant="ghost" aria-label="Back to projects" onClick={back}>
-              <ArrowLeftIcon />
-            </Button>
             <span className="text-muted-foreground">Projects</span>
-            <span className="text-muted-foreground/60">/</span>
+            <span aria-hidden className="text-muted-foreground/60">
+              /
+            </span>
             {p?.name ?? "…"}
           </span>
         }
@@ -241,10 +245,16 @@ function EditProject({ project, onSaved }: { project: Project; onSaved(): void }
             <DialogDescription>Its name and what it is for.</DialogDescription>
           </DialogHeader>
           <DialogPanel className="flex flex-col gap-4">
-            <Field name="name">
-              <FieldLabel>Name</FieldLabel>
-              <FieldControl render={<Input defaultValue={project.name} required maxLength={60} autoFocus />} />
-              <FieldError match="valueMissing">A project needs a name.</FieldError>
+            {/* validate carries the app's own words, so the one FieldError shows
+                them or the server's refusal, never the browser's copy. */}
+            <Field name="name" validate={(v) => (String(v ?? "").trim() ? null : "A project needs a name.")}>
+              <FieldLabel>
+                Name
+                <span aria-hidden className="text-muted-foreground">
+                  *
+                </span>
+              </FieldLabel>
+              <FieldControl render={<Input defaultValue={project.name} aria-required maxLength={60} autoFocus />} />
               <FieldError />
             </Field>
             <Field name="description">

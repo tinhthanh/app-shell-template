@@ -10,9 +10,11 @@ skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`,
 
 ## Tooling
 
-- `pnpm install` points git at `.githooks/`: pre-commit formats and lints
-  what's staged, commit-msg checks the subject, pre-push runs `pnpm check`.
-  Never `--no-verify`: CI runs the same and more.
+- `pnpm install` points git at `.githooks/`: pre-commit formats what's
+  staged in place and re-stages it, lints, and checks titles; commit-msg
+  checks the subject; pre-push runs `pnpm check`. Never `--no-verify`: CI
+  runs the same and more. Edits made from a shell aren't formatted by the
+  editor hook, so run `pnpm format` before you look at a diff.
 - Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
   when the tree has changes and blocks stopping while it is red; an
   Edit/Write hook formats the file; force pushes, pushes to `main`,
@@ -44,8 +46,10 @@ suite included, in both appearances.
 1. `pnpm check` is green, and the specs for what you touched pass.
 2. Every behaviour you changed has a test that proves it (the table below),
    named in the PR. A bug fix has a test that failed before the fix.
-3. A UI change has a screenshot in Default Dark and Default Light, and its
-   Kit section or a11y scene is updated.
+3. A UI change has a screenshot in Default Dark and Default Light
+   (`pnpm shots` writes them to `shots/`), and its axe scene is updated; a
+   new kit component gets a Kit section, a new view or settings section an
+   axe scene.
 4. A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`.
 5. No new `biome-ignore`, `test.skip`, `test.fixme` or `ALLOW` entry without
    a reason beside it.
@@ -125,14 +129,21 @@ behaviour is proven in `e2e/`.
   `e2e/a11y.spec.ts`; a behaviour test.
 - **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
   nested object is merged in the initialiser, as `systemThemes` is); a
-  `SettingsRow` in a section; `applyUiPrefs` if it changes layout; bump
-  `PREFS_VERSION` and add a `migratePrefs` step when a default changes in a
-  way an old saved value shouldn't override. A new section also needs
+  `SettingsRow` in a section; `applyUiPrefs` if it changes layout. A new
+  field needs no version bump: the initialiser's spread fills in its
+  default (test that an old save gets it); bump `PREFS_VERSION` and add a
+  `migratePrefs` step only when an existing default changes in a way an old
+  saved value shouldn't override. A pick-one value that isn't one of the
+  options falls back to the default in the initialiser, as `sidebarWidth`
+  is clamped. A new section also needs
   `SettingsSectionId` in `store.ts`, `SECTIONS` in `routes.ts` and in
   `settings-view.tsx`, and an a11y scene.
 - **A shortcut:** a line in `src/lib/shortcuts.json` (a new group also goes
-  in `ShortcutGroup`/`SHORTCUT_GROUPS` in `shortcuts.ts`), a line in
-  `shortcutFor` (`src/lib/keys.ts`) and a case in `run`
+  in `ShortcutGroup`/`SHORTCUT_GROUPS` in `shortcuts.ts`), its id in
+  `SHORTCUT_IDS` and a line in `shortcutFor` (`src/lib/keys.ts`; a Shift
+  shortcut goes above the Shift guard, compared as `k.toLowerCase()`; stay
+  clear of the browser's own keys such as ⌘⇧T, ⌘W, ⌘N, ⌘T), a press in
+  `keys.test.ts`'s reachability list, and a case in `run`
   (`src/hooks/use-shortcuts.ts`); an item in the palette if it should be
   searchable; `announce()` what it did when nothing shows on screen.
 - **A theme:** a `Theme` in `src/themes/builtin.ts` (colours and the full

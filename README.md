@@ -106,9 +106,9 @@ The complete recipes, with every file each one touches, are in
    `migratePrefs` when a default changes in a way an old value shouldn't
    override.
 5. **A shortcut**: a line in `src/lib/shortcuts.json`, an id in
-   `SHORTCUT_IDS` and a key in `shortcutFor` (`src/lib/keys.ts`), a case
-   in `run` (`src/hooks/use-shortcuts.ts`). The sheet and Settings list it
-   on their own.
+   `SHORTCUT_IDS`, a key in `shortcutFor` and a press in `keys.test.ts`
+   (`src/lib/`), a case in `run` (`src/hooks/use-shortcuts.ts`). The sheet
+   and Settings list it on their own; AGENTS.md has the full recipe.
 6. **A theme**: a `Theme` in `src/themes/builtin.ts`; `pnpm check:themes`
    tells you what to fix.
 7. **A browser test**: a spec in `e2e/` on the `app` fixture, on stable

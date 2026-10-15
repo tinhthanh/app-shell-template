@@ -17,15 +17,29 @@ export interface Client {
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
 }
 
-const params = () => new URLSearchParams(typeof location === "undefined" ? "" : location.search);
+const search = () => (typeof location === "undefined" ? "" : location.search);
 // Vite fills import.meta.env; node (the unit tests) has none.
 const env = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
 
-// isMock says whether the app runs on its fixtures.
-export const isMock = (): boolean => params().has("mock") || !env.VITE_API_URL;
+export interface Env {
+  DEV?: boolean | string;
+  VITE_API_URL?: string;
+  VITE_KNOBS?: string;
+}
 
-// apiBase is where the HTTP client sends requests: ?api= wins over the env.
-export const apiBase = (): string => params().get("api") ?? env.VITE_API_URL ?? "";
+// knobsOn says whether the URL may change where the app reads from (?mock,
+// ?api=): in development, or in a build made with VITE_KNOBS=1 (a demo). A
+// production build ignores them: a link must not be able to point the app
+// at another server.
+export const knobsOn = (e: Env = env): boolean => e.DEV === true || e.DEV === "true" || e.VITE_KNOBS === "1";
+
+// apiBase is where the HTTP client sends requests: VITE_API_URL, or ?api=
+// while knobs are on. Empty means there is no API, so the fixtures.
+export const apiBase = (s: string = search(), e: Env = env): string => (knobsOn(e) ? new URLSearchParams(s).get("api") : null) || e.VITE_API_URL || "";
+
+// isMock says whether the app runs on its fixtures: asked for (?mock=1,
+// while knobs are on), or no API to read from.
+export const isMock = (s: string = search(), e: Env = env): boolean => (knobsOn(e) && new URLSearchParams(s).get("mock") === "1") || !apiBase(s, e);
 
 // A read gets this long before it fails as "didn't answer", so nothing
 // spins forever. Writes are left alone: they must not be cut off midway.

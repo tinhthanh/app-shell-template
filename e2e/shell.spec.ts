@@ -11,6 +11,10 @@ test("the sidebar's places open their views, and ⌘1–9 jump to them", async (
   await app.open();
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects")).toBeVisible();
+  // One place is current, and only one, in the sidebar and in the rail.
+  await expect(app.page.locator("[data-testid=sidebar] [aria-current=page]")).toHaveCount(1);
+  await expect(app.nav("projects")).toHaveAttribute("aria-current", "page");
+  await expect(app.page.locator("[data-testid=sidebar] [data-active=true]")).toHaveCount(1);
   await expect(app.page).toHaveTitle(`Projects — ${APP_NAME}`);
   // ⌘1–9 follow the sidebar's order, whatever it is.
   const ids = await app.page.locator("[data-testid=sidebar] [data-testid^=nav-]").evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!.slice(4)));

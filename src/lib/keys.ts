@@ -31,6 +31,9 @@ export function shortcutFor(e: KeyPress, mac: boolean): Hit | undefined {
   // Zoom first: ⌘+ is ⌘⇧= on most keyboards, so Shift is part of it.
   if (k === "=" || k === "+" || e.code === "NumpadAdd") return { id: "zoom-in" };
   if (k === "-" || k === "_" || k === "−" || e.code === "NumpadSubtract") return { id: "zoom-out" };
+  // A Shift shortcut (⌘⇧X) goes above this line, compared as k.toLowerCase():
+  // Shift gives "X", and a Mac's ⌘ may leave it "x". Stay clear of the
+  // browser's own (⌘⇧T, ⌘W, ⌘N, ⌘T): a page never sees them.
   if (e.shiftKey) return undefined;
   if (k === "k") return { id: "palette" };
   if (k === ",") return { id: "settings" };

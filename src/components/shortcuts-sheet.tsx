@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { create } from "zustand";
 
 import { Button } from "@/components/ui/button";
@@ -16,12 +17,14 @@ export const openShortcuts = () => useShortcutsSheet.setState({ open: true });
 
 export function ShortcutsSheet() {
   const open = useShortcutsSheet((s) => s.open);
+  const done = useRef<HTMLButtonElement>(null);
   const close = () => useShortcutsSheet.setState({ open: false });
   return (
     <Sheet open={open} onOpenChange={(o) => useShortcutsSheet.setState({ open: o })}>
       {/* The zoom HUD (⌘+, ⌘−, ⌘0) lives with the sheet that lists those keys. */}
       <ZoomHud />
-      <SheetPopup className="sm:max-w-sm">
+      {/* The keyboard starts on Done: the other button leaves for Settings. */}
+      <SheetPopup className="sm:max-w-sm" initialFocus={done}>
         <SheetHeader>
           <SheetTitle>Keyboard shortcuts</SheetTitle>
           <SheetDescription>They work everywhere in the window: the app sees them first.</SheetDescription>
@@ -51,7 +54,9 @@ export function ShortcutsSheet() {
           >
             Search them in Settings
           </Button>
-          <Button onClick={close}>Done</Button>
+          <Button ref={done} onClick={close}>
+            Done
+          </Button>
         </SheetFooter>
       </SheetPopup>
     </Sheet>

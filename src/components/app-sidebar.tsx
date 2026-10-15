@@ -8,7 +8,7 @@ import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButto
 import { useIsMobile } from "@/hooks/use-media-query";
 import { APP_NAME } from "@/lib/app";
 import { isActive, type Place, places } from "@/lib/nav";
-import { platformKeys } from "@/lib/platform";
+import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { RAIL_WIDTH, SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN } from "@/lib/sidebar-width";
 import { useStore } from "@/lib/store";
@@ -47,9 +47,8 @@ export function AppSidebar() {
         style={{ width: `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))` }}
         className="@container/side relative flex shrink-0 flex-col border-sidebar-border border-r bg-sidebar text-sidebar-foreground"
       >
-        <SidebarResizeHandle />
         <div className="flex h-10 shrink-0 items-center gap-2 px-3">
-          <img src="/favicon.svg" alt="" className="size-4.5 rounded" />
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
           <span className="min-w-0 flex-1 truncate font-medium text-[13px] text-foreground">{APP_NAME}</span>
           <Tip label="Hide the sidebar (⌘\)" side="right">
             <button
@@ -79,6 +78,8 @@ export function AppSidebar() {
         <div className="mt-auto px-2 pb-2">
           <Places footer />
         </div>
+        {/* Last in the Tab order: the edge is reached after the places, not before the app's name. */}
+        <SidebarResizeHandle />
       </aside>
     </SidebarContext.Provider>
   );
@@ -89,22 +90,35 @@ function Places({ footer }: { footer: boolean }) {
   const view = useStore((s) => s.view);
   const list = places().filter((p) => !!p.footer === footer);
   return (
-    <SidebarMenu aria-label={footer ? "More" : "Places"}>
-      {list.map((p, i) => (
-        <SidebarMenuItem key={p.id}>
-          <SidebarMenuButton
-            isActive={isActive(p, view)}
-            data-testid={`nav-${p.id}`}
-            onClick={() => useStore.getState().setView({ ...p.view })}
-            className="h-side-row gap-2.5 text-[13px] [&_svg]:size-4 data-active:bg-sidebar-accent data-active:text-foreground"
-          >
-            {p.icon}
-            <span className="min-w-0 flex-1 truncate">{p.label}</span>
-            {!footer && <Kbd className="h-4.5 text-[10px] opacity-0 transition-opacity group-hover/menu-item:opacity-100">{`⌘${placeNumber(p, i)}`}</Kbd>}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-    </SidebarMenu>
+    <nav aria-label={footer ? "More" : "Places"}>
+      <SidebarMenu>
+        {list.map((p, i) => {
+          const active = isActive(p, view);
+          return (
+            <SidebarMenuItem key={p.id}>
+              {/* data-active is "true" or "false", so the style keys on the value. */}
+              <SidebarMenuButton
+                isActive={active}
+                aria-current={active ? "page" : undefined}
+                aria-keyshortcuts={footer ? undefined : `${IS_MAC ? "Meta" : "Control"}+${placeNumber(p, i)}`}
+                data-testid={`nav-${p.id}`}
+                onClick={() => useStore.getState().setView({ ...p.view })}
+                className="h-side-row gap-2.5 text-[13px] [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
+              >
+                {p.icon}
+                <span className="min-w-0 flex-1 truncate">{p.label}</span>
+                {/* The hint is decoration: the name is the label, the key is aria-keyshortcuts. */}
+                {!footer && (
+                  <Kbd aria-hidden className="h-4.5 text-[10px] opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
+                    {`⌘${placeNumber(p, i)}`}
+                  </Kbd>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
+      </SidebarMenu>
+    </nav>
   );
 }
 
@@ -127,10 +141,9 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
       style={{ width: RAIL_WIDTH }}
       className="relative flex shrink-0 flex-col items-center border-sidebar-border border-r bg-sidebar text-sidebar-foreground"
     >
-      {!fixed && <SidebarResizeHandle folded />}
       <div className="flex h-10 shrink-0 items-center">
         {fixed ? (
-          <img src="/favicon.svg" alt="" className="size-4.5 rounded" />
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
         ) : (
           <Tip label="Show the sidebar (⌘\)" side="right">
             <button
@@ -168,6 +181,7 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
             <RailButton key={p.id} place={p} active={isActive(p, view)} />
           ))}
       </div>
+      {!fixed && <SidebarResizeHandle folded />}
     </aside>
   );
 }

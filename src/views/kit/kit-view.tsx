@@ -192,16 +192,16 @@ function Choices() {
     <>
       <Section title="Switch and checkbox">
         <label className="flex items-center gap-2 text-sm">
-          <Switch defaultChecked /> On
+          <Switch defaultChecked /> Email me
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <Switch /> Off
+          <Switch /> Text me
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <Checkbox defaultChecked /> Checked
+          <Checkbox defaultChecked /> Remember me
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <Checkbox /> Unchecked
+          <Checkbox /> Subscribe
         </label>
       </Section>
       <Section title="Radio group">
