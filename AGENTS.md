@@ -103,6 +103,15 @@ configs or these rules without the `guardrail-change` label.
   (components/resource-view.tsx), which draws loading, failed and empty for
   you; a failed write is `toastError`. Nothing calls `fetch` outside
   `src/lib/api.ts`.
+- **Rows go in `<DataTable>`** (components/data-table.tsx): a sortable
+  header (the sort on the `View`, as `sort=name:asc`), the arrows, PageUp/Down,
+  Home and End between rows, Enter to open, and only the rows on screen in
+  the DOM, so thousands stay quick (`?many=1` on the mock).
+- **A list's filters are part of its `View`** (`routes.ts` writes them in
+  the hash), set with `setView(…, { replace: true })`, never component
+  state: reload, Back and a link keep them.
+- **A dialog with unsaved edits asks before closing** (`confirm()` from its
+  `onOpenChange`), as `ProjectForm` does.
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).
 - **Browser tests** import `test` and `expect` from `./fixtures` (it refuses
   page errors and requests off the page), wait on what they expect

@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Projects is a table: sort by name, owner or updated from the header (the sort is in the address), move between rows with the arrows, PageUp/Down, Home and End, open one with Enter; thousands of rows stay quick.
+
 - Sign in: the app asks who is signed in, shows a sign-in page while nobody is, sends the session with every call, and signs out on a 401 or from the account menu in the sidebar.
 - Dates and numbers read in your language ("12 minutes ago", "14 Oct 2026").
 - The sidebar, status bar, tags and settings text grow with the text size (⌘+), and the Match system card wraps on a narrow window instead of hiding its pickers.

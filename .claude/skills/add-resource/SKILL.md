@@ -15,6 +15,7 @@ the Kit run without a server. `Project` is the worked example.
 4. **`src/lib/mock.test.ts`**: read, read one, a 404, a refused write, `fail`.
 5. **`src/lib/api.test.ts`**: the paths and method of each new call against the stubbed `fetch`.
 6. **The view** (see the `add-view` skill): `const reports = useResource(() => client.reports(), [], { key: "reports" })` (keyed, so coming back draws at once; `mutate("reports", …)` after a write, with the old value put back on refusal; the list's filters on the `View`, written with `setView(…, { replace: true })`), drawn with `<ResourceView resource={reports} label="Reading reports…" testid="reports" isEmpty={…} empty={…}>{(reports) => …}</ResourceView>`, which draws loading, failed (with Try again) and empty for you; writes with `toastError` on failure, a 422 with code `invalid` shown on the field (`Form` + `Field` as in the project edit dialog), `confirm()` before anything irreversible.
-7. **`e2e/reports.spec.ts`**: the list from the fixtures; `slow=1` shows the loader, `fail=1` the error note with Try again, `empty=1` the empty state, `failOnce=1` recovers, `failWrites=1` toasts.
+7. **The rows** go in `<DataTable rows columns rowKey sort onSort onOpen label rowTestId rowProps>` (components/data-table.tsx): a `Column` has `id`, `label`, `cell`, and `sort` when its header sorts, `align: "end"` for numbers and dates, `from: "md"` to leave it out of narrow windows; keep the sort on the `View` with `parseSort`/`sortToString` (lib/list-keys.ts).
+8. **`e2e/reports.spec.ts`**: the list from the fixtures; `slow=1` shows the loader, `fail=1` the error note with Try again, `empty=1` the empty state, `failOnce=1` recovers, `failWrites=1` toasts.
 
 Then `pnpm check` and the specs.
