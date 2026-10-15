@@ -37,9 +37,12 @@ const ORDER = ["Ctrl", "Alt", "Shift"];
 const KEYS: Record<string, string> = { "↵": "Enter", "⇥": "Tab", "⌫": "Backspace" };
 
 // platformKeys writes a key hint for this platform: as it is on a Mac
-// ("⌘⇧D"), and with Ctrl, Alt and Shift elsewhere ("Ctrl+Shift+D").
+// ("⌘⇧D", "↵"), and with Ctrl, Alt and Shift elsewhere ("Ctrl+Shift+D"),
+// where a key on its own is a word too ("Enter"): Linux and Windows name
+// keys, and few of their fonts have the glyphs.
 export function platformKeys(s: string, mac = IS_MAC): string {
-  if (mac || !/[⌃⌘⌥⇧]/.test(s)) return s;
+  if (mac) return s;
+  if (!/[⌃⌘⌥⇧]/.test(s)) return KEYS[s] ?? s;
   return s.replace(/([⌃⌘⌥⇧]+)-click/g, (_, m: string) => `${names(m).join("+")}-click`).replace(/([⌃⌘⌥⇧]+) ?([^\s⌃⌘⌥⇧]+)/g, (_, m: string, key: string) => [...names(m), KEYS[key] ?? key].join("+"));
 }
 

@@ -53,6 +53,13 @@ fail before you trust it.
 
 ## Screenshots
 
+`e2e/visual.spec.ts` compares every view, in both default themes, with
+the baselines in `e2e/snapshots/` (Linux renderings, so CI's match). It
+runs with the suite on Linux; on a Mac, `pnpm test:visual` runs it in the
+Playwright Linux image (Docker). When a change means to alter the look,
+`pnpm test:visual --update` writes the new baselines: commit them, and
+the PR's review sees the pictures. Add a scene to `SCENES` for a new view.
+
 `pnpm shots` writes every view in Default Dark and Default Light to
 `shots/` (gitignored), for a PR's "Proof" section. `pnpm shots '#/kit/buttons'`
 takes one address.

@@ -1,4 +1,4 @@
-import { CheckIcon, SearchIcon } from "lucide-react";
+import { CheckIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
 import { SimpleSelect } from "@/components/simple-select";
@@ -181,13 +181,13 @@ function Preview({ theme }: { theme: Theme }) {
       </div>
       <div className="flex-1 px-2.5 py-2.5 font-mono text-[0.625rem] leading-[1.5]" style={{ background: t.background, color: t.foreground }}>
         <div>
-          <span style={{ color: t.green }}>●</span> tests pass
+          <Dot color={t.green} /> tests pass
         </div>
         <div>
-          <span style={{ color: t.yellow }}>●</span> <span style={{ color: t.blue }}>~/work/shop</span>
+          <Dot color={t.yellow} /> <span style={{ color: t.blue }}>~/work/shop</span>
         </div>
         <div>
-          <span style={{ color: t.magenta }}>❯</span> <span style={{ color: t.cyan }}>build</span>
+          <ChevronRightIcon aria-hidden className="inline size-2.5 align-[-0.1em]" style={{ color: t.magenta }} strokeWidth={3} /> <span style={{ color: t.cyan }}>build</span>
           <span className="ms-0.5 inline-block h-2.5 w-1 align-middle" style={{ background: t.cursor }} />
         </div>
       </div>
@@ -226,4 +226,10 @@ function Dots({ theme }: { theme: Theme }) {
       ))}
     </span>
   );
+}
+
+// Dot is the preview's status light, drawn rather than typed: a ● glyph
+// comes from whatever font the machine has, in whatever size.
+function Dot({ color }: { color: string }) {
+  return <span aria-hidden className="inline-block size-1.5 rounded-full align-[-0.05em]" style={{ background: color }} />;
 }

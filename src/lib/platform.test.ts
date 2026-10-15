@@ -20,5 +20,8 @@ test("elsewhere the keys are spelled out, Ctrl first", () => {
   assert.equal(linux("⌥-click to peek"), "Alt-click to peek");
   assert.equal(linux("⌘+ and ⌘− step it; ⌘0 resets."), "Ctrl++ and Ctrl+− step it; Ctrl+0 resets.");
   assert.equal(linux("F2"), "F2");
-  assert.equal(linux("↵"), "↵");
+  assert.equal(linux("↵"), "Enter");
+  assert.equal(linux("⇥"), "Tab");
+  assert.equal(linux("⌫"), "Backspace");
+  assert.equal(linux("Esc"), "Esc");
 });
