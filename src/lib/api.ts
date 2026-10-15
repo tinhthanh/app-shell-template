@@ -64,12 +64,12 @@ export const isMock = (s: string = search(), e: Env = env, r: RuntimeConfig = ru
 // spins forever. Writes are left alone: they must not be cut off midway.
 export const READ_TIMEOUT_MS = 30_000;
 
-// errorBody reads {error, code} from a failed response's text; plain text
+// errorBody reads {error, code, field} from a failed response's text; plain text
 // is already the message.
-function errorBody(text: string, fallback: string): { message: string; code?: string } {
+function errorBody(text: string, fallback: string): { message: string; code?: string; field?: string } {
   try {
-    const j = JSON.parse(text) as { error?: string; code?: string };
-    return { message: j.error ?? (text.trim() || fallback), code: j.code };
+    const j = JSON.parse(text) as { error?: string; code?: string; field?: string };
+    return { message: j.error ?? (text.trim() || fallback), code: j.code, field: j.field };
   } catch {
     return { message: text.trim() || fallback };
   }
@@ -103,9 +103,9 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
     clearTimeout(timer);
   }
   if (!res.ok) {
-    const { message, code } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
+    const { message, code, field } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
     if (res.status === 401) o.onUnauthorized?.();
-    throw new ApiError(message, res.status, code);
+    throw new ApiError(message, res.status, code, field);
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }

@@ -72,7 +72,10 @@ test("a failed response is an ApiError with the server's message and code", asyn
   answer = { status: 500, body: "boom" };
   await assert.rejects(client.projects(), (e: unknown) => e instanceof ApiError && e.status === 500 && e.message === "boom");
   assert.deepEqual(errorBody("", "fallback"), { message: "fallback" });
-  assert.deepEqual(errorBody('{"error":"x","code":"y"}', "f"), { message: "x", code: "y" });
+  assert.deepEqual(errorBody('{"error":"x","code":"y"}', "f"), { message: "x", code: "y", field: undefined });
+  // A refusal that names its field: the form puts the message there.
+  answer = { status: 422, json: { error: "A project needs a name.", code: "invalid", field: "name" } };
+  await assert.rejects(client.createProject({ name: "", description: "" }), (e: unknown) => e instanceof ApiError && e.code === "invalid" && e.field === "name");
 });
 
 test("a network failure is an ApiError with code network", async () => {

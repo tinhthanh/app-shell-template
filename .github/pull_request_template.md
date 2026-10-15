@@ -27,6 +27,14 @@
 
 <!-- If no test is possible, say why on one line, starting with "no-test: " (at least 15 characters). -->
 
+## Assumptions
+
+<!-- What the task left open and you decided: fields, statuses, defaults, where a place sits. "None." if nothing. -->
+
+## Not done
+
+<!-- What you left out of the ask, and why. "Nothing." if it is all there. -->
+
 ## Screenshots
 
 ## Guardrail changes

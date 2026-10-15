@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- On a phone the projects table leaves out the Updated column, so a row fits the width; a refusal from the server lands on the field it names in a form.
+
 - Off a Mac, a key on its own reads as a word (Enter, Tab, Backspace), as it does beside Ctrl; the theme previews draw their status lights and prompt instead of typing them, so they look the same on every machine.
 
 - On a phone the sidebar is a bar across the top with the places in a menu, and Settings and the Kit pick their section from a list; printing a page leaves out the sidebar, status bar and buttons; a right-to-left language (`?dir=rtl`) mirrors the whole app, the resize handle included.

@@ -44,3 +44,27 @@ export function subscribe<T>(key: string, fn: (value: T) => void): () => void {
 export function clearCache() {
   data.clear();
 }
+
+// optimistic shows a write's result before the server confirms it: the
+// patch goes into the record (key) and its row in the list (listKey) at
+// once, write runs, and what the server returns replaces both. If the
+// server refuses, both go back as they were and the error is thrown on,
+// for the caller to explain (toastError).
+export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T> }): Promise<T> {
+  const before = cached<T>(o.key);
+  const inList = (fn: (row: T) => T) => {
+    if (o.listKey) mutate<T[]>(o.listKey, (l) => l?.map((row) => (row.id === o.id ? fn(row) : row)));
+  };
+  mutate<T>(o.key, (x) => x && { ...x, ...o.patch });
+  inList((row) => ({ ...row, ...o.patch }));
+  try {
+    const saved = await o.write();
+    remember(o.key, saved);
+    inList(() => saved);
+    return saved;
+  } catch (err) {
+    mutate<T>(o.key, () => before);
+    if (before) inList(() => before);
+    throw err;
+  }
+}

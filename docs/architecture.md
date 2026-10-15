@@ -105,7 +105,7 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | URL | `?api=<url>` | The HTTP client's base, over the env |
 | URL | `?slow=1` | Every mock call takes 1.5 s |
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
-| URL | `?empty=1` | No projects |
+| URL | `?empty=1` | No records (projects, and whatever else the mock holds) |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
 | URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
@@ -130,6 +130,9 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | Tip, tip layer | The app's tooltip (`tip.tsx`), never `title=`; a layer shares one tooltip over many rows |
 | explain, ErrorNote, toastError | An error in plain words, the raw text behind Details |
 | confirm | `confirm()` from anywhere; `ConfirmHost` draws it |
+| FormDialog | A form in a dialog with the dirty check, busy state and field errors done (`components/form-dialog.tsx`) |
+| optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
+| return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |
 | focus home | `useRescueRemovedFocus`: the keyboard never falls to `<body>` |
 | still | `watchStillness`: decorative animations pause while the window is hidden |
 | evidence | What a PR shows: tests named, checks pasted, screenshots (`AGENTS.md › Done means`) |

@@ -30,6 +30,8 @@ export interface OpenOptions {
   theme?: string;
   // Extra query parameters: slow, fail, empty, platform…
   params?: Record<string, string>;
+  // The view to open, as its address without the #: "/projects/p-shop".
+  hash?: string;
 }
 
 export interface App {
@@ -93,7 +95,7 @@ export const test = base.extend<{ app: App }>({
           );
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
-        await page.goto(`/?${q}`);
+        await page.goto(`/?${q}${opts.hash ? `#${opts.hash}` : ""}`);
         await expect(page.getByTestId("nav-home")).toBeVisible();
       },
       nav: (id) => page.getByTestId(`nav-${id}`),

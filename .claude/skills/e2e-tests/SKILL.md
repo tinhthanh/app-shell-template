@@ -22,7 +22,7 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 
 ## The fixture (`e2e/fixtures.ts`)
 
-- `app.open({ prefs, theme, params })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `signedOut`, `platform`).
+- `app.open({ prefs, theme, params, hash })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `signedOut`, `platform`); `hash` is the view to land on (`"/projects/p-shop"`), instead of a hand-built `page.goto`.
 - `app.nav(id)`, `app.openSettings(section)`, `app.stored(key)`, `mod()` (`Control`, or `mod("mac")`).
 - A test fails if the page throws, logs a `console.error` (`app.allowConsoleError(/pattern/)` when that is the behaviour), asks for anything off its origin, or gets a 4xx/5xx. `retries: 0`.
 - Hooks: `data-testid` on roots (`sidebar`, `sidebar-rail`, `nav-<id>`, `settings-<id>`, `theme-option[data-theme-id]`, `command-palette`, `projects`, `project-row[data-project]`, `projects-loading|empty|failed`, `project-detail`, `error-note`, `confirm`, `status-bar`, `zoom-hud`, `announce-polite`), roles and names for controls, `[data-slot=toast-title]` for toasts.
@@ -33,6 +33,7 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 - **Wait for what you need, not for time.** No `waitForTimeout` (a plugin refuses it). Before axe, wait for `document.getAnimations()` to finish, as `a11y.spec.ts` does.
 - **Expect in-between states.** A reload or re-render can show a stale value first; assert the final one within the timeout.
 - **Text moves; ids don't.** Locate by `data-testid` or role + name; `exact: true` when a name is a prefix of another.
+- **A timeout under a second** is only for proving "at once" against the slow mock's 1.5 s (`{ timeout: 500 }` beside a comment that says so); everything else waits the default.
 - **Keys:** `${mod()}+k`, `${mod()}+Shift+Equal`, `Minus`; the page is on Linux unless opened with `params: { platform: "mac" }`.
 
 ## Proving something did not happen

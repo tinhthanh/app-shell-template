@@ -117,8 +117,13 @@ configs or these rules without the `guardrail-change` label.
 - **A list's filters are part of its `View`** (`routes.ts` writes them in
   the hash), set with `setView(…, { replace: true })`, never component
   state: reload, Back and a link keep them.
-- **A dialog with unsaved edits asks before closing** (`confirm()` from its
-  `onOpenChange`), as `ProjectForm` does.
+- **A form is a `FormDialog`** (components/form-dialog.tsx): it owns the
+  trigger, the busy Save, the dirty check (closing with edits asks first)
+  and puts a server refusal (`ApiError`, code `invalid`) on the field it
+  names. A write that should show at once goes through `optimistic()`
+  (lib/resource-cache.ts), which puts things back if the server refuses.
+  Coming back to a list, the keyboard lands on the row it left through
+  `returnFocusTo`/`useReturnFocus` (hooks/use-return-focus.ts).
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).
 - **Browser tests** import `test` and `expect` from `./fixtures` (it refuses
   page errors and requests off the page), wait on what they expect
@@ -146,8 +151,9 @@ behaviour is proven in `e2e/`.
 - **A view:** a `kind` in `View` (`src/lib/store.ts`); its address in
   `viewToHash` and `hashToView` (`src/lib/routes.ts`) and the round trip in
   `routes.test.ts`; a `lazyView`, a render line and a `viewTitles` entry in
-  `App.tsx`; a place in `src/lib/nav.tsx` (append before the footer place:
-  ⌘1–9 follow the order); a `data-testid` on the view's root; a scene in
+  `App.tsx`; a place in `src/lib/nav.tsx` (a product place goes before
+  Kit, which stays last of the top group; ⌘1–9 follow the order); a
+  `data-testid` on the view's root; a scene in
   `e2e/a11y.spec.ts`; a behaviour test.
 - **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
   nested object is merged in the initialiser, as `systemThemes` is); a
@@ -176,9 +182,12 @@ behaviour is proven in `e2e/`.
   `Client` with their paths in `httpClient` (`src/lib/api.ts`), fixtures and
   the mock methods (through `guard()`, cloning what they return) in
   `src/lib/mock.ts` (read, read one, create, update, delete), cases in
-  `mock.test.ts` and `api.test.ts`; a view copied from `views/projects/`:
-  keyed reads, filters on the `View`, optimistic writes through `mutate`,
-  create and delete, the dirty-check on its dialog.
+  `mock.test.ts` and `api.test.ts`; a view after `views/projects/`: keyed
+  reads, filters on the `View`, writes through `optimistic()`, create and
+  edit in a `FormDialog`, delete behind `confirm()`. A refusal names its
+  field: `new ApiError(message, 422, "invalid", "name")`. Say in the PR's
+  Assumptions what the task left open and you decided (fields, statuses,
+  defaults, where the place goes), and under Not done what you left out.
 - **A component in the kit:** show it on the Kit page (`src/views/kit/`); a
   new section goes in its `SECTIONS` and in the list in `e2e/a11y.spec.ts`.
 

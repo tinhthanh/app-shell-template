@@ -1,26 +1,26 @@
 import { ArrowLeftIcon, PencilIcon, PlusIcon, RefreshCwIcon, SearchIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { confirm } from "@/components/confirm";
 import { type Column, DataTable } from "@/components/data-table";
 import { toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
+import { FormDialog } from "@/components/form-dialog";
 import { PickOne } from "@/components/pick-one";
 import { ResourceView } from "@/components/resource-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
-import { ApiError, client } from "@/lib/api";
+import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
+import { client } from "@/lib/api";
 import { ago, number } from "@/lib/format";
 import { parseSort, sortToString } from "@/lib/list-keys";
 import { useResource } from "@/lib/resource";
-import { cached, forget, mutate } from "@/lib/resource-cache";
+import { forget, mutate, optimistic } from "@/lib/resource-cache";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Project, ProjectStatus } from "@/lib/types";
@@ -79,6 +79,7 @@ const COLUMNS: Column<Project>[] = [
     id: "updated",
     label: "Updated",
     sort: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+    from: "sm",
     align: "end",
     className: "w-32",
     cell: (p) => <span className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>,
@@ -87,10 +88,6 @@ const COLUMNS: Column<Project>[] = [
 const SORTABLE = COLUMNS.filter((c) => c.sort).map((c) => c.id);
 const LIST_KEY = "projects";
 const key = (id: string) => `project:${id}`;
-
-// returnTo is the project the person went into, so the list puts the
-// keyboard back on its row when they come back.
-let returnTo: string | undefined;
 
 export function ProjectsView({ id }: { id?: string }) {
   if (id) return <ProjectDetail id={id} />;
@@ -112,15 +109,8 @@ function ProjectList() {
   const q = query.trim().toLowerCase();
   const shown = all.filter((p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!status || p.status === status) && [...tags].every((t) => p.tags.includes(t)));
 
-  // Back from a project: the keyboard lands on its row, once the table has
-  // drawn it (the rows come a render after the data).
-  useEffect(() => {
-    if (!returnTo) return;
-    const row = document.querySelector<HTMLElement>(`[data-project="${returnTo}"]`);
-    if (!row) return;
-    row.focus();
-    returnTo = undefined;
-  });
+  // Back from a project, the keyboard lands on its row.
+  useReturnFocus("data-project");
 
   const open = (p: Project) => useStore.getState().setView({ ...view, id: p.id });
 
@@ -216,23 +206,16 @@ function ProjectDetail({ id }: { id: string }) {
   useTitle(p?.name);
   // Back to the list, with the filters it had; the row gets the keyboard.
   const back = () => {
-    returnTo = id;
+    returnFocusTo("data-project", id);
     useStore.getState().setView({ ...view, id: undefined });
   };
   // The status changes on screen at once and the list follows; if the
   // server refuses, it goes back and a toast says why.
   const setStatus = async (status: ProjectStatus) => {
-    const before = cached<Project>(key(id));
-    mutate<Project>(key(id), (x) => x && { ...x, status });
-    mutate<Project[]>(LIST_KEY, (l) => l?.map((x) => (x.id === id ? { ...x, status } : x)));
     try {
-      const saved = await client.updateProject(id, { status });
-      mutate<Project>(key(id), () => saved);
-      mutate<Project[]>(LIST_KEY, (l) => l?.map((x) => (x.id === id ? saved : x)));
+      const saved = await optimistic<Project>({ key: key(id), listKey: LIST_KEY, id, patch: { status }, write: () => client.updateProject(id, { status }) });
       toastManager.add({ type: "success", title: `${saved.name} is now ${status}` });
     } catch (err) {
-      mutate<Project>(key(id), () => before);
-      mutate<Project[]>(LIST_KEY, (l) => l?.map((x) => (x.id === id && before ? before : x)));
       toastError(err, "Couldn't update the project");
     }
   };
@@ -310,99 +293,47 @@ function ProjectDetail({ id }: { id: string }) {
   );
 }
 
-// ProjectForm is the example form: a dialog with a name (required, up to
-// 60 characters) and a description, validated in the app's own words and by
-// the server (an ApiError with code "invalid" lands on the field it names).
-// With a project it edits; without, it creates. Closing it with unsaved
-// changes asks first.
+// ProjectForm is the example form: a name (required, up to 60 characters)
+// and a description, validated in the app's own words and by the server (a
+// refusal lands on the field it names). With a project it edits; without,
+// it creates. FormDialog does the rest (components/form-dialog.tsx).
 function ProjectForm({ project, onSaved, trigger, label }: { project?: Project; onSaved(saved: Project): void; trigger: React.ReactElement; label: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const form = useRef<HTMLFormElement>(null);
-  const initial = { name: project?.name ?? "", description: project?.description ?? "" };
-  const close = () => {
-    setOpen(false);
-    setDirty(false);
-    setErrors({});
-  };
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (o) return setOpen(true);
-        if (!dirty) return close();
-        // Esc, the backdrop or Cancel with edits in the fields: ask first.
-        confirm({ title: "Discard your changes?", description: "What you typed here will be lost.", confirm: "Discard", destructive: true, run: close });
+    <FormDialog
+      trigger={trigger}
+      icon={project ? undefined : <PlusIcon />}
+      label={label}
+      title={project ? "Edit the project" : "New project"}
+      description="Its name and what it is for."
+      initial={{ name: project?.name ?? "", description: project?.description ?? "" }}
+      submit={project ? "Save" : "Create"}
+      failTitle="Couldn't save the project"
+      onSubmit={async (v) => {
+        const input = { name: v.name ?? "", description: v.description ?? "" };
+        const saved = project ? await client.updateProject(project.id, input) : await client.createProject(input);
+        if (!project) mutate<Project[]>(LIST_KEY, (l) => l && [saved, ...l]);
+        onSaved(saved);
+        toastManager.add({ type: "success", title: project ? "Project saved" : `${saved.name} was created` });
       }}
     >
-      <DialogTrigger render={trigger}>
-        {label === "New project" && <PlusIcon />}
-        {label}
-      </DialogTrigger>
-      <DialogPopup>
-        {/* The form is the popup's one child, laid out as the popup lays out
-            its header, panel and footer, so the panel scrolls on a short window. */}
-        <Form
-          ref={form}
-          className="flex min-h-0 flex-1 flex-col"
-          errors={errors}
-          onChange={() => {
-            const f = new FormData(form.current ?? undefined);
-            setDirty(String(f.get("name") ?? "") !== initial.name || String(f.get("description") ?? "") !== initial.description);
-          }}
-          onFormSubmit={async (values) => {
-            setErrors({});
-            setBusy(true);
-            const input = { name: String(values.name).trim(), description: String(values.description ?? "").trim() };
-            try {
-              const saved = project ? await client.updateProject(project.id, input) : await client.createProject(input);
-              if (!project) mutate<Project[]>(LIST_KEY, (l) => l && [saved, ...l]);
-              close();
-              onSaved(saved);
-              toastManager.add({ type: "success", title: project ? "Project saved" : `${saved.name} was created` });
-            } catch (err) {
-              // The server names the field it refused; anything else is a toast.
-              if (err instanceof ApiError && err.code === "invalid") setErrors({ name: err.message });
-              else toastError(err, "Couldn't save the project");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>{project ? "Edit the project" : "New project"}</DialogTitle>
-            <DialogDescription>Its name and what it is for.</DialogDescription>
-          </DialogHeader>
-          <DialogPanel className="flex flex-col gap-4">
-            {/* validate carries the app's own words, so the one FieldError shows
-                them or the server's refusal, never the browser's copy. */}
-            <Field name="name" validate={(v) => (String(v ?? "").trim() ? null : "A project needs a name.")}>
-              <FieldLabel>
-                Name
-                <span aria-hidden className="text-muted-foreground">
-                  *
-                </span>
-              </FieldLabel>
-              <FieldControl render={<Input defaultValue={initial.name} aria-required maxLength={60} autoFocus />} />
-              <FieldError />
-            </Field>
-            <Field name="description">
-              <FieldLabel>Description</FieldLabel>
-              <FieldControl render={<Textarea defaultValue={initial.description} rows={3} />} />
-              <FieldDescription>One line about what it is for.</FieldDescription>
-            </Field>
-          </DialogPanel>
-          <DialogFooter>
-            <DialogClose render={<Button variant="ghost" />}>Cancel</DialogClose>
-            <Button type="submit" loading={busy}>
-              {project ? "Save" : "Create"}
-            </Button>
-          </DialogFooter>
-        </Form>
-      </DialogPopup>
-    </Dialog>
+      {/* validate carries the app's own words, so the one FieldError shows
+          them or the server's refusal, never the browser's copy. */}
+      <Field name="name" validate={(v) => (String(v ?? "").trim() ? null : "A project needs a name.")}>
+        <FieldLabel>
+          Name
+          <span aria-hidden className="text-muted-foreground">
+            *
+          </span>
+        </FieldLabel>
+        <FieldControl render={<Input defaultValue={project?.name ?? ""} aria-required maxLength={60} autoFocus />} />
+        <FieldError />
+      </Field>
+      <Field name="description">
+        <FieldLabel>Description</FieldLabel>
+        <FieldControl render={<Textarea defaultValue={project?.description ?? ""} rows={3} />} />
+        <FieldDescription>One line about what it is for.</FieldDescription>
+      </Field>
+    </FormDialog>
   );
 }
 
