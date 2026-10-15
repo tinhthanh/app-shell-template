@@ -22,7 +22,7 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 
 ## The fixture (`e2e/fixtures.ts`)
 
-- `app.open({ prefs, theme, params, hash })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `signedOut`, `platform`); `hash` is the view to land on (`"/projects/p-shop"`), instead of a hand-built `page.goto`.
+- `app.open({ prefs, theme, params, hash })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failWrites`, `empty`, `crash`, `signedOut`, `platform`); `hash` is the view to land on (`"/projects/p-shop"`), instead of a hand-built `page.goto`; a test or an axe scene may call it again for another state. It waits for the shell: a sidebar row, the phone bar or the sign-in page.
 - `app.nav(id)`, `app.openSettings(section)`, `app.stored(key)`, `mod()` (`Control`, or `mod("mac")`).
 - A test fails if the page throws, logs a `console.error` (`app.allowConsoleError(/pattern/)` when that is the behaviour), asks for anything off its origin, or gets a 4xx/5xx. `retries: 0`.
 - Hooks: `data-testid` on roots (`sidebar`, `sidebar-rail`, `nav-<id>`, `settings-<id>`, `theme-option[data-theme-id]`, `command-palette`, `projects`, `project-row[data-project]`, `projects-loading|empty|failed`, `project-detail`, `error-note`, `confirm`, `status-bar`, `zoom-hud`, `announce-polite`), roles and names for controls, `[data-slot=toast-title]` for toasts.
@@ -61,9 +61,9 @@ Playwright Linux image (Docker). When a change means to alter the look,
 `pnpm test:visual --update` writes the new baselines: commit them, and
 the PR's review sees the pictures. Add a scene to `SCENES` for a new view.
 
-`pnpm shots` writes every view in Default Dark and Default Light to
-`shots/` (gitignored), for a PR's "Proof" section. `pnpm shots '#/kit/buttons'`
-takes one address.
+`pnpm shots` writes every desktop scene of `e2e/scenes.json` in Default
+Dark and Default Light to `shots/` (gitignored), for a PR's "Proof"
+section. `pnpm shots '#/kit/buttons'` takes one address.
 
 ## A new test
 

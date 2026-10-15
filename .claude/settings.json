@@ -32,12 +32,23 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "node .claude/hooks/format-file.mjs" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/format-file.mjs"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "hooks": [{ "type": "command", "command": "node .claude/hooks/stop-check.mjs", "timeout": 600 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/stop-check.mjs",
+            "timeout": 600
+          }
+        ]
       }
     ]
   }

@@ -109,9 +109,9 @@ test("the view is in the URL: reload keeps it, the back button goes back, a link
   await app.page.goBack();
   await expect(app.page.getByTestId("projects")).toBeVisible();
   await expect(app.page.getByTestId("project-detail")).toHaveCount(0);
-  await app.page.goto("/?mock=1#/settings/appearance");
+  await app.open({ hash: "/settings/appearance" });
   await expect(app.page.getByTestId("settings-appearance")).toBeVisible();
-  await app.page.goto("/?mock=1#/nowhere");
+  await app.open({ hash: "/nowhere" });
   await expect(app.page.getByRole("heading", { name: "Home" })).toBeVisible();
 });
 
@@ -233,7 +233,7 @@ test("the palette closed gives the keyboard back to what opened it", async ({ ap
 });
 
 test("signed out, the sign-in page covers the app; signing in returns to the address asked for; the account menu signs out", async ({ app }) => {
-  await app.page.goto("/?mock=1&platform=linux&signedOut=1#/projects?status=paused");
+  await app.open({ params: { signedOut: "1" }, hash: "/projects?status=paused" });
   const signin = app.page.getByTestId("signin");
   await expect(signin).toBeVisible();
   await signin.getByRole("textbox", { name: "Email" }).fill("sam@acme.test");
@@ -289,8 +289,7 @@ test("a first run shows no What's new, and counts the version as seen", async ({
 
 test("on a phone the sidebar is a top bar whose menu opens the places in a sheet, and nothing scrolls sideways", async ({ app }) => {
   await app.page.setViewportSize({ width: 375, height: 740 });
-  // Not app.open(): the places are in the sheet, so no nav row shows at first.
-  await app.page.goto("/?mock=1&platform=linux");
+  await app.open();
   await expect(app.page.getByTestId("phone-bar")).toBeVisible();
   await expect(app.page.getByTestId("sidebar")).toHaveCount(0);
   await app.page.getByRole("button", { name: "Menu" }).click();

@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, PencilIcon, PlusIcon, RefreshCwIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { confirm } from "@/components/confirm";
@@ -8,6 +8,7 @@ import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
 import { PickOne } from "@/components/pick-one";
 import { ResourceView } from "@/components/resource-view";
+import { SearchField } from "@/components/search-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -130,18 +131,7 @@ function ProjectList() {
         }
       />
       <div className="flex flex-wrap items-center gap-2 border-b px-6 py-2" data-print="hide">
-        <div className="relative w-56">
-          <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            size="sm"
-            type="search"
-            value={query}
-            onChange={(e) => set({ q: e.currentTarget.value || undefined })}
-            placeholder="Find a project"
-            aria-label="Find a project"
-            className="[&_input]:ps-7.5"
-          />
-        </div>
+        <SearchField className="w-56" value={query} onChange={(v) => set({ q: v || undefined })} placeholder="Find a project" />
         <PickOne<StatusFilter> label="Status" value={status} options={STATUSES} onChange={(v) => set({ status: v || undefined })} />
         {allTags.map((t) => (
           <FilterChip

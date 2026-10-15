@@ -1,7 +1,6 @@
-import { SearchIcon } from "lucide-react";
 import { useState } from "react";
 
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/search-field";
 import { Kbd } from "@/components/ui/kbd";
 import { platformKeys } from "@/lib/platform";
 import { describe, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts";
@@ -19,10 +18,7 @@ export function ShortcutsSection() {
 
   return (
     <SettingsPage title="Shortcuts" description="They work everywhere in the window: the app sees them first.">
-      <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input size="sm" className="ps-7" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search shortcuts" aria-label="Search shortcuts" />
-      </div>
+      <SearchField value={query} onChange={setQuery} placeholder="Search shortcuts" />
       {grouped.length === 0 && <p className="text-muted-foreground text-sm">No shortcut matches “{query}”.</p>}
       {grouped.map((g) => (
         <SettingsGroup key={g.title} title={g.title}>

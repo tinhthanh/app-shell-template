@@ -60,7 +60,7 @@ test("resetting preferences asks first, and the shortcuts list searches", async 
   await expect(app.page.locator("html")).toHaveAttribute("data-density", "compact");
 
   const shortcuts = await app.openSettings("shortcuts");
-  await shortcuts.getByRole("textbox", { name: "Search shortcuts" }).fill("zoom");
+  await shortcuts.getByRole("searchbox", { name: "Search shortcuts" }).fill("zoom");
   await expect(shortcuts.getByText("Zoom in")).toBeVisible();
   await expect(shortcuts.getByText("Search and commands")).toHaveCount(0);
 });

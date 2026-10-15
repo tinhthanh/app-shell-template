@@ -96,7 +96,8 @@ export const test = base.extend<{ app: App }>({
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
         await page.goto(`/?${q}${opts.hash ? `#${opts.hash}` : ""}`);
-        await expect(page.getByTestId("nav-home")).toBeVisible();
+        // The shell is up: a sidebar row, the phone bar, or the sign-in page.
+        await expect(page.getByTestId("nav-home").or(page.getByTestId("phone-bar")).or(page.getByTestId("signin")).first()).toBeVisible();
       },
       nav: (id) => page.getByTestId(`nav-${id}`),
       async openSettings(section) {

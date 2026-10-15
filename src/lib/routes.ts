@@ -1,5 +1,6 @@
 import type { SettingsSectionId, View } from "./store.ts";
 import type { ProjectStatus } from "./types.ts";
+import { PROJECT_STATUSES } from "./types.ts";
 
 // Each view's address, as the URL's hash: #/projects, #/projects/p-shop,
 // #/projects?q=shop&status=active&tags=web,ops, #/settings/appearance. The hash, not the path, so the app is one file
@@ -7,7 +8,7 @@ import type { ProjectStatus } from "./types.ts";
 // the hash and the view in step. Pure, so routes.test.ts runs it in node.
 
 const SECTIONS: SettingsSectionId[] = ["general", "appearance", "shortcuts", "about"];
-const STATUSES: ProjectStatus[] = ["active", "paused", "archived"];
+const STATUSES: readonly ProjectStatus[] = PROJECT_STATUSES;
 
 // query writes a view's filters after the path, leaving out what is unset.
 function query(v: { q?: string; status?: string; tags?: string[]; sort?: string }): string {

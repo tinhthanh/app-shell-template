@@ -1,6 +1,7 @@
 import { expect, test } from "./fixtures";
+import scenes from "./scenes.json" with { type: "json" };
 
-// Every view, in Default Dark and Default Light, against the baselines in
+// Every scene, in Default Dark and Default Light, against the baselines in
 // e2e/snapshots/ (Linux renderings: CI's, or pnpm test:visual's). A change
 // in how anything looks fails here, so a PR that means to change the look
 // updates the baselines (pnpm test:visual --update) and commits them, and
@@ -9,15 +10,10 @@ import { expect, test } from "./fixtures";
 // The fixtures' times are relative to now (12 minutes ago), so they read
 // the same on every run; what moves is frozen before the picture.
 
-const SCENES: { id: string; hash: string; ready: string; width?: number }[] = [
-  { id: "home", hash: "", ready: "nav-home" },
-  { id: "projects", hash: "#/projects", ready: "project-row" },
-  { id: "project-detail", hash: "#/projects/p-shop", ready: "project-detail" },
-  { id: "settings-appearance", hash: "#/settings/appearance", ready: "settings-appearance" },
-  { id: "kit-buttons", hash: "#/kit/buttons", ready: "kit-buttons" },
-  { id: "kit-inputs", hash: "#/kit/inputs", ready: "kit-inputs" },
-  { id: "phone-projects", hash: "#/projects", ready: "project-row", width: 375 },
-];
+// The scenes are e2e/scenes.json, which pnpm shots reads too: a new view
+// goes there once and is in both. ready is the testid that says the view
+// has its data.
+const SCENES = scenes as { id: string; hash: string; ready: string; width?: number }[];
 
 for (const theme of ["default-dark", "default-light"]) {
   for (const scene of SCENES) {
