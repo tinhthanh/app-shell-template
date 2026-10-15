@@ -7,6 +7,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A release is taken up only after a few days out, so a pulled one never lands.
+    cooldown:
+      default-days: 5
     commit-message:
       prefix: "chore(deps)"
     groups:

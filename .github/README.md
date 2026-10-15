@@ -8,6 +8,11 @@ conventional subject) and the `guardrails` job
 (`scripts/check-guardrails.mjs`: nothing skips a test or edits a check
 without the `guardrail-change` label).
 
+`workflows/pages.yml` publishes `dist/` to GitHub Pages on every push to
+`main` (set the repository variable `API_URL`, or `MOCK=1` for a demo on the
+fixtures). `workflows/release.yml` turns a tag `vX.Y.Z` into a GitHub release
+(`.claude/skills/release`).
+
 `rulesets/main.json` makes `main` take only squash-merged pull requests
 with those three checks green, with no force pushes. A code owner's review
 isn't required: with one owner, nobody could approve their own PR. Admins

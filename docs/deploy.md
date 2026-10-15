@@ -60,4 +60,13 @@ maps to upload alongside; they are not served.
 - **GitHub Pages**: `.github/workflows/pages.yml` builds and publishes
   `dist/` on every push to `main`.
 - **A container**: `deploy/Dockerfile` serves `dist/` with nginx and the
-  headers above; `API_URL` at start writes `config.js`.
+  headers above; `API_URL` at start writes `config.js`, and without it the
+  container refuses to start unless `MOCK=1`.
+
+## Releases
+
+`node scripts/release.mjs X.Y.Z` bumps the version and dates the changelog;
+after its PR merges, a tag `vX.Y.Z` makes `.github/workflows/release.yml`
+build and publish a GitHub release with `dist` attached. The size budget
+(`pnpm check:size`) and the bundle's licence file
+(`dist/third-party-licenses.md`) come with every build.

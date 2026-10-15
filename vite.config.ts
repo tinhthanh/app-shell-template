@@ -59,6 +59,9 @@ export default defineConfig(() => ({
     // SOURCEMAPS=1: hidden maps for an error reporter, never referenced by
     // the bundle; upload them, then delete them from dist (docs/deploy.md).
     sourcemap: process.env.SOURCEMAPS ? "hidden" : false,
+    // Every bundled package's licence, beside the app (THIRD_PARTY_NOTICES.md
+    // covers what the bundler can't see: the fonts).
+    license: { fileName: "third-party-licenses.md" },
     // Vendor is about 470 KB; a chunk past this is worth a look.
     chunkSizeWarningLimit: 600,
     // Fonts stay files: an inlined data: font would need font-src data: in a CSP.

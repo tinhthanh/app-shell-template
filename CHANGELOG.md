@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The app can be published to GitHub Pages or run in a container (docs/deploy.md), and a tag makes a GitHub release with the changelog as its notes.
+
 - One build runs against any API: the host writes `config.js` (docs/deploy.md). Away from a developer's machine, running on the fixtures shows a banner.
 - A tab left open across a deploy reloads itself once instead of failing.
 
