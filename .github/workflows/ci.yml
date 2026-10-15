@@ -44,6 +44,8 @@ jobs:
       # The node-run modules stay covered: lines 90%, branches and functions 80%.
       - run: pnpm test:coverage
       - run: pnpm build
+      # What loads at startup stays inside its budget (scripts/check-size.mjs).
+      - run: pnpm check:size
       # The browser suite (e2e/): the production build in Playwright's
       # Chromium, on the mock fixtures, with no page error allowed.
       - id: playwright

@@ -6,6 +6,23 @@ its UI kit, themes, settings scaffolding, focus handling, sidebar and
 checks, with the product-specific parts removed. Code derived from other
 projects, with their notices:
 
+## What the build bundles
+
+`pnpm build` writes `dist/third-party-licenses.md` with the licence of every
+package in the bundle (React, Base UI, lucide, class-variance-authority,
+clsx, tailwind-merge, zustand and their dependencies). Ship it beside the
+app.
+
+## Fonts
+
+| Font | Source | Licence |
+|---|---|---|
+| Inter | [rsms/inter](https://github.com/rsms/inter), via `@fontsource-variable/inter` | SIL Open Font License 1.1, Copyright 2016 The Inter Project Authors |
+| JetBrains Mono | [JetBrains/JetBrainsMono](https://github.com/JetBrains/JetBrainsMono), via `@fontsource-variable/jetbrains-mono` | SIL Open Font License 1.1, Copyright 2020 The JetBrains Mono Project Authors |
+
+The fonts ship as `woff2` files in `dist/assets`; the OFL asks that this
+notice travel with them.
+
 ## coss ui
 
 The components in `src/components/ui/` were installed from the

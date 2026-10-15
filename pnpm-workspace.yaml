@@ -1,2 +1,5 @@
 allowBuilds:
   esbuild: true
+# A new version is installed only once it has been out for a day: time for a
+# bad release to be pulled.
+minimumReleaseAge: 1440
