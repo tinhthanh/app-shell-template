@@ -1,21 +1,53 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.ts", "scripts/**/*.mjs", "*.ts", "*.json", "!pnpm-lock.yaml"] },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.ts", "scripts/**/*.mjs", "*.ts", "*.json", "!pnpm-lock.yaml"]
+  },
   "plugins": ["./biome-plugins/no-hex-colour.grit", "./biome-plugins/no-palette-class.grit", "./biome-plugins/no-wait-for-timeout.grit"],
-  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 200 },
-  "javascript": { "formatter": { "quoteStyle": "double", "trailingCommas": "all" } },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 200
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all"
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
       "preset": "recommended",
       "a11y": {
-        "noLabelWithoutControl": { "level": "error", "options": { "inputComponents": ["Checkbox", "Switch", "Radio", "Input", "Textarea", "Slider"] } }
+        "noLabelWithoutControl": {
+          "level": "error",
+          "options": {
+            "inputComponents": ["Checkbox", "Switch", "Radio", "Input", "Textarea", "Slider"]
+          }
+        }
       },
       "correctness": {
         "noNestedComponentDefinitions": "error",
         "noUndeclaredDependencies": "error",
-        "useExhaustiveDependencies": { "level": "error", "options": { "hooks": [{ "name": "useResource", "closureIndex": 0, "dependenciesIndex": 1 }] } }
+        "useExhaustiveDependencies": {
+          "level": "error",
+          "options": {
+            "hooks": [
+              {
+                "name": "useResource",
+                "closureIndex": 0,
+                "dependenciesIndex": 1
+              }
+            ]
+          }
+        }
       },
       "style": {
         "noParameterProperties": "error",
@@ -39,23 +71,91 @@
         "noRestrictedImports": {
           "level": "error",
           "options": {
-            "paths": { "@playwright/test": { "importNames": ["test", "expect"], "message": "Import test and expect from ./fixtures: it refuses page errors and requests off the page." } },
-            "patterns": [{ "group": ["@/lib/mock", "**/lib/mock*"], "message": "Read through client (src/lib/api.ts), never the fixtures." }]
+            "paths": {
+              "@playwright/test": {
+                "importNames": ["test", "expect"],
+                "message": "Import test and expect from ./fixtures: it refuses page errors and requests off the page."
+              }
+            },
+            "patterns": [
+              {
+                "group": ["@/lib/mock", "**/lib/mock*"],
+                "message": "Read through client (src/lib/api.ts), never the fixtures."
+              }
+            ]
           }
         }
       },
       "suspicious": {
         "noArrayIndexKey": "error",
-        "noConsole": { "level": "error", "options": { "allow": ["error"] } }
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["error"]
+          }
+        }
       }
     }
   },
   "overrides": [
-    { "includes": ["src/components/ui/**"], "linter": { "rules": { "a11y": { "noStaticElementInteractions": "off", "useSemanticElements": "off", "noSvgWithoutTitle": "off" } } } },
-    { "includes": ["src/lib/api.ts", "src/lib/storage.ts", "src/themes/apply.ts", "src/lib/*.test.ts", "e2e/**"], "linter": { "rules": { "style": { "noRestrictedGlobals": "off" } } } },
-    { "includes": ["src/lib/api.ts", "src/lib/mock.test.ts", "e2e/fixtures.ts"], "linter": { "rules": { "style": { "noRestrictedImports": "off" } } } },
-    { "includes": ["scripts/**", "src/themes/contrast.test.ts"], "linter": { "rules": { "suspicious": { "noConsole": "off" } } } },
-    { "includes": ["**/*.test.ts", "e2e/**"], "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } } }
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off",
+            "useSemanticElements": "off",
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/api.ts", "src/lib/storage.ts", "src/themes/apply.ts", "src/lib/*.test.ts", "e2e/**", "scripts/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/api.ts", "src/lib/mock.test.ts", "e2e/fixtures.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/**", "src/themes/contrast.test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "e2e/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
   ],
-  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
 }

@@ -16,9 +16,12 @@
 // first two but not the title: it writes "Bump" and cannot be told not to.
 //
 // Locally, with no env, it diffs against origin/main.
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 
-const base = process.env.BASE_SHA || "origin/main";
+// Locally: origin/main, else main, else the root commit, so the script
+// runs in a fresh copy with no remote.
+const exists = (ref) => spawnSync("git", ["rev-parse", "--verify", "--quiet", ref], { encoding: "utf8" }).status === 0;
+const base = process.env.BASE_SHA || (exists("origin/main") ? "origin/main" : exists("main") ? "main" : execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { encoding: "utf8" }).trim());
 const title = process.env.PR_TITLE ?? "";
 const body = process.env.PR_BODY ?? "";
 const bot = process.env.PR_ACTOR === "dependabot[bot]";

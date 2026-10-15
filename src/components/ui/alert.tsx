@@ -21,7 +21,8 @@ const alertVariants = cva(
 );
 
 export function Alert({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>): React.ReactElement {
-  return <div className={cn(alertVariants({ variant }), className)} data-slot="alert" role="alert" {...props} />;
+  // App: only an error is urgent; the rest are read in turn, not announced.
+  return <div className={cn(alertVariants({ variant }), className)} data-slot="alert" role={variant === "error" ? "alert" : "status"} {...props} />;
 }
 
 export function AlertTitle({ className, ...props }: React.ComponentProps<"div">): React.ReactElement {

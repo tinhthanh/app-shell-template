@@ -72,3 +72,19 @@ test("a read that never answers is cut off after the read timeout; a write is le
   );
   mock.timers.reset();
 });
+
+test("the URL may pick the mock or the API only while the knobs are on", async () => {
+  const { apiBase, isMock, knobsOn } = await import("./api.ts");
+  const prod = { VITE_API_URL: "https://api.acme.test" };
+  assert.equal(knobsOn(prod), false);
+  assert.equal(apiBase("?api=https://evil.test", prod), "https://api.acme.test");
+  assert.equal(isMock("?mock=1", prod), false);
+  // No API at all: the fixtures, whatever the URL says.
+  assert.equal(isMock("", {}), true);
+  // Development, or a demo build: the URL wins.
+  const dev = { DEV: true, VITE_API_URL: "https://api.acme.test" };
+  assert.equal(apiBase("?api=http://localhost:8080", dev), "http://localhost:8080");
+  assert.equal(isMock("?mock=1", dev), true);
+  assert.equal(isMock("?mock=0", dev), false);
+  assert.equal(isMock("?mock=1", { VITE_KNOBS: "1", VITE_API_URL: "x" }), true);
+});

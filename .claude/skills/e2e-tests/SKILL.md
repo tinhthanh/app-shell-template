@@ -35,6 +35,28 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 - **Text moves; ids don't.** Locate by `data-testid` or role + name; `exact: true` when a name is a prefix of another.
 - **Keys:** `${mod()}+k`, `${mod()}+Shift+Equal`, `Minus`; the page is on Linux unless opened with `params: { platform: "mac" }`.
 
+## Proving something did not happen
+
+`await expect(toast).toHaveCount(0)` proves nothing: it retries until the
+count is 0, and a toast that should not have shown leaves on its own after
+a few seconds, so the test passes with the bug in. Wait for a signal that
+the work is over, then read once:
+
+```ts
+await expect(row.getByRole("button", { name: "Done" })).toBeEnabled();   // the write finished
+expect(await app.page.locator("[data-slot=toast-title]").count()).toBe(0); // read once, no retry
+```
+
+Give the action a settled state to wait for (a button disabled while its
+write runs, a row that changes), and break the code once to see the test
+fail before you trust it.
+
+## Screenshots
+
+`pnpm shots` writes every view in Default Dark and Default Light to
+`shots/` (gitignored), for a PR's "Proof" section. `pnpm shots '#/kit/buttons'`
+takes one address.
+
 ## A new test
 
 - One behaviour per test, named as a sentence about what the user gets.

@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
+import { isMock, knobsOn } from "@/lib/api";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
 import { lazyView, preloadViews } from "@/lib/lazy-view";
 import { watchStillness } from "@/lib/still";
@@ -29,8 +30,9 @@ const SettingsView = lazyView(() => import("@/views/settings/settings-view").the
 const viewTitles = { projects: "Projects", kit: "Kit", settings: "Settings" } satisfies Record<Exclude<ViewKind, "home">, string>;
 
 // ?crash=<kind> makes that view throw, so the error boundary around it can
-// be seen and tested (e2e/shell.spec.ts); nothing else reads it.
-const crash = new URLSearchParams(location.search).get("crash");
+// be seen and tested (e2e/shell.spec.ts). Only on the fixtures or with the
+// knobs on: a production link can't crash a view.
+const crash = isMock() || knobsOn() ? new URLSearchParams(location.search).get("crash") : null;
 
 // ViewFor draws the view in front; a kind this switch leaves out fails to compile.
 function ViewFor({ view }: { view: View }) {

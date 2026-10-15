@@ -1,5 +1,5 @@
 {
-  "_": "The app's keyboard shortcuts, read by lib/shortcuts.ts: the Keyboard shortcuts sheet and Settings › Shortcuts draw this table, and lib/keys.ts maps presses to its ids (add a line there for a new one). group is the heading an item is under; count makes items 1..count, with {n} in label; sep puts a gap before the item; what is how a list names it when that differs from label. Keys are written for a Mac (⌘⇧K) and shown as Ctrl+Shift+K elsewhere (lib/platform.ts).",
+  "_": "The app's keyboard shortcuts, read by lib/shortcuts.ts: the Keyboard shortcuts sheet and Settings › Shortcuts draw this table, and lib/keys.ts maps presses to its ids (add a line there for a new one). group is the heading an item is under; count makes items 1..count, with {n} in label; sep puts a gap before the item; what is how a list names it when that differs from label. Keys are written for a Mac (⌘K) and shown as Ctrl+K elsewhere (lib/platform.ts); a Shift shortcut needs a line above the Shift guard in lib/keys.ts.",
   "shortcuts": [
     { "id": "palette", "group": "Go", "label": "Search and commands…", "keys": "⌘K" },
     { "id": "place", "group": "Go", "label": "Place {n}", "keys": "⌘1–9", "count": 9, "what": "Go to the sidebar's place 1–9" },

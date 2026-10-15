@@ -13,7 +13,9 @@ in step: a view change pushes the hash, popstate reads it. `View` stays
 the source of truth; the hash only mirrors it.
 
 **Consequences.** URLs carry a `#`. There is no server-side routing and
-no use of `#` for in-page anchors. Adding a view means a case in both
+no use of `#` for in-page anchors. Assets are referenced relatively
+(`base: "./"` in `vite.config.ts`), so the same build serves from the root
+or a sub-folder; `BASE_PATH` sets an absolute base for a host that needs one. Adding a view means a case in both
 directions (`scripts/check-views.mjs` checks the one TypeScript can't).
 
 **Revisit if.** The app gains a server that can rewrite paths, or needs

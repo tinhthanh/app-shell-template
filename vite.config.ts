@@ -40,16 +40,26 @@ const startupChunks = {
 // library's internals, and Base UI's contexts stop matching.
 const argPort = process.argv.includes("--port") ? process.argv[process.argv.indexOf("--port") + 1] : undefined;
 const devPort = Number(process.env.PORT ?? 1420);
+// The commit can come from the host (a Docker build has no .git; a PR build
+// is a merge commit).
+const appCommit = process.env.APP_COMMIT || commit();
 
 export default defineConfig(() => ({
   cacheDir: argPort && Number(argPort) !== devPort ? `node_modules/.vite-${argPort}` : "node_modules/.vite",
   plugins: [react(), tailwindcss()],
-  define: { __APP_COMMIT__: JSON.stringify(commit()), __APP_VERSION__: JSON.stringify(appVersion()) },
+  define: { __APP_COMMIT__: JSON.stringify(appCommit), __APP_VERSION__: JSON.stringify(appVersion()) },
+  // Relative asset paths: with hash routing the page's path never changes,
+  // so the build works at the root and under any folder (a GitHub Pages
+  // project site, say). BASE_PATH sets an absolute one when a host needs it.
+  base: process.env.BASE_PATH ?? "./",
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },
   build: {
-    chunkSizeWarningLimit: 1500,
+    // Vendor is about 470 KB; a chunk past this is worth a look.
+    chunkSizeWarningLimit: 600,
+    // Fonts stay files: an inlined data: font would need font-src data: in a CSP.
+    assetsInlineLimit: (file: string) => (file.endsWith(".woff2") ? false : undefined),
     rolldownOptions: { output: { codeSplitting: startupChunks } },
   },
   clearScreen: false,
