@@ -5,7 +5,7 @@ UI, zustand, Playwright. There is no backend here; the views read through
 `src/lib/api.ts`, which runs on the fixtures in `src/lib/mock.ts` unless
 `VITE_API_URL` is set. `docs/architecture.md` has the map and the
 vocabulary; `docs/decisions/` has why things are the way they are; the
-skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`,
+skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`,
 `add-theme`) walk through the recipes below step by step.
 
 ## Tooling
@@ -60,7 +60,9 @@ suite included, in both appearances.
 7. The work is on a branch, as a PR against `main`, with a lowercase
    conventional subject (`feat: …`, `fix: …`, `test: …`, `docs: …`,
    `ci: …`, `chore: …`) that says what the user gets. The PR template's
-   Proof section is filled in.
+   Proof section is filled in; a `feat:` says under Assumptions what the
+   task left open and you decided, and under Not done what you left out
+   (CI refuses a `feat:` without them).
 
 CI holds you to this: the `evidence` job refuses a change under `src/`
 with no changed test (write `no-test: <why>` in the PR body when none is

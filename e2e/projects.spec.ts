@@ -3,7 +3,7 @@ import { expect, test } from "./fixtures";
 // The example list view (views/projects): its three states, its filters
 // and a detail that writes back to the mock.
 
-test("projects list from the fixtures, narrow by search and tags, and open a detail", async ({ app }) => {
+test("the projects list comes from the fixtures and narrows by search and by tag", async ({ app }) => {
   await app.open();
   await app.nav("projects").click();
   const rows = app.page.getByTestId("project-row");
@@ -14,10 +14,14 @@ test("projects list from the fixtures, narrow by search and tags, and open a det
   await app.page.getByRole("button", { name: "mobile", exact: true, pressed: false }).click();
   await expect(rows).toHaveCount(2);
   await app.page.getByRole("button", { name: "mobile", exact: true, pressed: true }).click();
+  await expect(rows).toHaveCount(8);
+});
+
+test("a row opens its detail, and a status change there is kept and shown on the way back", async ({ app }) => {
+  await app.open({ hash: "/projects" });
   await app.page.locator("[data-testid=project-row][data-project=p-shop]").click();
   const detail = app.page.getByTestId("project-detail");
   await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
-  // A write: paused, kept by the mock, shown on the way back.
   // PickOne is a toggle group: its options are pressed buttons.
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Shop is now paused" })).toBeVisible();
@@ -25,18 +29,22 @@ test("projects list from the fixtures, narrow by search and tags, and open a det
   await expect(app.page.locator("[data-testid=project-row][data-project=p-shop]")).toContainText("paused");
 });
 
-test("a slow server shows the loader, a down one the failure with a retry, an empty one the empty state", async ({ app }) => {
+test("a slow server shows the loader until the rows come", async ({ app }) => {
   await app.open({ params: { slow: "1" } });
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects-loading")).toBeVisible();
   await expect(app.page.getByTestId("project-row").first()).toBeVisible({ timeout: 15_000 });
+});
 
+test("a server that is down shows the failure with Try again", async ({ app }) => {
   await app.open({ params: { fail: "1" } });
   await app.nav("projects").click();
   const failed = app.page.getByTestId("projects-failed");
   await expect(failed).toBeVisible();
   await expect(failed.getByRole("button", { name: "Try again" })).toBeVisible();
+});
 
+test("an empty server shows the empty state", async ({ app }) => {
   await app.open({ params: { empty: "1" } });
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects-empty")).toBeVisible();

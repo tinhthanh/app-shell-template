@@ -70,7 +70,7 @@ const BASE = { "src/lib/a.ts": "export const a = 1;\n", "src/lib/a.test.ts": "te
 const CODE = { "src/lib/a.ts": "export const a = 2;\n" };
 const TEST = { "src/lib/a.test.ts": "test 2\n" };
 const BULLET = { "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n- a is 2\n\n## 0.1.0\n" };
-const feat = { title: "feat: a is two" };
+const feat = { title: "feat: a is two", body: "## Assumptions\n\nNone.\n\n## Not done\n\nNothing.\n" };
 
 test("evidence: a behaviour change with a test and a bullet passes", () => {
   const r = gate("check-evidence", repo(BASE, { ...CODE, ...TEST, ...BULLET }), feat);
@@ -86,12 +86,12 @@ test("evidence: a behaviour change with no test is refused, and names the file",
 });
 
 test("evidence: a no-test line of at least 15 characters stands in for a test; a shorter one does not", () => {
-  assert.ok(gate("check-evidence", repo(BASE, { ...CODE, ...BULLET }), { ...feat, body: "no-test: the change is a renamed label only" }).ok);
-  assert.ok(!gate("check-evidence", repo(BASE, { ...CODE, ...BULLET }), { ...feat, body: "no-test: trivial" }).ok);
+  assert.ok(gate("check-evidence", repo(BASE, { ...CODE, ...BULLET }), { ...feat, body: `${feat.body}no-test: the change is a renamed label only` }).ok);
+  assert.ok(!gate("check-evidence", repo(BASE, { ...CODE, ...BULLET }), { ...feat, body: `${feat.body}no-test: trivial` }).ok);
 });
 
 test("evidence: a no-test line with a test changed is refused", () => {
-  const r = gate("check-evidence", repo(BASE, { ...CODE, ...TEST, ...BULLET }), { ...feat, body: "no-test: nothing to test here, honestly" });
+  const r = gate("check-evidence", repo(BASE, { ...CODE, ...TEST, ...BULLET }), { ...feat, body: `${feat.body}no-test: nothing to test here, honestly` });
   assert.ok(!r.ok);
   assert.match(r.out, /take the line out/);
 });
@@ -109,7 +109,8 @@ test("evidence: the title is a lowercase conventional subject", () => {
     assert.ok(!r.ok, title);
     assert.match(r.out, /lowercase conventional subject/);
   }
-  for (const title of ["fix(app): a is two", "feat!: a breaks", "perf: a is quick"]) assert.ok(gate("check-evidence", repo(BASE, { ...CODE, ...TEST, ...BULLET }), { title }).ok, title);
+  for (const title of ["fix(app): a is two", "feat!: a breaks", "perf: a is quick"])
+    assert.ok(gate("check-evidence", repo(BASE, { ...CODE, ...TEST, ...BULLET }), { title, body: feat.body }).ok, title);
 });
 
 test("evidence: the vendored kit, styles, tests and types are not behaviour", () => {
@@ -191,4 +192,24 @@ test("guardrails: a lint suppression needs a reason of 15 characters after the c
 
 test("guardrails: a removed skip is not an added one", () => {
   assert.ok(gate("check-guardrails", repo({ ...GUARD, "e2e/x.spec.ts": `${SKIP}("a");\n` }, { "e2e/x.spec.ts": 'test("a");\n' })).ok);
+});
+
+test("evidence: a feat: PR says its assumptions and what it left out; the template's comments alone do not count", () => {
+  const files = { ...CODE, ...TEST, ...BULLET };
+  const r = gate("check-evidence", repo(BASE, files), { title: "feat: a is two", body: "## What the user gets\n\nA.\n" });
+  assert.ok(!r.ok);
+  assert.match(r.out, /## Assumptions/);
+  assert.match(r.out, /## Not done/);
+  const comments = gate("check-evidence", repo(BASE, files), {
+    title: "feat: a is two",
+    body: "## Assumptions\n\n<!-- what you decided -->\n\n## Not done\n\n<!-- what you left out -->\n\n## Screenshots\n",
+  });
+  assert.ok(!comments.ok);
+  const filled = gate("check-evidence", repo(BASE, files), {
+    title: "feat: a is two",
+    body: "## Assumptions\n\n<!-- what you decided -->\nStatuses are open and closed.\n\n## Not done\n\nNothing.\n\n## Screenshots\n",
+  });
+  assert.ok(filled.ok, filled.out);
+  // A fix: or test: PR is not asked.
+  assert.ok(gate("check-evidence", repo(BASE, files), { title: "fix: a is two", body: "" }).ok);
 });

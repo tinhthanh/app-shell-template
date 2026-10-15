@@ -10,7 +10,10 @@
 //   - a change under src/ or index.html has a bullet under ## Unreleased
 //     in CHANGELOG.md, unless the title says it isn't user-visible
 //     (test:, ci:, chore:, refactor:, docs:, build:);
-//   - the title is a lowercase conventional subject.
+//   - the title is a lowercase conventional subject;
+//   - a feat: PR has "## Assumptions" and "## Not done" sections with
+//     something under each ("None." will do): what the task left open and
+//     the author decided, and what was left out.
 //
 // Dependabot's pull requests (PR_ACTOR dependabot[bot]) are held to the
 // first two but not the title: it writes "Bump" and cannot be told not to.
@@ -39,6 +42,18 @@ if (title && !bot && !SUBJECT.test(title)) problems.push(`the title "${title}" i
 const noTest = /^no-test: (.{15,})$/m.exec(body);
 if (behaviour.length && !tests.length && !noTest) problems.push(`behaviour changed with no test changed (or a "no-test: <why>" line in the PR body):\n    ${behaviour.join("\n    ")}`);
 if (noTest && tests.length) problems.push(`the PR body says no-test, but tests changed: take the line out`);
+
+// section is what the body says under "## name", with the template's
+// HTML comments taken out; undefined when the heading is missing.
+const section = (name) => {
+  const m = new RegExp(`^## ${name}\\s*$([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(body);
+  return m ? m[1].replace(/<!--[\s\S]*?-->/g, "").trim() : undefined;
+};
+if (/^feat(\(|!|:)/.test(title) && !bot) {
+  for (const name of ["Assumptions", "Not done"])
+    if (!section(name))
+      problems.push(`a feat: PR says under "## ${name}" what it ${name === "Assumptions" ? "decided that the task left open" : "left out"} ("None." or "Nothing." when there is nothing)`);
+}
 
 const notUserVisible = /^(test|ci|chore|refactor|docs|build)(\(|:)/.test(title);
 if (behaviour.length && !notUserVisible && !changed.includes("CHANGELOG.md"))
