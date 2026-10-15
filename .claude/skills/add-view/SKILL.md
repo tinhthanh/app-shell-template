@@ -8,9 +8,10 @@ description: Add a view (a page in the main area with a place in the sidebar, an
 A view is a `kind` of `View`. The compiler and `pnpm check:views` refuse a
 half-wired one; this is the order that keeps them green. Start from
 `src/views/projects/` for a list-and-detail view over a resource (its
-pieces are shared: `DataTable`, `SearchField`, `PickOne`, `FormDialog`,
-`optimistic()`, `useReturnFocus`; what you write is the columns, the
-fields and the words), or `src/views/home/` for a static one.
+pieces are shared: `ListToolbar`, `SearchField`, `PickOne`, `NothingMatches`,
+`DataTable`, `DetailPage`, `FormDialog`, `optimistic()`, `removeRecord()`,
+`useReturnFocus`; what you write is the columns, the fields and the
+words), or `src/views/home/` for a static one.
 
 1. **`src/lib/store.ts`**: add `{ kind: "reports"; id?: string; q?: string; sort?: string }` to `View`: the list's filters and sort live here, so the address keeps them.
 2. **`src/lib/routes.ts`**: a case in `viewToHash` (`#/reports`, `#/reports/<id>`) and in `hashToView`.

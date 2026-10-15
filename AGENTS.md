@@ -187,8 +187,11 @@ behaviour is proven in `e2e/`.
   the mock methods (through `guard()`, cloning what they return) in
   `src/lib/mock.ts` (read, read one, create, update, delete), cases in
   `mock.test.ts` and `api.test.ts`; a view after `views/projects/`: keyed
-  reads, filters on the `View`, writes through `optimistic()`, create and
-  edit in a `FormDialog`, delete behind `confirm()`. A refusal names its
+  reads, filters on the `View` in a `ListToolbar` (`NothingMatches` when
+  they leave none), rows in a `DataTable`, one record in a `DetailPage`,
+  writes through `optimistic()`, create and edit in a `FormDialog`, delete
+  through `removeRecord()`: what you write is the columns, the fields and
+  the words. A refusal names its
   field: `new ApiError(message, 422, "invalid", "name")`. Say in the PR's
   Assumptions what the task left open and you decided (fields, statuses,
   defaults, where the place goes), and under Not done what you left out.
