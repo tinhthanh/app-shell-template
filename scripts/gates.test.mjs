@@ -182,7 +182,7 @@ test("guardrails: a ts-ignore or ts-expect-error comment is refused", () => {
   }
 });
 
-test("guardrails: a biome-ignore needs a reason of 15 characters after the colon", () => {
+test("guardrails: a lint suppression needs a reason of 15 characters after the colon", () => {
   const short = gate("check-guardrails", repo(GUARD, { "src/lib/a.ts": `// ${BIOME_IGNORE}: ok\nexport const a = 2;\n` }));
   assert.ok(!short.ok);
   assert.match(short.out, /without a reason/);
