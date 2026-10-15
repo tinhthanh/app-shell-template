@@ -130,6 +130,7 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | Tip, tip layer | The app's tooltip (`tip.tsx`), never `title=`; a layer shares one tooltip over many rows |
 | explain, ErrorNote, toastError | An error in plain words, the raw text behind Details |
 | confirm | `confirm()` from anywhere; `ConfirmHost` draws it |
+| ListToolbar, NothingMatches, DetailPage, removeRecord | The shape of a list view and a record's page, shared (`components/list-page.tsx`, `detail-page.tsx`, `remove-record.ts`) |
 | FormDialog | A form in a dialog with the dirty check, busy state and field errors done (`components/form-dialog.tsx`) |
 | optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
 | return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |

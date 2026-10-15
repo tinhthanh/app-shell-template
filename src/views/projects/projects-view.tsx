@@ -1,12 +1,14 @@
-import { ArrowLeftIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { confirm } from "@/components/confirm";
 import { type Column, DataTable } from "@/components/data-table";
+import { DetailPage } from "@/components/detail-page";
 import { toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
+import { ListToolbar, NothingMatches } from "@/components/list-page";
 import { PickOne } from "@/components/pick-one";
+import { removeRecord } from "@/components/remove-record";
 import { ResourceView } from "@/components/resource-view";
 import { SearchField } from "@/components/search-field";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,7 @@ import { client } from "@/lib/api";
 import { ago, number } from "@/lib/format";
 import { parseSort, sortToString } from "@/lib/list-keys";
 import { useResource } from "@/lib/resource";
-import { forget, mutate, optimistic } from "@/lib/resource-cache";
+import { mutate, optimistic } from "@/lib/resource-cache";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Project, ProjectStatus } from "@/lib/types";
@@ -130,7 +132,7 @@ function ProjectList() {
           </>
         }
       />
-      <div className="flex flex-wrap items-center gap-2 border-b px-6 py-2" data-print="hide">
+      <ListToolbar>
         <SearchField className="w-56" value={query} onChange={(v) => set({ q: v || undefined })} placeholder="Find a project" />
         <PickOne<StatusFilter> label="Status" value={status} options={STATUSES} onChange={(v) => set({ status: v || undefined })} />
         {allTags.map((t) => (
@@ -147,7 +149,7 @@ function ProjectList() {
             {t}
           </FilterChip>
         ))}
-      </div>
+      </ListToolbar>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <ResourceView
           resource={projects}
@@ -168,7 +170,7 @@ function ProjectList() {
         >
           {() =>
             shown.length === 0 ? (
-              <p className="px-6 py-8 text-muted-foreground text-sm">Nothing matches.</p>
+              <NothingMatches />
             ) : (
               <DataTable
                 rows={shown}
@@ -211,75 +213,64 @@ function ProjectDetail({ id }: { id: string }) {
   };
   const remove = () =>
     p &&
-    confirm({
-      title: `Delete ${p.name}?`,
+    removeRecord<Project>({
+      name: p.name,
       description: "The project and its history go for good.",
-      detail: p.name,
-      confirm: "Delete",
-      destructive: true,
-      run: async () => {
-        await client.deleteProject(id);
-        forget(key(id));
-        mutate<Project[]>(LIST_KEY, (l) => l?.filter((x) => x.id !== id));
-        toastManager.add({ type: "success", title: `${p.name} was deleted` });
-        useStore.getState().setView({ ...view, id: undefined });
-      },
+      key: key(id),
+      listKey: LIST_KEY,
+      id,
+      remove: () => client.deleteProject(id),
+      after: () => useStore.getState().setView({ ...view, id: undefined }),
     });
   return (
-    <div className="flex h-full flex-col" data-testid="project-detail">
-      <ViewHeader
-        leading={
-          <Button size="icon-xs" variant="ghost" aria-label="Back to projects" data-autofocus onClick={back}>
-            <ArrowLeftIcon />
+    <DetailPage
+      testid="project-detail"
+      resource={project}
+      label="Reading the project…"
+      title={p?.name}
+      crumb={{ label: "Projects", view: { ...view, id: undefined } }}
+      onBack={back}
+      actions={
+        p && (
+          <Button size="sm" variant="destructive-outline" onClick={remove}>
+            <Trash2Icon />
+            Delete
           </Button>
-        }
-        crumbs={[{ label: "Projects", view: { ...view, id: undefined } }]}
-        title={p?.name ?? "…"}
-        actions={
-          p && (
-            <Button size="sm" variant="destructive-outline" onClick={remove}>
-              <Trash2Icon />
-              Delete
-            </Button>
-          )
-        }
-      />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <ResourceView resource={project} label="Reading the project…" testid="project">
-          {(p) => (
-            <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
-              {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
-              <div className="flex items-start gap-3">
-                <StatusBadge status={p.status} />
-                <ProjectForm
-                  project={p}
-                  onSaved={(saved) => mutate<Project>(key(id), () => saved)}
-                  trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ms-auto" />}
-                  label={<PencilIcon />}
-                />
-              </div>
-              <p className="mt-3 text-base">{p.description}</p>
-              <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-                <dt className="text-muted-foreground">Owner</dt>
-                <dd>{p.owner}</dd>
-                <dt className="text-muted-foreground">Tags</dt>
-                <dd className="flex gap-1">
-                  {p.tags.map((t) => (
-                    <Tag key={t} name={t} />
-                  ))}
-                </dd>
-                <dt className="text-muted-foreground">Updated</dt>
-                <dd>{ago(p.updatedAt)}</dd>
-                <dt className="text-muted-foreground">Status</dt>
-                <dd>
-                  <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
-                </dd>
-              </dl>
-            </div>
-          )}
-        </ResourceView>
-      </div>
-    </div>
+        )
+      }
+    >
+      {(p) => (
+        <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
+          {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
+          <div className="flex items-start gap-3">
+            <StatusBadge status={p.status} />
+            <ProjectForm
+              project={p}
+              onSaved={(saved) => mutate<Project>(key(id), () => saved)}
+              trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ms-auto" />}
+              label={<PencilIcon />}
+            />
+          </div>
+          <p className="mt-3 text-base">{p.description}</p>
+          <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Owner</dt>
+            <dd>{p.owner}</dd>
+            <dt className="text-muted-foreground">Tags</dt>
+            <dd className="flex gap-1">
+              {p.tags.map((t) => (
+                <Tag key={t} name={t} />
+              ))}
+            </dd>
+            <dt className="text-muted-foreground">Updated</dt>
+            <dd>{ago(p.updatedAt)}</dd>
+            <dt className="text-muted-foreground">Status</dt>
+            <dd>
+              <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
+            </dd>
+          </dl>
+        </div>
+      )}
+    </DetailPage>
   );
 }
 
