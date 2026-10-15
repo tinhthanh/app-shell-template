@@ -24,7 +24,7 @@ export function openWhatsNew() {
 export function useWhatsNewAfterUpdate() {
   const seen = usePrefs((p) => p.whatsNewSeen);
   // Decided once, as the app starts, not on every change of seen.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: once at start.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: decided once as the app starts, not again when seen changes.
   useEffect(() => {
     const d = decide({ firstRun, seen, current: APP_VERSION, releases: RELEASES });
     if (d.seen !== seen) setPrefs({ whatsNewSeen: d.seen });
