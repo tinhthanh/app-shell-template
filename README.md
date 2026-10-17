@@ -92,6 +92,11 @@ docs/                   architecture.md, decisions/
 The complete recipes, with every file each one touches, are in
 `AGENTS.md` ("Adding things"); this is the short version.
 
+0. **Set up the repository** once, from your copy with `gh` signed in:
+   `node scripts/setup-repo.mjs`. It creates the `guardrail-change` label,
+   applies the ruleset on `main` and puts you in `.github/CODEOWNERS`, then
+   says what is left for Pages (a variable, `API_URL` or `MOCK=1`, and the
+   Pages source). Until then the Pages run is skipped, not failed.
 1. **Name it**: `APP_NAME` in `src/lib/app.ts`, `<title>` in `index.html`,
    `public/favicon.svg`, `name` and `version` in `package.json`, this
    README's title, the Home page's heading (`src/views/home/home-view.tsx`),
@@ -101,7 +106,9 @@ The complete recipes, with every file each one touches, are in
    rename them in `src/lib/store.ts`, `prefs.ts` and `themes/apply.ts`.
 2. **Your resource**: replace `Project` in `src/lib/types.ts`, the paths in
    `httpClient` (`src/lib/api.ts`) and the fixtures in `src/lib/mock.ts`;
-   copy `views/projects/` for each list-and-detail view.
+   a list-and-detail view after `views/projects/`, on the shared pieces
+   (`ListToolbar`, `DataTable`, `DetailPage`, `FormDialog`, `optimistic()`,
+   `removeRecord()`): you write the columns, the fields and the words.
 3. **A view**: a `kind` in `View` (`src/lib/store.ts`), its address in
    `src/lib/routes.ts`, a `lazyView` in `App.tsx`, a place in
    `src/lib/nav.tsx`. The sidebar, ⌘1–9 and the palette follow.

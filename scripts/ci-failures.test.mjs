@@ -21,7 +21,7 @@ const XML = `<?xml version="1.0" encoding="UTF-8"?>
 </testcase>
 </testsuite>
 <testsuite name="projects.spec.ts" tests="1" failures="1">
-<testcase name="a slow server shows the loader" classname="e2e/projects.spec.ts" time="30">
+<testcase name="a slow server shows the loader" classname="projects.spec.ts" time="30">
 <failure message="timeout" type="FAILURE"><![CDATA[    Test timeout of 30000ms exceeded.]]></failure>
 </testcase>
 </testsuite>
@@ -33,6 +33,8 @@ test("each failed test is named with its spec and the error's own line, colours 
   assert.equal(list.length, 2);
   assert.deepEqual(list[0], { file: "e2e/shell.spec.ts", name: 'a right-to-left page mirrors: the sidebar sits on the "right"', message: "Error: expect(locator).toHaveAttribute(expected) failed" });
   assert.equal(list[1].message, "Test timeout of 30000ms exceeded.");
+  // Playwright's classname is from the test folder; the report gives the path from the root.
+  assert.equal(list[1].file, "e2e/projects.spec.ts");
 });
 
 test("the report carries the marker first, the failed step, and the command to run a spec", () => {

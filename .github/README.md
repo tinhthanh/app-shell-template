@@ -8,6 +8,10 @@ conventional subject) and the `guardrails` job
 (`scripts/check-guardrails.mjs`: nothing skips a test or edits a check
 without the `guardrail-change` label).
 
+`workflows/codeql.yml` is GitHub's code scanning (security and quality
+queries) on every pull request, on `main` and weekly; it reports, it does
+not block (it is not a required check).
+
 `workflows/pages.yml` publishes `dist/` to GitHub Pages on every push to
 `main` (set the repository variable `API_URL`, or `MOCK=1` for a demo on the
 fixtures). `workflows/release.yml` turns a tag `vX.Y.Z` into a GitHub release
@@ -17,7 +21,8 @@ fixtures). `workflows/release.yml` turns a tag `vX.Y.Z` into a GitHub release
 with those three checks green, with no force pushes. A code owner's review
 isn't required: with one owner, nobody could approve their own PR. Admins
 can bypass, but only through a pull request. GitHub applies rulesets to private repositories on paid plans and to
-public ones on any plan; apply it once with:
+public ones on any plan. `node scripts/setup-repo.mjs` applies it, creates
+the label below and sets the CODEOWNERS owner; by hand:
 
 ```sh
 gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/main.json
