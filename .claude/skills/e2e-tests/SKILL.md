@@ -54,7 +54,7 @@ fail before you trust it.
 
 ## Screenshots
 
-`e2e/visual.spec.ts` compares every view, in both default themes, with
+`e2e/visual.spec.ts` compares every view at a fixed moment (`VISUAL_NOW`, UTC: the fixtures' times are relative, and an old one reads as a date that would move every day), in both default themes, with
 the baselines in `e2e/snapshots/` (Linux renderings, so CI's match). It
 runs with the suite on Linux; on a Mac, `pnpm test:visual` runs it in the
 Playwright Linux image (Docker). When a change means to alter the look,

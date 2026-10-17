@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- A repository made from the template sets itself up with one command (`node scripts/setup-repo.mjs`), and its Pages run is skipped, not failed, until it is configured.
+
 - The app starts without the fixtures' code when it talks to an API; searching from the palette shows some of every kind of record.
 
 - The shortcuts search is a search box like the others, so Esc clears it.

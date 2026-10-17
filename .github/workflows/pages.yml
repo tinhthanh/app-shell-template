@@ -3,7 +3,9 @@ name: pages
 # Publishes dist/ to GitHub Pages on every push to main. The site runs on
 # the fixtures unless the repository variable API_URL names an API; set
 # the variable MOCK to 1 to say the fixtures are what you want (a demo),
-# or the job refuses to publish an unconfigured app.
+# With neither, the job is skipped, not failed: a repository fresh from the
+# template has a grey Pages run, not a red one, until it is configured
+# (node scripts/setup-repo.mjs says how).
 on:
   push:
     branches: [main]
@@ -20,6 +22,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Unconfigured: skipped. vars are the repository's variables.
+    if: vars.API_URL != '' || vars.MOCK == '1'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -32,15 +36,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Refuse to publish an app nobody configured
-        env:
-          API_URL: ${{ vars.API_URL }}
-          MOCK: ${{ vars.MOCK }}
-        run: |
-          if [ -z "$API_URL" ] && [ "$MOCK" != "1" ]; then
-            echo "::error::set the repository variable API_URL, or MOCK=1 to publish the demo on its fixtures"
-            exit 1
-          fi
       - run: pnpm build
         env:
           APP_COMMIT: ${{ github.sha }}

@@ -29,7 +29,9 @@ export function failures(xml) {
         .find((l) => /^Error:|^Test timeout|^expect\(|^TimeoutError/.test(l)) ??
       text.trim().split("\n")[0] ??
       "";
-    out.push({ file, name: decode(name), message: decode(line).slice(0, 300) });
+    // Playwright names the spec from the test folder (projects.spec.ts):
+    // the path from the root is what the command takes.
+    out.push({ file: file.includes("/") || file === "?" ? file : `e2e/${file}`, name: decode(name), message: decode(line).slice(0, 300) });
   }
   return out;
 }
