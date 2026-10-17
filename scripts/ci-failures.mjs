@@ -53,6 +53,11 @@ export function report(list, step) {
     lines.push(`${list.length} browser test${list.length === 1 ? "" : "s"} failed (run them with \`E2E_PORT=1427 pnpm test:e2e <spec>\`):`, "");
     for (const f of list.slice(0, MAX)) lines.push(`- \`${f.file}\` › ${f.name}${f.message ? `\n  \`${f.message}\`` : ""}`);
     if (list.length > MAX) lines.push(`- …and ${list.length - MAX} more; the e2e-report artifact has them all.`);
+    if (list.some((f) => f.file === "e2e/visual.spec.ts"))
+      lines.push(
+        "",
+        "A picture changed (`e2e/visual.spec.ts`). If the change meant it, write the new baselines with `pnpm test:visual --update` (Docker on a Mac) and commit `e2e/snapshots/`; the artifact has each `-diff.png`.",
+      );
   } else if (step) lines.push("No browser test failed; the step's own output says why (the job log).");
   lines.push("", "The e2e-report artifact holds the HTML report and the traces of the failed tests.");
   return `${lines.join("\n")}\n`;

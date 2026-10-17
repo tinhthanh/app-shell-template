@@ -51,3 +51,9 @@ test("with no browser failure the report points at the job log", () => {
   assert.match(md, /No browser test failed/);
   assert.doesNotMatch(md, /browser tests? failed \(/);
 });
+
+test("a changed picture says how to take the new baselines", () => {
+  const md = report([{ file: "e2e/visual.spec.ts", name: "home looks as it did in default-dark", message: "Error: expect(page).toHaveScreenshot(expected) failed" }], "Run pnpm exec playwright test");
+  assert.match(md, /pnpm test:visual --update/);
+  assert.doesNotMatch(report(failures(XML), "x"), /test:visual/);
+});
