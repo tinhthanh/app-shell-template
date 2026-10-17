@@ -50,10 +50,32 @@ const runtime = (): RuntimeConfig => (globalThis as { __APP_CONFIG__?: RuntimeCo
 // at another server.
 export const knobsOn = (e: Env = env): boolean => e.DEV === true || e.DEV === "true" || e.VITE_KNOBS === "1";
 
+const pageOrigin = () => (typeof location === "undefined" ? "" : location.origin);
+const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+// urlApi is ?api= if it may be used: a path on this origin, this origin, or
+// a server on this machine (localhost). Anywhere else is refused, so a link
+// to a dev or demo build cannot send its requests, and whatever the
+// headers hook adds (a token), to a stranger's server. A staging API is
+// VITE_API_URL or config.js, which the link cannot change.
+export function urlApi(s: string, origin: string = pageOrigin()): string | null {
+  const raw = new URLSearchParams(s).get("api");
+  if (!raw) return null;
+  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  try {
+    const u = new URL(raw);
+    if ((u.protocol === "http:" || u.protocol === "https:") && (u.origin === origin || LOOPBACK.has(u.hostname))) return raw;
+  } catch {
+    // Not a URL: refused like a stranger's.
+  }
+  return null;
+}
+
 // apiBase is where the HTTP client sends requests: ?api= while knobs are
-// on, else the host's config.js, else VITE_API_URL. Empty means there is no
-// API, so the fixtures.
-export const apiBase = (s: string = search(), e: Env = env, r: RuntimeConfig = runtime()): string => (knobsOn(e) ? new URLSearchParams(s).get("api") : null) || r.apiUrl || e.VITE_API_URL || "";
+// on (this origin or localhost only, urlApi), else the host's config.js,
+// else VITE_API_URL. Empty means there is no API, so the fixtures.
+export const apiBase = (s: string = search(), e: Env = env, r: RuntimeConfig = runtime(), origin: string = pageOrigin()): string =>
+  (knobsOn(e) ? urlApi(s, origin) : null) || r.apiUrl || e.VITE_API_URL || "";
 
 // isMock says whether the app runs on its fixtures: asked for (?mock=1
 // while knobs are on, or config.js says mock), or no API to read from.

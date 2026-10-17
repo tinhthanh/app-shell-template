@@ -47,7 +47,16 @@ if (noTest && tests.length) problems.push(`the PR body says no-test, but tests c
 // HTML comments taken out; undefined when the heading is missing.
 const section = (name) => {
   const m = new RegExp(`^## ${name}\\s*$([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(body);
-  return m ? m[1].replace(/<!--[\s\S]*?-->/g, "").trim() : undefined;
+  if (!m) return undefined;
+  // Again until nothing changes: taking one comment out can join the
+  // pieces of another (<!-<!-- -->- leaves <!--), and an unclosed one
+  // takes the rest of the section.
+  let text = m[1];
+  for (let before = ""; before !== text; ) {
+    before = text;
+    text = text.replace(/<!--[\s\S]*?(-->|$)/g, "");
+  }
+  return text.trim();
 };
 if (/^feat(\(|!|:)/.test(title) && !bot) {
   for (const name of ["Assumptions", "Not done"])

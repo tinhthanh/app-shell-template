@@ -102,7 +102,7 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | env | `VITE_API_URL` | The HTTP client's base; unset means the mock |
 | env | `PORT` | The dev server's port (1420) |
 | URL | `?mock=1` | The fixtures, whatever the env says |
-| URL | `?api=<url>` | The HTTP client's base, over the env |
+| URL | `?api=<url>` | The HTTP client's base, over the env: a path, this origin or localhost only (`urlApi`) |
 | URL | `?slow=1` | Every mock call takes 1.5 s |
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
 | URL | `?empty=1` | No records (projects, and whatever else the mock holds) |

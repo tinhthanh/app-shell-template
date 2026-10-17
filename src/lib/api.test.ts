@@ -130,3 +130,18 @@ test("the host's config.js wins over the build's env, and can force the fixtures
   assert.equal(isMock("", env, { mock: true }), true);
   assert.equal(isMock("", env, { apiUrl: "https://host.test" }), false);
 });
+
+test("?api= may point at this origin or this machine, never at a stranger's server", async () => {
+  const { apiBase, urlApi } = await import("./api.ts");
+  const here = "https://demo.acme.test";
+  assert.equal(urlApi("?api=/api", here), "/api");
+  assert.equal(urlApi("?api=https://demo.acme.test/v2", here), "https://demo.acme.test/v2");
+  assert.equal(urlApi("?api=http://localhost:8080", here), "http://localhost:8080");
+  assert.equal(urlApi("?api=http://127.0.0.1:9000", here), "http://127.0.0.1:9000");
+  assert.equal(urlApi("?api=http://[::1]:9000", here), "http://[::1]:9000");
+  for (const bad of ["https://evil.test", "//evil.test", "https://demo.acme.test.evil.test", "http://localhost.evil.test", "javascript:alert(1)", "not a url"])
+    assert.equal(urlApi(`?api=${encodeURIComponent(bad)}`, here), null, bad);
+  // Refused, the app falls back to what the build or the host said.
+  const demo = { VITE_KNOBS: "1", VITE_API_URL: "https://api.acme.test" };
+  assert.equal(apiBase("?api=https://evil.test", demo, {}, here), "https://api.acme.test");
+});
