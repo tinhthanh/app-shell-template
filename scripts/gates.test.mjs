@@ -213,3 +213,12 @@ test("evidence: a feat: PR says its assumptions and what it left out; the templa
   // A fix: or test: PR is not asked.
   assert.ok(gate("check-evidence", repo(BASE, files), { title: "fix: a is two", body: "" }).ok);
 });
+
+test("evidence: a comment split around another, or left open, is still a comment", () => {
+  const files = { ...CODE, ...TEST, ...BULLET };
+  for (const tricky of ["<!-<!-- x -->- y -->", "<!-- never closed\nSome words"]) {
+    const r = gate("check-evidence", repo(BASE, files), { title: "feat: a is two", body: `## Assumptions\n\n${tricky}\n\n## Not done\n\nNothing.\n` });
+    assert.ok(!r.ok, tricky);
+    assert.match(r.out, /## Assumptions/);
+  }
+});

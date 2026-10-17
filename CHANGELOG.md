@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- In a development or demo build, `?api=` takes only this site or a server on this machine: a link can no longer send the app's requests to another server.
+
 - A repository made from the template sets itself up with one command (`node scripts/setup-repo.mjs`), and its Pages run is skipped, not failed, until it is configured.
 
 - The app starts without the fixtures' code when it talks to an API; searching from the palette shows some of every kind of record.

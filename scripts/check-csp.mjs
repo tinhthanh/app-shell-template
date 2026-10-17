@@ -23,9 +23,15 @@ if (!csp.includes(hash)) {
   console.error(`check-csp: deploy/csp.txt does not name the inline script's hash.\n  The script changed; put this in script-src:\n  ${hash}`);
   process.exit(1);
 }
+// escapeRegExp makes a string match itself in a RegExp, every special
+// character and the backslash included.
+function escapeRegExp(s) {
+  return s.replace(/[\\^$.*+?()[\]{}|/-]/g, "\\$&");
+}
+
 // Nothing weaker than the policy the docs promise.
 for (const bad of ["'unsafe-inline'", "'unsafe-eval'", "*"]) {
-  if (new RegExp(`(script-src|style-src|default-src)[^;]*\\s${bad.replace(/[*']/g, "\\$&")}(\\s|;|$)`).test(csp)) {
+  if (new RegExp(`(script-src|style-src|default-src)[^;]*\\s${escapeRegExp(bad)}(\\s|;|$)`).test(csp)) {
     console.error(`check-csp: deploy/csp.txt allows ${bad}; the app does not need it`);
     process.exit(1);
   }
