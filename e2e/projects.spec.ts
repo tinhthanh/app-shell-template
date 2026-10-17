@@ -9,7 +9,7 @@ test("the projects list comes from the fixtures and narrows by search and by tag
   const rows = app.page.getByTestId("project-row");
   await expect(rows).toHaveCount(8);
   await app.page.getByRole("searchbox", { name: "Find a project" }).fill("app");
-  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveCount(3);
   await app.page.getByRole("searchbox", { name: "Find a project" }).fill("");
   await app.page.getByRole("button", { name: "mobile", exact: true, pressed: false }).click();
   await expect(rows).toHaveCount(2);
