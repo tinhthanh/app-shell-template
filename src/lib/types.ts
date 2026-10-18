@@ -110,10 +110,15 @@ export interface Page<T> {
 
 // ---- Who is signed in (lib/session.ts) ------------------------------------
 
+// What a person may do follows their role (lib/permissions.ts).
+export const ROLES = ["owner", "member", "viewer"] as const;
+export type Role = (typeof ROLES)[number];
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  role: Role;
 }
 
 // ---- Search (the palette's record search) ---------------------------------

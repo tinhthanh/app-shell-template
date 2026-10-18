@@ -128,3 +128,17 @@ test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
   assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), { items: [], total: 0 });
 });
+
+test("a viewer reads but every write is refused with a 403, and a member may not delete", async () => {
+  const viewer = mockClient({ latency: 0, role: "viewer" });
+  assert.equal((await viewer.me()).role, "viewer");
+  assert.equal((await viewer.projects()).total, FIXTURES.length);
+  const forbidden = (e: unknown) => e instanceof ApiError && e.status === 403 && e.code === "forbidden";
+  await assert.rejects(viewer.updateProject("p-shop", { status: "paused" }), forbidden);
+  await assert.rejects(viewer.createProject({ name: "New", description: "" }), forbidden);
+  await assert.rejects(viewer.deleteProject("p-shop"), forbidden);
+  const member = mockClient({ latency: 0, role: "member" });
+  assert.equal((await member.updateProject("p-shop", { status: "paused" })).status, "paused");
+  await assert.rejects(member.deleteProject("p-shop"), forbidden);
+  assert.equal((await mockClient({ latency: 0 }).me()).role, "owner");
+});

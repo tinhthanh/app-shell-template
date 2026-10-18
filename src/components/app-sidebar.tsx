@@ -12,6 +12,7 @@ import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
 import { isActive, type Place, places } from "@/lib/nav";
+import { ROLE_WORDS } from "@/lib/permissions";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { signedOut, useSession } from "@/lib/session";
@@ -263,7 +264,10 @@ function Account({ compact = false }: { compact?: boolean }) {
         {!compact && <span className="min-w-0 flex-1 truncate text-start">{user.name}</span>}
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-48">
-        <div className="px-2 py-1.5 text-muted-foreground text-xs">{user.email}</div>
+        <div className="px-2 py-1.5 text-muted-foreground text-xs">
+          <div className="truncate">{user.email}</div>
+          <div data-testid="account-role">{ROLE_WORDS[user.role]}</div>
+        </div>
         <MenuItem onClick={() => void signOut()}>
           <LogOutIcon />
           Sign out
