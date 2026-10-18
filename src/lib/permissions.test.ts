@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ACTIONS, type Action, can, ROLE_WORDS } from "./permissions.ts";
+import { ACTIONS, type Action, can, roleWords } from "./permissions.ts";
 import { ROLES } from "./types.ts";
 
 test("an owner may do everything, a member everything but delete, a viewer nothing", () => {
@@ -26,6 +26,9 @@ test("nobody signed in may take any action", () => {
 });
 
 test("every role has its words, and every action names only known roles", () => {
-  assert.deepEqual(Object.keys(ROLE_WORDS), [...ROLES]);
+  assert.deepEqual(
+    ROLES.map((r) => roleWords(r)),
+    ["Owner", "Member", "Viewer"],
+  );
   for (const roles of Object.values(ACTIONS)) for (const r of roles) assert.ok((ROLES as readonly string[]).includes(r));
 });

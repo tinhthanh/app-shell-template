@@ -20,6 +20,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { openWhatsNew } from "@/components/whats-new/whats-new-dialog";
 import { useThemes } from "@/hooks/use-theme";
 import { client } from "@/lib/api";
+import { t } from "@/lib/i18n";
 import { places, RECORD_KINDS } from "@/lib/nav";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { keysFor } from "@/lib/shortcuts";
@@ -64,7 +65,7 @@ export function CommandPalette() {
       return;
     }
     let live = true;
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       client.search(q).then(
         (h) => live && setHits(h),
         () => live && setHits([]),
@@ -72,7 +73,7 @@ export function CommandPalette() {
     }, 150);
     return () => {
       live = false;
-      window.clearTimeout(t);
+      window.clearTimeout(timer);
     };
   }, [query]);
   // The theme before a preview, to put back on close.
@@ -102,33 +103,33 @@ export function CommandPalette() {
     const commands: Item[] = [
       {
         value: "cmd:sidebar",
-        label: collapsed ? "Show the sidebar" : "Hide the sidebar",
+        label: collapsed ? t("shell.showSidebar") : t("shell.hideSidebar"),
         icon: <PanelLeftIcon />,
         shortcut: keysFor("sidebar"),
         run: () => setPrefs({ sidebarCollapsed: !collapsed }),
       },
-      { value: "cmd:shortcuts", label: "Keyboard shortcuts", icon: <KeyboardIcon />, shortcut: keysFor("shortcuts"), run: openShortcuts },
-      { value: "cmd:whats-new", label: "What's new", icon: <SparklesIcon />, search: "release version changelog", run: openWhatsNew },
+      { value: "cmd:shortcuts", label: t("shell.palette.keyboardShortcuts"), icon: <KeyboardIcon />, shortcut: keysFor("shortcuts"), run: openShortcuts },
+      { value: "cmd:whats-new", label: t("shell.palette.whatsNew"), icon: <SparklesIcon />, search: "release version changelog", run: openWhatsNew },
     ];
     // Each kind of record is a group of its own (lib/nav.tsx RECORD_KINDS).
     const records: Group[] = Object.entries(RECORD_KINDS)
       .map(([kind, k]) => ({
-        value: k.group,
+        value: t(k.group),
         items: hits
           .filter((h) => h.kind === kind)
           .map((h): Item => ({ value: `record:${h.kind}:${h.id}`, label: h.name, icon: k.icon, detail: h.detail, run: () => useStore.getState().setView(k.view(h.id)) })),
       }))
       .filter((g) => g.items.length);
-    const themeItems: Item[] = themes.map((t) => ({
-      value: `theme:${t.id}`,
-      label: t.name,
+    const themeItems: Item[] = themes.map((th) => ({
+      value: `theme:${th.id}`,
+      label: th.name,
       icon: <PaletteIcon />,
-      detail: t.id === themeId ? "current" : t.appearance,
-      search: `theme ${t.appearance}`,
-      theme: t.id,
-      run: () => useStore.getState().setTheme(t.id),
+      detail: th.id === themeId ? t("shell.palette.current") : t(`shell.palette.${th.appearance}`),
+      search: `theme ${th.appearance}`,
+      theme: th.id,
+      run: () => useStore.getState().setTheme(th.id),
     }));
-    return [...records, { value: "Go to", items: goTo }, { value: "Commands", items: commands }, { value: "Themes", items: themeItems }];
+    return [...records, { value: t("shell.palette.goTo"), items: goTo }, { value: t("shell.palette.commands"), items: commands }, { value: t("shell.palette.themes"), items: themeItems }];
   }, [themes, themeId, collapsed, hits]);
 
   return (
@@ -140,7 +141,7 @@ export function CommandPalette() {
       }}
     >
       {/* Closed, the keyboard goes back to the button or key that opened it, else home. */}
-      <CommandDialogPopup aria-label="Search and commands" data-testid="command-palette" finalFocus={() => (paletteOpenedFrom()?.isConnected ? (paletteOpenedFrom() as HTMLElement) : true)}>
+      <CommandDialogPopup aria-label={t("shell.home.search")} data-testid="command-palette" finalFocus={() => (paletteOpenedFrom()?.isConnected ? (paletteOpenedFrom() as HTMLElement) : true)}>
         <Command
           items={groups}
           value={query}
@@ -148,15 +149,15 @@ export function CommandPalette() {
           itemToStringValue={(i: unknown) => `${(i as Item).label} ${(i as Item).detail ?? ""} ${(i as Item).search ?? ""}`}
           onItemHighlighted={(i: unknown) => {
             // A highlight that lands while the popup animates out is not a preview.
-            const t = (i as Item | undefined)?.theme;
-            if (!t || !useStore.getState().paletteOpen) return;
+            const picked = (i as Item | undefined)?.theme;
+            if (!picked || !useStore.getState().paletteOpen) return;
             before.current ??= useStore.getState().themeId;
-            useStore.getState().setTheme(t);
+            useStore.getState().setTheme(picked);
           }}
         >
-          <CommandInput aria-label="Search places, commands and themes" placeholder="Find a project, go to a place, run a command, pick a theme…" />
+          <CommandInput aria-label={t("shell.palette.label")} placeholder={t("shell.palette.placeholder")} />
           <CommandPanel>
-            <CommandEmpty>Nothing matches.</CommandEmpty>
+            <CommandEmpty>{t("shell.palette.nothing")}</CommandEmpty>
             <CommandList>
               {(group: Group) => (
                 <CommandGroup key={group.value} items={group.items}>
@@ -178,10 +179,10 @@ export function CommandPalette() {
           <CommandFooter className="text-[0.6875rem] text-muted-foreground">
             <span className="flex items-center gap-1">
               <Kbd>↑</Kbd>
-              <Kbd>↓</Kbd> to move, <Kbd>↵</Kbd> to open
+              <Kbd>↓</Kbd> {t("shell.palette.toMove")} <Kbd>↵</Kbd> {t("shell.palette.toOpen")}
             </span>
             <span className="flex items-center gap-1">
-              <Kbd>esc</Kbd> to close
+              <Kbd>esc</Kbd> {t("shell.palette.toClose")}
             </span>
           </CommandFooter>
         </Command>

@@ -18,5 +18,6 @@ no longer hold, write a new record that supersedes it.
 | [0010](0010-the-e2e-contract.md) | The browser suite's contract |
 | [0011](0011-sessions.md) | Sessions are a cookie by default, and never in storage |
 | [0012](0012-permissions.md) | What a person may do is one table, asked by name |
+| [0013](0013-words.md) | The app's words are one table per language, with no library |
 
 Format: Status, Context, Decision, Consequences, Revisit if. Under 40 lines.

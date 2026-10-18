@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Tip } from "@/components/tip";
+import { t } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 import { clampWidth, dragged, RAIL_WIDTH, SIDEBAR_DEFAULT, SIDEBAR_MIN, sidebarMax, stepped } from "@/lib/sidebar-width";
 import { cn } from "@/lib/utils";
@@ -142,13 +143,13 @@ export function SidebarResizeHandle({ folded = false }: { folded?: boolean }) {
   const max = sidebarMax(typeof window === "undefined" ? Infinity : window.innerWidth);
   const now = folded ? RAIL_WIDTH : Math.min(width, max);
   return (
-    <Tip side="right" delay={600} label={folded ? "Drag to open the sidebar" : "Drag to resize · double-click for the default width"}>
+    <Tip side="right" delay={600} label={folded ? t("shell.dragToOpen") : t("shell.dragToResize")}>
       {/* biome-ignore lint/a11y/useSemanticElements: <hr> cannot be dragged or focused; this is a WAI-ARIA focusable separator. */}
       <div
         ref={self}
         role="separator"
         aria-orientation="vertical"
-        aria-label={folded ? "Open the sidebar" : "Resize the sidebar"}
+        aria-label={folded ? t("shell.openSidebar") : t("shell.resizeSidebar")}
         aria-valuemin={folded ? RAIL_WIDTH : SIDEBAR_MIN}
         aria-valuemax={max}
         aria-valuenow={now}

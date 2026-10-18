@@ -16,6 +16,7 @@ import { useWindowTitle } from "@/hooks/use-window-title";
 import { client, isMock, knobsOn } from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
+import { t } from "@/lib/i18n";
 import { lazyView, preloadViews } from "@/lib/lazy-view";
 import { usePrefs } from "@/lib/prefs";
 import { signedIn, signedOut, useSession } from "@/lib/session";
@@ -32,7 +33,8 @@ const SettingsView = lazyView(() => import("@/views/settings/settings-view").the
 
 // What the window is called on each view, and what an error names. Every
 // kind but home must be here: tsc says so.
-const viewTitles = { projects: "Projects", kit: "Kit", settings: "Settings" } satisfies Record<Exclude<ViewKind, "home">, string>;
+// In the language in use, so read at render.
+const viewTitles = () => ({ projects: t("shell.place.projects"), kit: t("shell.place.kit"), settings: t("shell.place.settings") }) satisfies Record<Exclude<ViewKind, "home">, string>;
 
 // ?crash=<kind> makes that view throw, so the error boundary around it can
 // be seen and tested (e2e/shell.spec.ts). Only on the fixtures or with the
@@ -59,7 +61,7 @@ function ViewFor({ view }: { view: View }) {
 export default function App() {
   useApplyTheme();
   useShortcuts();
-  useWindowTitle(viewTitles);
+  useWindowTitle(viewTitles());
   // Spinners and shimmers hold still while the window is in the background.
   useEffect(watchStillness, []);
   // The other views' code, fetched once the app has started and is idle.
@@ -108,7 +110,7 @@ export default function App() {
           <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
             {unconfigured && (
               <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-xs">
-                Showing made-up data: no API is configured. Set apiUrl in config.js, or VITE_API_URL at build time (docs/deploy.md).
+                {t("shell.unconfigured")}
               </div>
             )}
             {phone && <PhoneBar />}
@@ -117,7 +119,7 @@ export default function App() {
               <main className="relative min-h-0 min-w-0 flex-1">
                 <ErrorBoundary
                   key={view.kind}
-                  scope={view.kind === "home" ? undefined : viewTitles[view.kind]}
+                  scope={view.kind === "home" ? undefined : viewTitles()[view.kind]}
                   onLeave={view.kind === "home" ? undefined : () => useStore.getState().setView({ kind: "home" })}
                 >
                   <Suspense>
@@ -128,7 +130,7 @@ export default function App() {
             </div>
             <StatusBar />
           </div>
-          <ErrorBoundary scope="a dialog">
+          <ErrorBoundary scope={t("shell.aDialog")}>
             <CommandPalette />
             <ShortcutsSheet />
             <ConfirmHost />

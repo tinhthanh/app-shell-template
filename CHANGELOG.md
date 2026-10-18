@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The app speaks Vietnamese: Settings › General › Language picks English, Tiếng Việt, or Match system (the default, which follows your computer); dates and numbers follow the language.
+
 - What you can do follows your role: a viewer sees the projects but no New, Edit, status change or Delete; a member does everything but delete; the account menu says which role you have.
 
 - Closing a form after changing only a choice (a select) asks before it throws the change away, as it does after typing; the Kit has a form dialog with a select to copy; a loader's clock is as readable as its words.

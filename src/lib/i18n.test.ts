@@ -22,10 +22,9 @@ test("the system's language is the first one the app has words for, else English
 });
 
 test("what a word is given fills its blanks, and a blank not given stays to be seen", () => {
-  const key = Object.keys(en)[0] as keyof typeof en;
-  assert.equal(t(key, {}), en[key]);
-  const fill = (s: string, p: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in p ? String(p[k]) : m));
-  assert.equal(fill("{n} of {total}", { n: 3 }), "3 of {total}");
+  assert.equal(t("shell.zoom.fromDefault", { sign: "+", n: 2 }), "+2 from default");
+  assert.equal(t("shell.zoom.fromDefault", { n: 2 }), "{sign}2 from default");
+  assert.equal(t("shell.language", {}), en["shell.language"]);
 });
 
 test("every language has a word for every key, and none is left empty", () => {

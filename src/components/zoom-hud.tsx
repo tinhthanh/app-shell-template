@@ -1,6 +1,6 @@
 import { ALargeSmallIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-
+import { t } from "@/lib/i18n";
 import { platformKeys } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { UI_SIZES, useZoomHud } from "@/lib/zoom";
@@ -17,13 +17,13 @@ export function ZoomHud() {
   useEffect(() => {
     if (!at) return;
     setShown(true);
-    const t = window.setTimeout(() => setShown(false), SHOW_MS);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setShown(false), SHOW_MS);
+    return () => window.clearTimeout(timer);
   }, [at]);
   if (size === undefined) return null;
   const range = UI_SIZES;
   const steps = range.max - range.min + 1;
-  const edge = size === range.max ? "Largest" : size === range.min ? "Smallest" : size === range.default ? "Default" : undefined;
+  const edge = size === range.max ? t("shell.zoom.largest") : size === range.min ? t("shell.zoom.smallest") : size === range.default ? t("shell.zoom.default") : undefined;
   return (
     <div
       role="status"
@@ -37,7 +37,7 @@ export function ZoomHud() {
     >
       <div className="flex items-center gap-[8px] text-[13px] leading-[16px]">
         <ALargeSmallIcon className="size-[16px] shrink-0 text-muted-foreground" />
-        <span className="font-medium">Text size</span>
+        <span className="font-medium">{t("shell.zoom.title")}</span>
         <span className="ms-auto font-mono text-[12px] text-muted-foreground tabular-nums">{size}px</span>
       </div>
       {/* One notch a step; the dot under one marks the default. */}
@@ -53,9 +53,9 @@ export function ZoomHud() {
         })}
       </div>
       <div className="flex items-center justify-between text-[11px] text-muted-foreground leading-[14px]">
-        <span>{edge ?? `${size > range.default ? "+" : "−"}${Math.abs(size - range.default)} from default`}</span>
+        <span>{edge ?? t("shell.zoom.fromDefault", { sign: size > range.default ? "+" : "−", n: Math.abs(size - range.default) })}</span>
         <span>
-          <kbd className="font-sans">{platformKeys("⌘0")}</kbd> resets
+          <kbd className="font-sans">{platformKeys("⌘0")}</kbd> {t("shell.zoom.resets")}
         </span>
       </div>
     </div>
