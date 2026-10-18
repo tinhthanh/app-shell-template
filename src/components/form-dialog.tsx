@@ -35,12 +35,17 @@ export interface FormDialogProps {
 export function FormDialog({ trigger, icon, label, title, description, initial, submit, failTitle, onSubmit, children }: FormDialogProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [dirty, setDirty] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const form = useRef<HTMLFormElement>(null);
+  // dirty reads the fields as they are when the dialog is asked to close, so
+  // a choice (a Select, whose value sits in a hidden input that fires no
+  // change event) counts as an edit as much as typing does.
+  const dirty = () => {
+    const f = new FormData(form.current ?? undefined);
+    return Object.keys(initial).some((k) => String(f.get(k) ?? "") !== initial[k]);
+  };
   const close = () => {
     setOpen(false);
-    setDirty(false);
     setErrors({});
   };
   return (
@@ -48,7 +53,7 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
       open={open}
       onOpenChange={(o) => {
         if (o) return setOpen(true);
-        if (!dirty) return close();
+        if (!dirty()) return close();
         // Esc, the backdrop or Cancel with edits in the fields: ask first.
         confirm({ title: "Discard your changes?", description: "What you typed here will be lost.", confirm: "Discard", destructive: true, run: close });
       }}
@@ -64,10 +69,6 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
           ref={form}
           className="flex min-h-0 flex-1 flex-col"
           errors={errors}
-          onChange={() => {
-            const f = new FormData(form.current ?? undefined);
-            setDirty(Object.keys(initial).some((k) => String(f.get(k) ?? "") !== initial[k]));
-          }}
           onFormSubmit={async (values) => {
             setErrors({});
             setBusy(true);

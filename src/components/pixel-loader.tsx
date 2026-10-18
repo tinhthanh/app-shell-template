@@ -51,7 +51,7 @@ export function PixelLoader({ label, since, className }: { label: string; since?
       <span className="shimmer min-w-0 truncate">{label}</span>
       {/* The clock is for the eye: a screen reader would hear it tick. */}
       {ms >= 2000 && (
-        <span aria-hidden className="shrink-0 font-mono text-[0.92em] tabular-nums opacity-80">
+        <span aria-hidden className="shrink-0 font-mono text-[0.92em] tabular-nums">
           {elapsedWords(ms)}
         </span>
       )}

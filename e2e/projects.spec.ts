@@ -29,11 +29,18 @@ test("a row opens its detail, and a status change there is kept and shown on the
   await expect(app.page.locator("[data-testid=project-row][data-project=p-shop]")).toContainText("paused");
 });
 
+test("a search that leaves nothing says so, and clearing it brings the rows back", async ({ app }) => {
+  await app.open({ hash: "/projects?q=zzz" });
+  await expect(app.page.getByTestId("nothing-matches")).toBeVisible();
+  await app.page.getByRole("searchbox", { name: "Find a project" }).fill("");
+  await expect(app.page.getByTestId("project-row")).toHaveCount(8);
+});
+
 test("a slow server shows the loader until the rows come", async ({ app }) => {
   await app.open({ params: { slow: "1" } });
   await app.nav("projects").click();
   await expect(app.page.getByTestId("projects-loading")).toBeVisible();
-  await expect(app.page.getByTestId("project-row").first()).toBeVisible({ timeout: 15_000 });
+  await expect(app.page.getByTestId("project-row").first()).toBeVisible();
 });
 
 test("a server that is down shows the failure with Try again", async ({ app }) => {
@@ -60,8 +67,7 @@ test("a failed read is explained in words, with the server's own behind Details"
 });
 
 test("the edit form refuses an empty name, shows the server's refusal on the field, and saves", async ({ app }) => {
-  await app.open();
-  await app.page.goto("/?mock=1#/projects/p-shop");
+  await app.open({ hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
   await detail.getByRole("button", { name: "Edit the project" }).click();
   const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
@@ -86,8 +92,7 @@ test("Try again reads again after a server that was down comes back", async ({ a
 });
 
 test("a failed save is a toast in plain words, and the project is left as it was", async ({ app }) => {
-  await app.open({ params: { failWrites: "1" } });
-  await app.page.goto("/?mock=1&platform=linux&failWrites=1#/projects/p-shop");
+  await app.open({ params: { failWrites: "1" }, hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
@@ -104,12 +109,13 @@ test("a project that doesn't exist says so, with a way back", async ({ app }) =>
 });
 
 test("switching projects quickly shows the last one asked for, never an earlier answer", async ({ app }) => {
-  await app.open({ params: { slow: "1" } });
-  await app.page.goto("/?mock=1&platform=linux&slow=1#/projects/p-shop");
-  // Before Shop arrives, ask for the API instead.
-  await app.page.goto("/?mock=1&platform=linux&slow=1#/projects/p-api");
+  await app.open({ params: { slow: "1" }, hash: "/projects/p-shop" });
+  // Before Shop arrives, ask for the API instead: a new address in the same page.
+  await app.page.evaluate(() => {
+    location.hash = "#/projects/p-api";
+  });
   const detail = app.page.getByTestId("project-detail");
-  await expect(detail.getByRole("heading", { name: "Public API", exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(detail.getByRole("heading", { name: "Public API", exact: true })).toBeVisible();
   await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toHaveCount(0);
 });
 
@@ -141,16 +147,16 @@ test("the list's filters live in the URL: reload, Back and a link keep them", as
   await expect(rows).toHaveCount(1);
   await expect(app.page.locator("[data-testid=project-row][data-project=p-ios]")).toBeFocused();
   // A shared link opens narrowed.
-  await app.page.goto("/?mock=1&platform=linux#/projects?tags=mobile");
+  await app.open({ hash: "/projects?tags=mobile" });
   await expect(rows).toHaveCount(2);
 });
 
 test("coming back to the list draws it at once from what was kept, and reads again behind", async ({ app }) => {
   await app.open({ params: { slow: "1" } });
   await app.nav("projects").click();
-  await expect(app.page.getByTestId("project-row").first()).toBeVisible({ timeout: 15_000 });
+  await expect(app.page.getByTestId("project-row").first()).toBeVisible();
   await app.page.locator("[data-testid=project-row][data-project=p-shop]").click();
-  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
   await app.page.getByRole("button", { name: "Back to projects" }).click();
   // Rows at once (the mock takes 1.5 s to answer again), and no loader.
   await expect(app.page.getByTestId("project-row")).toHaveCount(8, { timeout: 500 });
@@ -160,12 +166,12 @@ test("coming back to the list draws it at once from what was kept, and reads aga
 test("a status change shows at once, and goes back with a toast when the server refuses", async ({ app }) => {
   await app.open({ params: { failWrites: "1", slow: "1" }, hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
-  await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   // Before the server answers: already paused on screen.
   await expect(detail.getByText("Paused", { exact: true }).first()).toBeVisible({ timeout: 500 });
   // The server refuses: back to Active, with the toast.
-  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible({ timeout: 15_000 });
+  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
   await expect(detail.getByText("Active", { exact: true }).first()).toBeVisible();
 });
 

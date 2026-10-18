@@ -55,7 +55,9 @@ suite included, in both appearances.
 
 1. `pnpm check` is green, and the specs for what you touched pass.
 2. Every behaviour you changed has a test that proves it (the table below),
-   named in the PR. A bug fix has a test that failed before the fix.
+   named in the PR. A bug fix has a test that failed before the fix. A
+   failure you say isn't yours ("it fails on main too") comes with its
+   proof: the run on `main` (a CI link, or the command and its last lines).
 3. A UI change that alters a view in `e2e/visual.spec.ts` updates its
    baselines (`pnpm test:visual --update`), and the PR shows them.
 4. A UI change has a screenshot in Default Dark and Default Light
@@ -181,7 +183,10 @@ behaviour is proven in `e2e/`.
   `migratePrefs` step only when an existing default changes in a way an old
   saved value shouldn't override. A pick-one value that isn't one of the
   options falls back to the default in the initialiser, as `sidebarWidth`
-  is clamped. A new section also needs
+  is clamped (test that a malformed save falls back). A setting that is a
+  list's default filter fills in only when the address doesn't name that
+  filter: the address wins, so a link means the same to everyone it is
+  sent to (say in the PR how a link shows it). A new section also needs
   `SettingsSectionId` in `store.ts`, `SECTIONS` in `routes.ts` and in
   `settings-view.tsx`, and an a11y scene.
 - **A shortcut:** a line in `src/lib/shortcuts.json` (a new group also goes

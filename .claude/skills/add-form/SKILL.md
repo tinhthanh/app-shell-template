@@ -25,7 +25,7 @@ names. You write the fields and the save. `ProjectForm` in
      failTitle="Couldn't save the report"
      onSubmit={async (v) => {                      // v: the fields, trimmed; throw to refuse
        const saved = await client.createReport({ title: v.title ?? "", scope: v.scope ?? "" });
-       mutate<Report[]>("reports", (l) => l && [saved, ...l]);
+       mutate<Report[]>("reports", (l) => l && [saved, ...l]);   // a paged list: editRows(l, (rows) => [saved, ...rows]) on its listKey
        onSaved(saved);
        toastManager.add({ type: "success", title: `${saved.title} was created` });
      }}
@@ -55,6 +55,11 @@ names. You write the fields and the save. `ProjectForm` in
    reaches `onSubmit`: the kit's `Select` (`src/components/ui/select.tsx`,
    `name` and `defaultValue` on the root) or a `RadioGroup` inside the
    `Field`. `SimpleSelect` is for toolbars and filters: it has no `name`.
+   The Kit's Overlays › Form dialog (`src/views/kit/kit-view.tsx`) is the
+   worked example: a `Field` with a `FieldLabel` around a `Select` whose
+   `name` is in `initial`, so the trigger is named by the label and the
+   dirty check (which reads the form when the dialog is asked to close)
+   sees a choice changed as it sees typing.
    Put a unit case in `mock.test.ts` that the value arrives, and a browser
    test that the choice is kept.
 
