@@ -59,7 +59,7 @@ export const vi: Record<keyof typeof en, string> = {
   "projects.nowPaused": "{name} giờ đang tạm dừng",
   "projects.nowArchived": "{name} giờ đã lưu trữ",
   "projects.name": "Tên",
-  "projects.owner": "Người phụ trách",
+  "projects.owner": "Phụ trách",
   "projects.tags": "Thẻ",
   "projects.updated": "Cập nhật",
   "projects.description": "Mô tả",

@@ -71,7 +71,8 @@ for (const root of roots) {
     const visit = (node) => {
       if (hidden(node)) return;
       if (ts.isJsxText(node) && isWord(node.text) && !CODE.has(tagOf(node.parent))) at(node, JSON.stringify(node.text.trim()));
-      else if (ts.isJsxAttribute(node) && SHOWN.has(node.name.getText())) {
+      // scope on an HTML element (<th scope="col">) is the table's, not a word.
+      else if (ts.isJsxAttribute(node) && SHOWN.has(node.name.getText()) && !(node.name.getText() === "scope" && /^[a-z]/.test(node.parent.parent.tagName.getText()))) {
         const init = node.initializer && ts.isJsxExpression(node.initializer) ? node.initializer.expression : node.initializer;
         const s = literal(init);
         if (s !== undefined && isWord(s)) at(node, `${node.name.getText()}=${JSON.stringify(s)}`);

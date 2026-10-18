@@ -33,7 +33,7 @@ const settingsView = await read("src/views/settings/settings-view.tsx");
 for (const k of kinds) {
   if (k !== "home" && !new RegExp(`case "${k}":`).test(routes)) problems.push(`view ${k}: no case in hashToView (src/lib/routes.ts)`);
   if (!routesTest.includes(`kind: "${k}"`)) problems.push(`view ${k}: no round trip in src/lib/routes.test.ts`);
-  if (k !== "home" && !new RegExp(`\\b${k}: "`).test(/viewTitles = \{([^}]*)\}/.exec(app)?.[1] ?? "")) problems.push(`view ${k}: no viewTitles entry in src/App.tsx`);
+  if (k !== "home" && !new RegExp(`\\b${k}: (?:"|t\\()`).test(/viewTitles = (?:\(\) => \()?\{([^}]*)\}/.exec(app)?.[1] ?? "")) problems.push(`view ${k}: no viewTitles entry in src/App.tsx`);
   if (!new RegExp(`id: ["\`]${k}\\b`).test(a11y)) problems.push(`view ${k}: no axe scene in e2e/a11y.spec.ts (a scene whose id starts with "${k}")`);
 }
 const routeSections = /const SECTIONS[^=]*=\s*\[([^\]]*)\]/.exec(routes)?.[1] ?? "";

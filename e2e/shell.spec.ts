@@ -337,3 +337,24 @@ test("a right-to-left page mirrors: the sidebar sits on the right, and its edge'
   const icon = (await app.page.locator("[data-testid=projects] svg.lucide-search").first().boundingBox())!;
   expect(icon.x + icon.width / 2).toBeGreaterThan(box.x + box.width / 2);
 });
+
+test("in Vietnamese the sidebar, the palette and a project's date speak Vietnamese, and the section stays in front when the language changes", async ({ app }) => {
+  await app.open({ prefs: { language: "vi" }, hash: "/projects/p-shop" });
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+  await expect(app.nav("settings")).toContainText("Cài đặt");
+  const detail = app.page.getByTestId("project-detail");
+  await expect(detail.getByText("12 phút trước")).toBeVisible();
+  await app.page.keyboard.press(`${mod()}+k`);
+  await expect(app.page.getByRole("combobox", { name: "Tìm mục, lệnh và chủ đề" })).toBeVisible();
+  await app.page.keyboard.press("Escape");
+  // Back to English from Settings: the section stays in front, now in English.
+  await app.openSettings("general");
+  await app.page
+    .getByRole("radio", { name: "English" })
+    .or(app.page.getByRole("button", { name: "English" }))
+    .first()
+    .click();
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(app.page.getByTestId("settings-general")).toBeVisible();
+  await expect(app.nav("settings")).toContainText("Settings");
+});
