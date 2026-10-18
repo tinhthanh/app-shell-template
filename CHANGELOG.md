@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Projects are read from the server a page at a time, filtered and sorted there: the next page comes as you reach the end of the list (with Try again if it doesn't), the count says how many match a filter, and Back from a row far down a long list puts the keyboard on it again.
+
 - In a development or demo build, `?api=` takes only this site or a server on this machine: a link can no longer send the app's requests to another server.
 
 - A repository made from the template sets itself up with one command (`node scripts/setup-repo.mjs`), and its Pages run is skipped, not failed, until it is configured.

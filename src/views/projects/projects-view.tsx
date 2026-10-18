@@ -19,21 +19,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
-import { client } from "@/lib/api";
+import { client, listQuery } from "@/lib/api";
 import { ago, number } from "@/lib/format";
 import { parseSort, sortToString } from "@/lib/list-keys";
-import { useResource } from "@/lib/resource";
+import { editRows } from "@/lib/pages";
+import { usePages, useResource } from "@/lib/resource";
 import { mutate, optimistic } from "@/lib/resource-cache";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
-import type { Project, ProjectStatus } from "@/lib/types";
+import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { hashTone, toneVar } from "@/themes/tones";
 import { ViewHeader } from "@/views/view-header";
 
-// Projects is the example resource, end to end: a list read through the
-// client and kept by key, narrowed by a search, a status and tags that live
-// in the URL (reload, Back and a link keep them), a detail that edits,
+// Projects is the example resource, end to end: a list read a page at a
+// time through the client, filtered and sorted by the server and kept by
+// key, narrowed by a search, a status and tags that live in the URL
+// (reload, Back and a link keep them), a detail that edits,
 // changes status at once and deletes with a confirm, and a form that
 // creates. Copy it for your own resources.
 
@@ -53,7 +55,7 @@ const COLUMNS: Column<Project>[] = [
   {
     id: "name",
     label: "Name",
-    sort: (a, b) => a.name.localeCompare(b.name),
+    sort: "server",
     cell: (p) => (
       <span className="block min-w-0">
         <span className="flex items-center gap-2">
@@ -64,7 +66,7 @@ const COLUMNS: Column<Project>[] = [
       </span>
     ),
   },
-  { id: "owner", label: "Owner", sort: (a, b) => a.owner.localeCompare(b.owner), from: "lg", className: "w-28", cell: (p) => <span className="text-muted-foreground">{p.owner}</span> },
+  { id: "owner", label: "Owner", sort: "server", from: "lg", className: "w-28", cell: (p) => <span className="text-muted-foreground">{p.owner}</span> },
   {
     id: "tags",
     label: "Tags",
@@ -81,7 +83,7 @@ const COLUMNS: Column<Project>[] = [
   {
     id: "updated",
     label: "Updated",
-    sort: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+    sort: "server",
     from: "sm",
     align: "end",
     className: "w-32",
@@ -89,8 +91,12 @@ const COLUMNS: Column<Project>[] = [
   },
 ];
 const SORTABLE = COLUMNS.filter((c) => c.sort).map((c) => c.id);
-const LIST_KEY = "projects";
 const key = (id: string) => `project:${id}`;
+
+// What the list asks the server for, from the view's filters; each one is
+// kept under its own key, so a filter that comes back draws at once.
+const listOf = (v: ProjectsView): ProjectQuery => ({ q: v.q?.trim() || undefined, status: v.status, tags: v.tags, sort: parseSort(v.sort, SORTABLE) && v.sort });
+const listKey = (v: ProjectsView) => `projects${listQuery(listOf(v))}`;
 
 export function ProjectsView({ id }: { id?: string }) {
   if (id) return <ProjectDetail id={id} />;
@@ -99,7 +105,9 @@ export function ProjectsView({ id }: { id?: string }) {
 
 function ProjectList() {
   const view = useStore((s) => s.view) as ProjectsView;
-  const projects = useResource(() => client.projects(), [], { key: LIST_KEY });
+  const lk = listKey(view);
+  const projects = usePages((page) => client.projects({ ...listOf(view), ...page }), { key: lk });
+  const tagsInUse = useResource(() => client.projectTags(), [], { key: "project-tags" });
   // The filters are the view's; typing replaces the address rather than
   // adding a history entry per letter.
   const set = (patch: Partial<ProjectsView>) => useStore.getState().setView({ ...view, ...patch }, { replace: true });
@@ -107,13 +115,12 @@ function ProjectList() {
   const status: StatusFilter = view.status ?? "";
   const tags = new Set(view.tags ?? []);
 
-  const all = projects.status === "ready" ? projects.data : [];
-  const allTags = [...new Set(all.flatMap((p) => p.tags))].sort();
-  const q = query.trim().toLowerCase();
-  const shown = all.filter((p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!status || p.status === status) && [...tags].every((t) => p.tags.includes(t)));
+  // A tag that is set stays a chip even if no project wears it any more.
+  const allTags = [...new Set([...(tagsInUse.status === "ready" ? tagsInUse.data : []), ...tags])].sort();
+  const filtered = Boolean(query.trim() || status || tags.size);
 
   // Back from a project, the keyboard lands on its row.
-  useReturnFocus("data-project");
+  const backTo = useReturnFocus("data-project");
 
   const open = (p: Project) => useStore.getState().setView({ ...view, id: p.id });
 
@@ -121,14 +128,14 @@ function ProjectList() {
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
         title="Projects"
-        description={projects.status === "ready" ? `${number(all.length)} in all` : undefined}
+        description={projects.status === "ready" ? `${number(projects.data.total)} ${filtered ? "match" : "in all"}` : undefined}
         actions={
           <>
             <Button size="sm" variant="outline" onClick={projects.reload} disabled={projects.loading} aria-label="Reload">
               <RefreshCwIcon className={cn(projects.loading && "animate-spin")} />
               Reload
             </Button>
-            <ProjectForm onSaved={open} trigger={<Button size="sm" />} label="New project" />
+            <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />
           </>
         }
       />
@@ -155,7 +162,7 @@ function ProjectList() {
           resource={projects}
           label="Reading projects…"
           testid="projects"
-          isEmpty={(all) => all.length === 0}
+          isEmpty={(page) => page.items.length === 0 && !filtered}
           empty={
             <Empty className="h-full">
               <EmptyHeader>
@@ -163,17 +170,20 @@ function ProjectList() {
                 <EmptyDescription>Start with the first one; the rest come from your API.</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <ProjectForm onSaved={open} trigger={<Button size="sm" />} label="New project" />
+                <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />
               </EmptyContent>
             </Empty>
           }
         >
-          {() =>
-            shown.length === 0 ? (
+          {(page) =>
+            page.items.length === 0 ? (
               <NothingMatches />
             ) : (
               <DataTable
-                rows={shown}
+                rows={page.items}
+                total={page.total}
+                more={projects.more}
+                focusRow={backTo}
                 columns={COLUMNS}
                 rowKey={(p) => p.id}
                 sort={parseSort(view.sort, SORTABLE)}
@@ -205,7 +215,7 @@ function ProjectDetail({ id }: { id: string }) {
   // server refuses, it goes back and a toast says why.
   const setStatus = async (status: ProjectStatus) => {
     try {
-      const saved = await optimistic<Project>({ key: key(id), listKey: LIST_KEY, id, patch: { status }, write: () => client.updateProject(id, { status }) });
+      const saved = await optimistic<Project>({ key: key(id), listKey: listKey(view), id, patch: { status }, write: () => client.updateProject(id, { status }) });
       toastManager.add({ type: "success", title: `${saved.name} is now ${status}` });
     } catch (err) {
       toastError(err, "Couldn't update the project");
@@ -217,7 +227,7 @@ function ProjectDetail({ id }: { id: string }) {
       name: p.name,
       description: "The project and its history go for good.",
       key: key(id),
-      listKey: LIST_KEY,
+      listKey: listKey(view),
       id,
       remove: () => client.deleteProject(id),
       after: () => useStore.getState().setView({ ...view, id: undefined }),
@@ -277,8 +287,9 @@ function ProjectDetail({ id }: { id: string }) {
 // ProjectForm is the example form: a name (required, up to 60 characters)
 // and a description, validated in the app's own words and by the server (a
 // refusal lands on the field it names). With a project it edits; without,
-// it creates. FormDialog does the rest (components/form-dialog.tsx).
-function ProjectForm({ project, onSaved, trigger, label }: { project?: Project; onSaved(saved: Project): void; trigger: React.ReactElement; label: ReactNode }) {
+// it creates, at the top of the list it was opened from (listKey).
+// FormDialog does the rest (components/form-dialog.tsx).
+function ProjectForm({ project, listKey, onSaved, trigger, label }: { project?: Project; listKey?: string; onSaved(saved: Project): void; trigger: React.ReactElement; label: ReactNode }) {
   return (
     <FormDialog
       trigger={trigger}
@@ -292,7 +303,7 @@ function ProjectForm({ project, onSaved, trigger, label }: { project?: Project; 
       onSubmit={async (v) => {
         const input = { name: v.name ?? "", description: v.description ?? "" };
         const saved = project ? await client.updateProject(project.id, input) : await client.createProject(input);
-        if (!project) mutate<Project[]>(LIST_KEY, (l) => l && [saved, ...l]);
+        if (!project && listKey) mutate<Page<Project>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Project> | undefined);
         onSaved(saved);
         toastManager.add({ type: "success", title: project ? "Project saved" : `${saved.name} was created` });
       }}

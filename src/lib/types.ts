@@ -86,6 +86,28 @@ export interface Project {
   updatedAt: string;
 }
 
+// What the list asks the server for: the filters and the sort from the
+// address (lib/routes.ts), and where to start.
+export interface ProjectQuery {
+  q?: string;
+  status?: ProjectStatus;
+  tags?: string[];
+  // "name:asc", as the address has it (lib/list-keys.ts).
+  sort?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+// ---- A list a page at a time (lib/pages.ts) --------------------------------
+
+export interface Page<T> {
+  items: T[];
+  // Where the next page starts; absent on the last.
+  next?: string;
+  // How many match in all, for the count and a screen reader.
+  total: number;
+}
+
 // ---- Who is signed in (lib/session.ts) ------------------------------------
 
 export interface User {

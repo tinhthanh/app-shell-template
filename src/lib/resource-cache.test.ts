@@ -47,6 +47,13 @@ test("an optimistic write shows at once in the record and the list, then what th
   assert.equal(cached<Row[]>("rows")?.[0]?.name, "A (saved)");
 });
 
+test("an optimistic write reaches its row in a list kept a page at a time", async () => {
+  remember<Row>("row:a", { id: "a", status: "active", name: "A" });
+  remember("rows?page", { items: [{ id: "a", status: "active", name: "A" }], next: "1", total: 4 });
+  await optimistic<Row>({ key: "row:a", listKey: "rows?page", id: "a", patch: { status: "paused" }, write: async () => ({ id: "a", status: "paused", name: "A" }) });
+  assert.deepEqual(cached("rows?page"), { items: [{ id: "a", status: "paused", name: "A" }], next: "1", total: 4 });
+});
+
 test("a refused optimistic write goes back as it was, and the error is thrown on", async () => {
   remember<Row>("row:a", { id: "a", status: "active", name: "A" });
   remember<Row[]>("rows", [{ id: "a", status: "active", name: "A" }]);

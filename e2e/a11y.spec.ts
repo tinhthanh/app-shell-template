@@ -97,6 +97,15 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "projects with a page that didn't come",
+    run: async (app) => {
+      await app.open({ params: { many: "1", failMore: "1" }, hash: "/projects" });
+      await app.page.getByTestId("project-row").first().focus();
+      await app.page.keyboard.press("End");
+      await expect(app.page.getByTestId("more-rows").getByRole("button", { name: "Try again" })).toBeVisible();
+    },
+  },
+  {
     id: "projects empty",
     run: async (app) => {
       await app.open({ params: { empty: "1" }, hash: "/projects" });

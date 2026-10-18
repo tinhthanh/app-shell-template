@@ -1,6 +1,8 @@
 import { confirm } from "@/components/confirm";
 import { toastManager } from "@/components/ui/toast";
+import { editRows } from "@/lib/pages";
 import { forget, mutate } from "@/lib/resource-cache";
+import type { Page } from "@/lib/types";
 
 // removeRecord deletes a record the way the app does it: a confirm that
 // names it, the call, the record forgotten and its row taken out of the
@@ -26,7 +28,7 @@ export function removeRecord<T extends { id: string }>(o: {
     run: async () => {
       await o.remove();
       forget(o.key);
-      mutate<T[]>(o.listKey, (l) => l?.filter((x) => x.id !== o.id));
+      mutate<T[] | Page<T>>(o.listKey, (l) => editRows(l, (rows) => rows.filter((x) => x.id !== o.id)));
       toastManager.add({ type: "success", title: `${o.name} was deleted` });
       o.after?.();
     },

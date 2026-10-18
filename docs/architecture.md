@@ -7,7 +7,8 @@ file headers say what each module is for; this says how they connect.
 ## A read, end to end
 
 ```
-view            useResource(() => client.projects(), [])      src/lib/resource.ts
+view            useResource(() => client.project(id), [id])   src/lib/resource.ts
+                usePages((page) => client.projects({…filters, …page}), { key })   a list, a page at a time
   └─ client     mockClient() | httpClient(VITE_API_URL)       src/lib/api.ts, src/lib/mock.ts
        └─ answers with data, or throws ApiError(message, status, code)   src/lib/errors.ts
 <ResourceView>  loading   → <PixelLoader>                      src/components/resource-view.tsx
@@ -27,6 +28,16 @@ answer is kept for the page's life (`lib/resource-cache.ts`): the list
 draws at once when you come back, and a write calls `mutate(key, …)` to
 show its result before the server confirms, putting it back on refusal.
 A list's filters are part of its `View`, so the URL carries them.
+
+A list that can grow (Projects) is read a page at a time with `usePages`:
+the server filters and sorts and answers a `Page` (`items`, `next`,
+`total`; `lib/pages.ts`), each filter and sort is kept under its own key
+(`projects?status=active`), `<DataTable more total>` asks for the next
+page as its last rows come on screen and says when one fails, and
+`optimistic()` and `removeRecord()` change a paged list's rows as they do
+a whole one's. Coming back, the first read asks for as many rows as were
+kept, so the row the keyboard left (`focusRow`) is still there. A short,
+bounded list (the tags in use) is read whole with `useResource`.
 
 ## Where state lives
 

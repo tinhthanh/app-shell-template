@@ -8,7 +8,9 @@ import { FIXTURES, mockClient } from "./mock.ts";
 test("the fixtures list, read one, and keep an update", async () => {
   const c = mockClient({ latency: 0 });
   const all = await c.projects();
-  assert.equal(all.length, FIXTURES.length);
+  assert.equal(all.items.length, FIXTURES.length);
+  assert.equal(all.total, FIXTURES.length);
+  assert.equal(all.next, undefined);
   const one = await c.project("p-shop");
   assert.equal(one.name, "Shop");
   const updated = await c.updateProject("p-shop", { status: "paused" });
@@ -35,7 +37,7 @@ test("a project is created with an id from its name, and deleted", async () => {
   const c = mockClient({ latency: 0 });
   const p = await c.createProject({ name: "Loyalty Cards", description: "Points and perks." });
   assert.equal(p.id, "p-loyalty-cards");
-  assert.equal((await c.projects()).length, FIXTURES.length + 1);
+  assert.equal((await c.projects()).total, FIXTURES.length + 1);
   await assert.rejects(c.createProject({ name: "Shop", description: "" }), (e: unknown) => e instanceof ApiError && e.code === "invalid");
   await c.deleteProject(p.id);
   await assert.rejects(c.project(p.id), (e: unknown) => e instanceof ApiError && e.status === 404);
@@ -45,7 +47,7 @@ test("a project is created with an id from its name, and deleted", async () => {
 test("failOnce fails the first call only, and failWrites only the writes", async () => {
   const once = mockClient({ latency: 0, failOnce: true });
   await assert.rejects(once.projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
-  assert.equal((await once.projects()).length, FIXTURES.length);
+  assert.equal((await once.projects()).total, FIXTURES.length);
   const writes = mockClient({ latency: 0, failWrites: true });
   assert.equal((await writes.project("p-shop")).name, "Shop");
   await assert.rejects(writes.updateProject("p-shop", { status: "paused" }), (e: unknown) => e instanceof ApiError && e.status === 503);
@@ -78,14 +80,51 @@ test("search finds projects by a few letters, best first", async () => {
 });
 
 test("many gives thousands of projects, the same every time", async () => {
-  const a = await mockClient({ latency: 0, many: true }).projects();
-  const b = await mockClient({ latency: 0, many: true }).projects();
-  assert.equal(a.length, 5000);
-  assert.deepEqual(a[4999], b[4999]);
-  assert.equal(new Set(a.map((p) => p.id)).size, 5000);
+  const a = await mockClient({ latency: 0, many: true }).projects({ limit: 5000 });
+  const b = await mockClient({ latency: 0, many: true }).projects({ limit: 5000 });
+  assert.equal(a.total, 5000);
+  assert.deepEqual(a.items[4999], b.items[4999]);
+  assert.equal(new Set(a.items.map((p) => p.id)).size, 5000);
+});
+
+test("the list comes a page at a time, each starting where the last one ended", async () => {
+  const c = mockClient({ latency: 0, many: true });
+  const first = await c.projects();
+  assert.equal(first.items.length, 50);
+  assert.equal(first.total, 5000);
+  assert.equal(first.next, "50");
+  const second = await c.projects({ cursor: first.next });
+  assert.equal(second.items[0]?.id, "p-51");
+  const last = await c.projects({ cursor: "4990" });
+  assert.equal(last.items.length, 10);
+  assert.equal(last.next, undefined);
+  assert.equal((await c.projects({ limit: 120 })).items.length, 120);
+});
+
+test("the server filters by search, status and tags, and sorts by a column either way", async () => {
+  const c = mockClient({ latency: 0 });
+  const names = async (q: Parameters<typeof c.projects>[0]) => (await c.projects(q)).items.map((p) => p.name);
+  assert.deepEqual(await names({ q: "app" }), ["iOS app", "Android app"]);
+  assert.deepEqual(await names({ q: "app", status: "active" }), ["iOS app"]);
+  assert.deepEqual(await names({ tags: ["web", "ops"] }), ["Legacy admin"]);
+  assert.equal((await c.projects({ q: "app" })).total, 2);
+  assert.equal((await names({ sort: "name:asc" }))[0], "Android app");
+  assert.equal((await names({ sort: "name:desc" }))[0], "Warehouse");
+  assert.equal((await names({ sort: "nope:asc" }))[0], "Shop");
+});
+
+test("the tags in use are listed once each, in order", async () => {
+  assert.deepEqual(await mockClient({ latency: 0 }).projectTags(), ["backend", "design", "mobile", "ops", "payments", "web"]);
+});
+
+test("failMore fails the first read of a later page once, and Try again gets it", async () => {
+  const c = mockClient({ latency: 0, many: true, failMore: true });
+  const first = await c.projects();
+  await assert.rejects(c.projects({ cursor: first.next }), (e: unknown) => e instanceof ApiError && e.status === 503);
+  assert.equal((await c.projects({ cursor: first.next })).items[0]?.id, "p-51");
 });
 
 test("fail makes every call a 503, and empty starts with nothing", async () => {
   await assert.rejects(mockClient({ latency: 0, fail: true }).projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
-  assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), []);
+  assert.deepEqual(await mockClient({ latency: 0, empty: true }).projects(), { items: [], total: 0 });
 });

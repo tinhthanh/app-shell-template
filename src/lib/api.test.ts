@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
-import { ApiError, errorBody, httpClient, READ_TIMEOUT_MS } from "./api.ts";
+import { ApiError, errorBody, httpClient, listQuery, READ_TIMEOUT_MS } from "./api.ts";
 
 type Answer = { status: number; body?: string; json?: unknown; hang?: boolean; throws?: Error };
 const calls: { url: string; init: RequestInit }[] = [];
@@ -34,6 +34,17 @@ test("reads GET their path and writes PATCH JSON, ids escaped", async () => {
   assert.equal(calls[1]?.init.method, "PATCH");
   assert.equal(calls[1]?.init.body, JSON.stringify({ status: "paused" }));
   assert.deepEqual(calls[1]?.init.headers, { "Content-Type": "application/json" });
+});
+
+test("the list asks for its filters, sort and page in the query, and leaves out what is unset", async () => {
+  answer = { status: 200, json: { items: [], total: 0 } };
+  await client.projects({ q: "a b", status: "active", tags: ["web", "ops"], sort: "name:asc", cursor: "50", limit: 50 });
+  assert.equal(calls[0]?.url, "http://api.test/projects?q=a+b&status=active&tags=web%2Cops&sort=name%3Aasc&cursor=50&limit=50");
+  await client.projects();
+  assert.equal(calls[1]?.url, "http://api.test/projects");
+  assert.equal(listQuery({ q: "", tags: [], cursor: undefined }), "");
+  await client.projectTags();
+  assert.equal(calls[2]?.url, "http://api.test/project-tags");
 });
 
 test("search asks the server with the query escaped", async () => {

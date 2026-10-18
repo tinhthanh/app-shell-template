@@ -118,6 +118,12 @@ configs or these rules without the `guardrail-change` label.
   header (the sort on the `View`, as `sort=name:asc`), the arrows, PageUp/Down,
   Home and End between rows, Enter to open, and only the rows on screen in
   the DOM, so thousands stay quick (`?many=1` on the mock).
+- **A list that can grow is read a page at a time** with `usePages`
+  (lib/resource.ts): the server filters and sorts and answers a `Page`
+  (lib/pages.ts), the key names the query (`projects${listQuery(…)}`),
+  and the table gets `more`, `total` and `focusRow`; its columns sort
+  with `"server"`. A short, bounded list (tags, a team's roles) is read
+  whole with `useResource`.
 - **A list's filters are part of its `View`** (`routes.ts` writes them in
   the hash), set with `setView(…, { replace: true })`, never component
   state: reload, Back and a link keep them.
@@ -187,7 +193,7 @@ behaviour is proven in `e2e/`.
   the mock methods (through `guard()`, cloning what they return) in
   `src/lib/mock.ts` (read, read one, create, update, delete), cases in
   `mock.test.ts` and `api.test.ts`; a view after `views/projects/`: keyed
-  reads, filters on the `View` in a `ListToolbar` (`NothingMatches` when
+  reads (a page at a time when the list can grow), filters on the `View` in a `ListToolbar` (`NothingMatches` when
   they leave none), rows in a `DataTable`, one record in a `DetailPage`,
   writes through `optimistic()`, create and edit in a `FormDialog`, delete
   through `removeRecord()`: what you write is the columns, the fields and
