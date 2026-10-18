@@ -5,13 +5,15 @@ import { create } from "zustand";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle } from "@/components/ui/dialog";
 import { APP_VERSION } from "@/lib/app";
+import { t } from "@/lib/i18n";
 import { firstRun, setPrefs, usePrefs } from "@/lib/prefs";
 import { RELEASES } from "@/lib/releases";
 import { decide, latestRelease, type Release } from "@/lib/whats-new";
 
 // What's new shows a release's notes: once after an update (lib/whats-new.ts
 // decides, against prefs.whatsNewSeen), and whenever asked from the palette
-// or Settings › About (openWhatsNew). App.tsx mounts it once.
+// or Settings › About (openWhatsNew). App.tsx mounts it once. The frame is
+// in the language in use; the notes are the changelog's, as written.
 
 const useWhatsNew = create<{ release?: Release }>()(() => ({}));
 
@@ -41,9 +43,9 @@ export function WhatsNewDialog() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <SparklesIcon className="size-4 text-muted-foreground" />
-              What's new in {release.version}
+              {t("settings.whatsNew.title", { version: release.version })}
             </DialogTitle>
-            <DialogDescription>What this version brings.</DialogDescription>
+            <DialogDescription>{t("settings.whatsNew.description")}</DialogDescription>
           </DialogHeader>
           <DialogPanel>
             <ul className="flex flex-col gap-2 text-sm">
@@ -56,7 +58,7 @@ export function WhatsNewDialog() {
             </ul>
           </DialogPanel>
           <DialogFooter>
-            <DialogClose render={<Button />}>Got it</DialogClose>
+            <DialogClose render={<Button />}>{t("settings.whatsNew.gotIt")}</DialogClose>
           </DialogFooter>
         </DialogPopup>
       )}

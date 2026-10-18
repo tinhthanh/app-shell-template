@@ -64,3 +64,19 @@ test("resetting preferences asks first, and the shortcuts list searches", async 
   await expect(shortcuts.getByText("Zoom in")).toBeVisible();
   await expect(shortcuts.getByText("Search and commands")).toHaveCount(0);
 });
+
+test("choosing Tiếng Việt puts the app's words in Vietnamese, and it is kept", async ({ app }) => {
+  await app.open({ prefs: { language: "en" } });
+  const general = await app.openSettings("general");
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "en");
+  await general.getByRole("button", { name: "Tiếng Việt", exact: true }).click();
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+  // The frame is drawn again in Vietnamese, on the same section.
+  await expect(app.page.getByTestId("settings-nav-general")).toHaveAccessibleName("Chung");
+  await expect(app.page.getByTestId("settings-general").getByText("Ngôn ngữ", { exact: true }).first()).toBeVisible();
+  await expect(app.page.getByTestId("settings-general").getByRole("button", { name: "Tiếng Việt", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(async () => ((await app.stored("app.prefs")) as { language?: string }).language).toBe("vi");
+  await app.page.reload();
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+  await expect(app.page.getByTestId("settings-nav-about")).toHaveAccessibleName("Giới thiệu");
+});

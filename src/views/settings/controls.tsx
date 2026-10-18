@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
+
 import { PickOne } from "@/components/pick-one";
 import { NumberField, NumberFieldDecrement, NumberFieldGroup, NumberFieldIncrement, NumberFieldInput } from "@/components/ui/number-field";
 import { useSettingsRow } from "@/views/settings/rows";
 
 // Segmented picks one of a few values, with the app's shared PickOne.
-export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: string }[]; onChange(v: T): void; label?: string }) {
+export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: ReactNode }[]; onChange(v: T): void; label?: string }) {
   const row = useSettingsRow();
   return <PickOne value={value} options={options} onChange={onChange} label={label} aria-labelledby={label ? undefined : row?.labelledBy} aria-describedby={row?.describedBy} />;
 }

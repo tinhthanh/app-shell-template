@@ -1,5 +1,6 @@
 import { Children, cloneElement, createContext, Fragment, isValidElement, type ReactElement, type ReactNode, useContext, useId } from "react";
 
+import { t } from "@/lib/i18n";
 import { platformKeys } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { ViewHeader } from "@/views/view-header";
@@ -15,7 +16,7 @@ export function SettingsPage({ title, badge, description, actions, children }: {
       <ViewHeader
         title={
           <span className="flex items-baseline gap-1.5">
-            <span className="text-muted-foreground">Settings</span>
+            <span className="text-muted-foreground">{t("settings.title")}</span>
             <span className="text-muted-foreground/60">/</span>
             {title}
             {badge && <span className="self-center">{badge}</span>}
@@ -100,6 +101,12 @@ export function SettingsRow({ label, description, children, className }: { label
 // Code is a path or a command inside a description.
 export function Code({ children }: { children: ReactNode }) {
   return <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">{children}</code>;
+}
+
+// fill puts pieces of markup (a Code, say) into a word's blanks: t() fills
+// blanks with text only, and a translation may move them about.
+export function fill(text: string, parts: Record<string, ReactNode>): ReactNode {
+  return text.split(/\{(\w+)\}/).map((s, i) => (i % 2 ? <Fragment key={s}>{parts[s] ?? `{${s}}`}</Fragment> : s));
 }
 
 // Value shows a setting that is read, not edited here, as a quiet chip.
