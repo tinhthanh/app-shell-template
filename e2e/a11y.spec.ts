@@ -37,6 +37,16 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   })),
   { id: "settings appearance", run: async (app) => void (await app.openSettings("appearance")) },
   { id: "settings general", run: async (app) => void (await app.openSettings("general")) },
+  {
+    // The test has opened the app already (seeding its theme), so the language is chosen as a person would.
+    id: "settings general in Vietnamese",
+    run: async (app) => {
+      const general = await app.openSettings("general");
+      await general.getByRole("button", { name: "Tiếng Việt", exact: true }).click();
+      await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+      await expect(app.page.getByTestId("settings-nav-general")).toHaveAccessibleName("Chung");
+    },
+  },
   { id: "settings shortcuts", run: async (app) => void (await app.openSettings("shortcuts")) },
   { id: "settings about", run: async (app) => void (await app.openSettings("about")) },
   {
