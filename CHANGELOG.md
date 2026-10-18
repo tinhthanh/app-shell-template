@@ -7,6 +7,8 @@ about what the person gets. A release renames the heading to its version.
 
 - What you can do follows your role: a viewer sees the projects but no New, Edit, status change or Delete; a member does everything but delete; the account menu says which role you have.
 
+- Closing a form after changing only a choice (a select) asks before it throws the change away, as it does after typing; the Kit has a form dialog with a select to copy; a loader's clock is as readable as its words.
+
 - Projects are read from the server a page at a time, filtered and sorted there: the next page comes as you reach the end of the list (with Try again if it doesn't), the count says how many match a filter, and Back from a row far down a long list puts the keyboard on it again.
 
 - In a development or demo build, `?api=` takes only this site or a server on this machine: a link can no longer send the app's requests to another server.

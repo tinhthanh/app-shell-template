@@ -5,6 +5,7 @@ import { confirm } from "@/components/confirm";
 import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
+import { FormDialog } from "@/components/form-dialog";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
 import { SimpleSelect } from "@/components/simple-select";
@@ -18,7 +19,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardPanel, CardTitle } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Field, FieldControl, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
@@ -26,6 +27,7 @@ import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/compone
 import { Popover, PopoverDescription, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Progress, ProgressIndicator, ProgressLabel, ProgressTrack, ProgressValue } from "@/components/ui/progress";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetDescription, SheetFooter, SheetHeader, SheetPanel, SheetPopup, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
@@ -280,6 +282,9 @@ function Choices() {
   );
 }
 
+// The Kit's loader started a while ago, so its clock shows at once.
+const LONG_WAIT_SINCE = Date.now() - 65_000;
+
 function Feedback() {
   return (
     <>
@@ -311,7 +316,9 @@ function Feedback() {
       </Section>
       <Section title="Waiting">
         <Spinner />
-        <PixelLoader label="Reading projects…" />
+        {/* A wait that has taken a while, so its clock shows from the start and
+            axe checks it every time, not only when a slow run reaches its second second. */}
+        <PixelLoader label="Reading projects…" since={LONG_WAIT_SINCE} />
         <div className="flex w-full flex-col gap-2">
           <Skeleton className="h-4 w-3/5" />
           <Skeleton className="h-4 w-2/5" />
@@ -342,9 +349,52 @@ function Feedback() {
   );
 }
 
+const KINDS = [
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+];
+
 function Overlays() {
   return (
     <>
+      <Section title="Form dialog">
+        {/* A FormDialog with a typed field and a choice: a Select takes a
+            name, so its value is in the form, and choosing counts as an edit. */}
+        <FormDialog
+          trigger={<Button variant="outline" />}
+          label="Open a form"
+          title="New report"
+          description="Its title and how often it comes."
+          initial={{ title: "Stock levels", kind: "weekly" }}
+          submit="Create"
+          failTitle="Couldn't save the report"
+          onSubmit={async (v) => {
+            toastManager.add({ type: "success", title: `${v.title} comes ${v.kind}` });
+          }}
+        >
+          <Field name="title" validate={(v) => (String(v ?? "").trim() ? null : "A report needs a title.")}>
+            <FieldLabel>Title</FieldLabel>
+            <FieldControl render={<Input defaultValue="Stock levels" aria-required />} />
+            <FieldError />
+          </Field>
+          <Field name="kind">
+            <FieldLabel>How often</FieldLabel>
+            <Select name="kind" defaultValue="weekly" items={KINDS}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectPopup>
+                {KINDS.map((k) => (
+                  <SelectItem key={k.value} value={k.value}>
+                    {k.label}
+                  </SelectItem>
+                ))}
+              </SelectPopup>
+            </Select>
+          </Field>
+        </FormDialog>
+      </Section>
       <Section title="Dialog and sheet">
         <Dialog>
           <DialogTrigger render={<Button variant="outline" />}>Open a dialog</DialogTrigger>
