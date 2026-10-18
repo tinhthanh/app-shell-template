@@ -47,7 +47,7 @@ bounded list (the tags in use) is read whole with `useResource`.
 | The person's settings: density, text size, sidebar, system themes | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
-| Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011) |
+| Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
 
 `src/lib/storage.ts` wraps `localStorage` in try/catch: storage can be
 missing or throw, and the app must work without it.

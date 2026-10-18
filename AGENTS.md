@@ -118,6 +118,11 @@ configs or these rules without the `guardrail-change` label.
 - **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
   call signs out (`docs/decisions/0011-sessions.md`); never a token in
   storage.
+- **What a person may do is `can(user, action)`** (`lib/permissions.ts`,
+  `docs/decisions/0012-permissions.md`): a view asks `useCan("project.delete")`
+  and leaves out what isn't theirs to do, never `user.role === …` in a
+  component. The server decides; the mock refuses with a 403 under
+  `?role=viewer` or `?role=member`.
 - **Key hints** are written for a Mac (`⌘K`) and shown through `<Kbd>`, which
   rewrites them for other platforms.
 - **Reads go through `useResource`** and are drawn by `<ResourceView>`

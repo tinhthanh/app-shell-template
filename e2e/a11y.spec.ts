@@ -106,6 +106,13 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "project detail as a viewer",
+    run: async (app) => {
+      await app.open({ params: { role: "viewer" }, hash: "/projects/p-shop" });
+      await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+    },
+  },
+  {
     id: "projects empty",
     run: async (app) => {
       await app.open({ params: { empty: "1" }, hash: "/projects" });

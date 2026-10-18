@@ -25,6 +25,7 @@ import { parseSort, sortToString } from "@/lib/list-keys";
 import { editRows } from "@/lib/pages";
 import { usePages, useResource } from "@/lib/resource";
 import { mutate, optimistic } from "@/lib/resource-cache";
+import { useCan } from "@/lib/session";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
@@ -105,6 +106,8 @@ export function ProjectsView({ id }: { id?: string }) {
 
 function ProjectList() {
   const view = useStore((s) => s.view) as ProjectsView;
+  // What isn't the person's to do isn't offered (lib/permissions.ts); the server still decides.
+  const canCreate = useCan("project.create");
   const lk = listKey(view);
   const projects = usePages((page) => client.projects({ ...listOf(view), ...page }), { key: lk });
   const tagsInUse = useResource(() => client.projectTags(), [], { key: "project-tags" });
@@ -135,7 +138,7 @@ function ProjectList() {
               <RefreshCwIcon className={cn(projects.loading && "animate-spin")} />
               Reload
             </Button>
-            <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />
+            {canCreate && <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />}
           </>
         }
       />
@@ -167,11 +170,13 @@ function ProjectList() {
             <Empty className="h-full">
               <EmptyHeader>
                 <EmptyTitle>No projects yet</EmptyTitle>
-                <EmptyDescription>Start with the first one; the rest come from your API.</EmptyDescription>
+                <EmptyDescription>{canCreate ? "Start with the first one; the rest come from your API." : "When someone adds one, it shows here."}</EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
-                <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />
-              </EmptyContent>
+              {canCreate && (
+                <EmptyContent>
+                  <ProjectForm listKey={lk} onSaved={open} trigger={<Button size="sm" />} label="New project" />
+                </EmptyContent>
+              )}
             </Empty>
           }
         >
@@ -203,6 +208,8 @@ function ProjectList() {
 
 function ProjectDetail({ id }: { id: string }) {
   const view = useStore((s) => s.view) as ProjectsView;
+  const canEdit = useCan("project.edit");
+  const canDelete = useCan("project.delete");
   const project = useResource(() => client.project(id), [id], { key: key(id) });
   const p = project.status === "ready" ? project.data : undefined;
   useTitle(p?.name);
@@ -241,7 +248,8 @@ function ProjectDetail({ id }: { id: string }) {
       crumb={{ label: "Projects", view: { ...view, id: undefined } }}
       onBack={back}
       actions={
-        p && (
+        p &&
+        canDelete && (
           <Button size="sm" variant="destructive-outline" onClick={remove}>
             <Trash2Icon />
             Delete
@@ -254,12 +262,14 @@ function ProjectDetail({ id }: { id: string }) {
           {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
           <div className="flex items-start gap-3">
             <StatusBadge status={p.status} />
-            <ProjectForm
-              project={p}
-              onSaved={(saved) => mutate<Project>(key(id), () => saved)}
-              trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ms-auto" />}
-              label={<PencilIcon />}
-            />
+            {canEdit && (
+              <ProjectForm
+                project={p}
+                onSaved={(saved) => mutate<Project>(key(id), () => saved)}
+                trigger={<Button size="icon-xs" variant="ghost" aria-label="Edit the project" className="ms-auto" />}
+                label={<PencilIcon />}
+              />
+            )}
           </div>
           <p className="mt-3 text-base">{p.description}</p>
           <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
@@ -274,8 +284,12 @@ function ProjectDetail({ id }: { id: string }) {
             <dt className="text-muted-foreground">Updated</dt>
             <dd>{ago(p.updatedAt)}</dd>
             <dt className="text-muted-foreground">Status</dt>
-            <dd>
-              <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
+            <dd className={cn(!canEdit && "capitalize")}>
+              {canEdit ? (
+                <PickOne label="Status" value={p.status} options={STATUSES.filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
+              ) : (
+                p.status
+              )}
             </dd>
           </dl>
         </div>

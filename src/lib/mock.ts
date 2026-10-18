@@ -1,7 +1,8 @@
 import type { Client } from "@/lib/api";
-import type { Project, SearchHit, User } from "@/lib/types";
+import type { Project, Role, SearchHit, User } from "@/lib/types";
 import { ApiError } from "./errors.ts";
 import { pageOf, sortRows } from "./pages.ts";
+import { type Action, can } from "./permissions.ts";
 import { rankEach } from "./search-rank.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
@@ -19,6 +20,8 @@ import { rankEach } from "./search-rank.ts";
 //   ?mock=1&empty=1       there are no projects
 //   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
 //   ?mock=1&many=1        5,000 projects, for the list's scrolling and keys
+//   ?mock=1&role=viewer   signed in as a viewer (or member): the writes
+//                         their role can't take are refused with a 403
 //   ?mock=1&failMore=1    the list's second page fails once, then comes (Try again)
 
 const now = Date.now();
@@ -65,6 +68,8 @@ export interface MockOptions {
   empty?: boolean;
   // Seed data of your own (defaults to FIXTURES).
   projects?: Project[];
+  // Who is signed in may only do what this role may (lib/permissions.ts).
+  role?: Role;
   // Start signed out: every call is a 401 until signIn.
   signedOut?: boolean;
   // Thousands of projects, for a long list.
@@ -76,7 +81,7 @@ export interface MockOptions {
   onUnauthorized?: () => void;
 }
 
-export const ALEX: User = { id: "u-alex", name: "Alex Rivera", email: "alex@acme.test" };
+export const ALEX: User = { id: "u-alex", name: "Alex Rivera", email: "alex@acme.test", role: "owner" };
 
 const fromUrl = (): MockOptions => {
   if (typeof location === "undefined") return {};
@@ -90,6 +95,7 @@ const fromUrl = (): MockOptions => {
     signedOut: q.has("signedOut"),
     many: q.has("many"),
     failMore: q.has("failMore"),
+    role: (["owner", "member", "viewer"] as const).find((r) => r === q.get("role")),
   };
 };
 
@@ -100,7 +106,8 @@ export function mockClient(given: MockOptions = {}): Client {
   const latency = opts.latency ?? 0;
   let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? (opts.many ? many() : FIXTURES));
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
-  let user: User | null = opts.signedOut ? null : ALEX;
+  const me = { ...ALEX, role: opts.role ?? ALEX.role };
+  let user: User | null = opts.signedOut ? null : me;
   let calls = 0;
   let laterPages = 0;
   const down = () => new ApiError("The server is not answering right now.", 503, "unavailable");
@@ -108,11 +115,14 @@ export function mockClient(given: MockOptions = {}): Client {
     opts.onUnauthorized?.();
     return new ApiError("You're signed out.", 401, "unauthorized");
   };
-  const guard = async (write = false) => {
+  // guard is every call's first line: the knobs, then who is asking, then
+  // (for a write) whether their role may take it.
+  const guard = async (write = false, action?: Action) => {
     await wait();
     calls++;
     if (opts.fail || (opts.failOnce && calls === 1) || (write && opts.failWrites)) throw down();
     if (!user) throw unauthorized();
+    if (action && !can(user, action)) throw new ApiError("Your role doesn't allow that.", 403, "forbidden");
   };
   const find = (id: string) => {
     const p = projects.find((x) => x.id === id);
@@ -144,7 +154,7 @@ export function mockClient(given: MockOptions = {}): Client {
       return structuredClone(find(id));
     },
     async updateProject(id, patch) {
-      await guard(true);
+      await guard(true, "project.edit");
       // What a server would refuse: an empty name, or one another project has.
       if (patch.name !== undefined && !patch.name.trim()) throw new ApiError("A project needs a name.", 422, "invalid", "name");
       if (patch.name && projects.some((p) => p.id !== id && p.name.toLowerCase() === patch.name?.toLowerCase()))
@@ -154,7 +164,7 @@ export function mockClient(given: MockOptions = {}): Client {
       return structuredClone(next);
     },
     async createProject(input) {
-      await guard(true);
+      await guard(true, "project.create");
       const name = input.name.trim();
       if (!name) throw new ApiError("A project needs a name.", 422, "invalid", "name");
       if (projects.some((p) => p.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`Another project is already called ${name}.`, 422, "invalid", "name");
@@ -167,7 +177,7 @@ export function mockClient(given: MockOptions = {}): Client {
       return structuredClone(p);
     },
     async deleteProject(id) {
-      await guard(true);
+      await guard(true, "project.delete");
       find(id);
       projects = projects.filter((p) => p.id !== id);
     },
@@ -189,7 +199,7 @@ export function mockClient(given: MockOptions = {}): Client {
     async signIn(email, password) {
       await wait();
       if (!email.trim() || !password) throw new ApiError("That email and password don't match.", 401, "unauthorized");
-      user = { ...ALEX, email: email.trim() };
+      user = { ...me, email: email.trim() };
       return structuredClone(user);
     },
     async signOut() {

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { type Action, can } from "./permissions.ts";
 import { clearCache } from "./resource-cache.ts";
 import type { User } from "./types.ts";
 
@@ -17,6 +18,10 @@ export const useSession = create<{ status: SessionStatus; user?: User }>()(() =>
 export function signedIn(user?: User) {
   useSession.setState({ status: "signed-in", user });
 }
+
+// useCan says whether the person signed in may take an action
+// (lib/permissions.ts), and redraws when who that is changes.
+export const useCan = (action: Action): boolean => useSession((s) => can(s.user, action));
 
 // signedOut forgets everything read for the person who left.
 export function signedOut() {
