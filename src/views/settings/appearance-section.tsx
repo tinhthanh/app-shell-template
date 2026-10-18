@@ -165,7 +165,8 @@ function Preview({ theme }: { theme: Theme }) {
   const c = theme.colors;
   const t = theme.terminal;
   return (
-    <div className="flex h-full" style={{ background: c.background }}>
+    // A picture of the theme, hidden from a screen reader where it is used; said here too, so check:words knows.
+    <div aria-hidden className="flex h-full" style={{ background: c.background }}>
       <div className="flex w-[38%] flex-col gap-1.5 border-e px-2.5 py-3" style={{ background: c.sidebar, borderColor: c.border }}>
         <div className="h-1.5 w-4/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.55 }} />
         <div className="h-1.5 w-3/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.3 }} />

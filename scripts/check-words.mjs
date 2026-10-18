@@ -48,7 +48,15 @@ async function* files(path) {
 
 // A file's path (src/lib/api.ts) is a name, the same in every language.
 const PATH = /^[\w@./-]+\.(ts|tsx|js|mjs|json|css|md)$/;
-const isWord = (s) => LETTERS.test(s) && !NOT_A_WORD.test(s.trim()) && !PATH.test(s.trim());
+// A message key (settings.section.general) or a name in code (app.prefs).
+const KEY = /^[A-Za-z]+(\.[\w-]+)+$/;
+const isWord = (s) => LETTERS.test(s) && !NOT_A_WORD.test(s.trim()) && !PATH.test(s.trim()) && !KEY.test(s.trim());
+// Text in code or a key cap is a name, and what is hidden from a screen
+// reader is a picture (a theme's preview): neither is a word to translate.
+const CODE = new Set(["code", "Code", "kbd", "Kbd", "pre"]);
+const tagOf = (el) => (ts.isJsxElement(el) ? el.openingElement.tagName.getText() : undefined);
+const hidden = (el) =>
+  ts.isJsxElement(el) && el.openingElement.attributes.properties.some((a) => ts.isJsxAttribute(a) && a.name.getText() === "aria-hidden" && (!a.initializer || /true/.test(a.initializer.getText())));
 const literal = (n) =>
   n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) ? n.text : n && ts.isTemplateExpression(n) ? n.head.text + n.templateSpans.map((s) => s.literal.text).join(" ") : undefined;
 
@@ -61,7 +69,8 @@ for (const root of roots) {
     const src = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     const at = (node, what) => problems.push(`${rel}:${src.getLineAndCharacterOfPosition(node.getStart()).line + 1}  ${what}`);
     const visit = (node) => {
-      if (ts.isJsxText(node) && isWord(node.text)) at(node, JSON.stringify(node.text.trim()));
+      if (hidden(node)) return;
+      if (ts.isJsxText(node) && isWord(node.text) && !CODE.has(tagOf(node.parent))) at(node, JSON.stringify(node.text.trim()));
       else if (ts.isJsxAttribute(node) && SHOWN.has(node.name.getText())) {
         const init = node.initializer && ts.isJsxExpression(node.initializer) ? node.initializer.expression : node.initializer;
         const s = literal(init);
