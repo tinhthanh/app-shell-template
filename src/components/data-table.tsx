@@ -1,8 +1,10 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, Loader2Icon } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { moveIndex, type SortDir, toggleSort } from "@/lib/list-keys";
+import type { More } from "@/lib/resource";
 import { cn } from "@/lib/utils";
 
 // DataTable is the list every resource's rows go in: columns with a header
@@ -13,14 +15,20 @@ import { cn } from "@/lib/utils";
 // from density (h-row). The sort is the caller's: keep it in the view, so
 // the address carries it (lib/list-keys.ts has the pure parts).
 //
+// A list read a page at a time (usePages, lib/resource.ts) passes more and
+// total: the next page is asked for as the last rows come on screen, a row
+// at the end says it is coming or failed (with Try again), and a screen
+// reader hears the whole count. Its columns sort with "server": the rows
+// come in order.
+//
 //   <DataTable rows={projects} rowKey={(p) => p.id} columns={[{ id: "name", label: "Name", sort: byName, cell: (p) => … }]}
 //     sort={sort} onSort={setSort} onOpen={open} label="Projects" rowProps={(p) => ({ "data-project": p.id })} />
 
 export interface Column<T> {
   id: string;
   label: ReactNode;
-  // Present: the header sorts by it.
-  sort?: (a: T, b: T) => number;
+  // Present: the header sorts by it, here, or "server" when the rows come sorted.
+  sort?: ((a: T, b: T) => number) | "server";
   // Numbers and dates sit at the end.
   align?: "start" | "end";
   // A width for the column, else it shares what is left.
@@ -45,6 +53,9 @@ export function DataTable<T>({
   label,
   rowTestId,
   rowProps,
+  total,
+  more,
+  focusRow,
   className,
 }: {
   rows: T[];
@@ -57,11 +68,17 @@ export function DataTable<T>({
   label: string;
   rowTestId?: string;
   rowProps?: (row: T) => Record<string, string | undefined>;
+  // A list read a page at a time: how many in all, and the next page.
+  total?: number;
+  more?: More;
+  // The row (its rowKey) the keyboard comes back to, from useReturnFocus:
+  // scrolled into the DOM, however far down, and given the focus.
+  focusRow?: string;
   className?: string;
 }) {
   const sorted = (() => {
     const col = sort && columns.find((c) => c.id === sort.by);
-    if (!col?.sort) return rows;
+    if (!col?.sort || col.sort === "server") return rows;
     const s = [...rows].sort(col.sort);
     return sort?.dir === "desc" ? s.reverse() : s;
   })();
@@ -70,6 +87,15 @@ export function DataTable<T>({
   // The one row Tab lands on: the last one the keyboard was on, else the first.
   const [current, setCurrent] = useState(0);
   const [wanted, setWanted] = useState<number>();
+  const sought = useRef<string>(undefined);
+  useEffect(() => {
+    if (!focusRow || sought.current === focusRow) return;
+    const i = sorted.findIndex((r) => rowKey(r) === focusRow);
+    if (i < 0) return;
+    sought.current = focusRow;
+    setCurrent(i);
+    setWanted(i);
+  });
   // A move to a row off screen: scroll it in, then give it the keyboard.
   useEffect(() => {
     if (wanted === undefined) return;
@@ -94,12 +120,18 @@ export function DataTable<T>({
     setWanted(to);
   };
   const items = virtualizer.getVirtualItems();
+  // The last rows are on screen (or the keyboard went to End): ask for the
+  // next page. A failed one waits for Try again.
+  const last = items.at(-1)?.index ?? -1;
+  useEffect(() => {
+    if (more?.has && !more.loading && !more.failed && last >= sorted.length - 12) more.load();
+  });
   const top = items[0]?.start ?? 0;
   const bottom = virtualizer.getTotalSize() - (items.at(-1)?.end ?? 0);
   const visible = (c: Column<T>) => (c.from === "sm" ? "max-sm:hidden" : c.from === "md" ? "max-md:hidden" : c.from === "lg" ? "max-lg:hidden" : "");
   return (
     <div ref={scroller} className={cn("h-full overflow-auto", className)} data-slot="data-table">
-      <table className="w-full border-separate border-spacing-0 text-sm" aria-label={label} aria-rowcount={sorted.length}>
+      <table className="w-full border-separate border-spacing-0 text-sm" aria-label={label} aria-rowcount={total ?? sorted.length}>
         <thead className="sticky top-0 z-10 bg-background">
           <tr>
             {columns.map((c) => {
@@ -166,6 +198,23 @@ export function DataTable<T>({
           )}
         </tbody>
       </table>
+      {more?.has && (
+        <div className="flex h-row items-center justify-center gap-2 text-muted-foreground text-xs" data-testid="more-rows">
+          {more.failed ? (
+            <>
+              Couldn't read more
+              <Button size="xs" variant="outline" onClick={more.load}>
+                Try again
+              </Button>
+            </>
+          ) : (
+            <>
+              <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+              <span role="status">Reading more…</span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
 import { ApiError } from "./errors.ts";
 import { signedOut } from "./session.ts";
-import type { Project, SearchHit, User } from "./types.ts";
+import type { Page, Project, ProjectQuery, SearchHit, User } from "./types.ts";
 
 export type * from "@/lib/types";
 export { ApiError };
@@ -12,7 +12,10 @@ export { ApiError };
 // (e2e/) run that way, so they are fixed and quick.
 
 export interface Client {
-  projects(): Promise<Project[]>;
+  // A page of the projects that match, filtered and sorted by the server.
+  projects(query?: ProjectQuery): Promise<Page<Project>>;
+  // Every tag in use, for the list's filter chips.
+  projectTags(): Promise<string[]>;
   project(id: string): Promise<Project>;
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
   createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
@@ -131,13 +134,26 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
-// httpClient talks to a JSON API at base: GET /projects, GET /projects/:id,
-// PATCH /projects/:id, GET/POST/DELETE /session. Change the paths to your
-// server's.
+// listQuery writes a list's query as a URL's search, leaving out what is
+// unset: ?q=shop&status=active&tags=web,ops&sort=name:asc&cursor=50&limit=50.
+export function listQuery(query: ProjectQuery = {}): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(query)) {
+    const s = Array.isArray(v) ? v.join(",") : v === undefined ? "" : String(v);
+    if (s) p.set(k, s);
+  }
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
+// httpClient talks to a JSON API at base: GET /projects?… (a Page),
+// GET /project-tags, GET /projects/:id, PATCH /projects/:id,
+// GET/POST/DELETE /session. Change the paths to your server's.
 export function httpClient(base: string, o: ClientOptions = {}): Client {
   const c = <T>(method: string, path: string, body?: unknown) => call<T>(base, method, path, body, o);
   return {
-    projects: () => c("GET", "/projects"),
+    projects: (query) => c("GET", `/projects${listQuery(query)}`),
+    projectTags: () => c("GET", "/project-tags"),
     project: (id) => c("GET", `/projects/${encodeURIComponent(id)}`),
     updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
     createProject: (input) => c("POST", "/projects", input),

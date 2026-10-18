@@ -1,6 +1,7 @@
 import type { Client } from "@/lib/api";
 import type { Project, SearchHit, User } from "@/lib/types";
 import { ApiError } from "./errors.ts";
+import { pageOf, sortRows } from "./pages.ts";
 import { rankEach } from "./search-rank.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
@@ -18,6 +19,7 @@ import { rankEach } from "./search-rank.ts";
 //   ?mock=1&empty=1       there are no projects
 //   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
 //   ?mock=1&many=1        5,000 projects, for the list's scrolling and keys
+//   ?mock=1&failMore=1    the list's second page fails once, then comes (Try again)
 
 const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
@@ -67,6 +69,9 @@ export interface MockOptions {
   signedOut?: boolean;
   // Thousands of projects, for a long list.
   many?: boolean;
+  // The first read of a list's later page (a cursor is given) fails; the
+  // first page and every read after that one work.
+  failMore?: boolean;
   // Called on a 401, as the HTTP client does (lib/session.ts signedOut).
   onUnauthorized?: () => void;
 }
@@ -84,6 +89,7 @@ const fromUrl = (): MockOptions => {
     empty: q.has("empty"),
     signedOut: q.has("signedOut"),
     many: q.has("many"),
+    failMore: q.has("failMore"),
   };
 };
 
@@ -96,6 +102,7 @@ export function mockClient(given: MockOptions = {}): Client {
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
   let user: User | null = opts.signedOut ? null : ALEX;
   let calls = 0;
+  let laterPages = 0;
   const down = () => new ApiError("The server is not answering right now.", 503, "unavailable");
   const unauthorized = () => {
     opts.onUnauthorized?.();
@@ -112,10 +119,25 @@ export function mockClient(given: MockOptions = {}): Client {
     if (!p) throw new ApiError(`No project is called ${id}.`, 404, "not_found");
     return p;
   };
+  // How the server sorts the list: the columns' ids in the address.
+  const SORTS: Record<string, (a: Project, b: Project) => number> = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    owner: (a, b) => a.owner.localeCompare(b.owner),
+    updated: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+  };
   return {
-    async projects() {
+    async projects(query = {}) {
       await guard();
-      return structuredClone(projects);
+      if (query.cursor && opts.failMore && ++laterPages === 1) throw down();
+      const q = query.q?.trim().toLowerCase();
+      const match = projects.filter(
+        (p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!query.status || p.status === query.status) && (query.tags ?? []).every((t) => p.tags.includes(t)),
+      );
+      return structuredClone(pageOf(sortRows(match, query.sort, SORTS), query.cursor, query.limit));
+    },
+    async projectTags() {
+      await guard();
+      return [...new Set(projects.flatMap((p) => p.tags))].sort();
     },
     async project(id) {
       await guard();

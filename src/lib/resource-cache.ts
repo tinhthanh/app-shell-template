@@ -4,6 +4,8 @@
 // confirms it (mutate). Outside the store on purpose (docs/decisions/0009):
 // this is the API's data, not the app's state. Pure, so
 // resource-cache.test.ts runs it in node.
+import { editRows } from "./pages.ts";
+import type { Page } from "./types.ts";
 
 const data = new Map<string, unknown>();
 const subscribers = new Map<string, Set<(value: unknown) => void>>();
@@ -47,13 +49,14 @@ export function clearCache() {
 
 // optimistic shows a write's result before the server confirms it: the
 // patch goes into the record (key) and its row in the list (listKey) at
-// once, write runs, and what the server returns replaces both. If the
+// once (kept whole or a page at a time, lib/pages.ts), write runs, and
+// what the server returns replaces both. If the
 // server refuses, both go back as they were and the error is thrown on,
 // for the caller to explain (toastError).
 export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T> }): Promise<T> {
   const before = cached<T>(o.key);
   const inList = (fn: (row: T) => T) => {
-    if (o.listKey) mutate<T[]>(o.listKey, (l) => l?.map((row) => (row.id === o.id ? fn(row) : row)));
+    if (o.listKey) mutate<T[] | Page<T>>(o.listKey, (l) => editRows(l, (rows) => rows.map((row) => (row.id === o.id ? fn(row) : row))));
   };
   mutate<T>(o.key, (x) => x && { ...x, ...o.patch });
   inList((row) => ({ ...row, ...o.patch }));
