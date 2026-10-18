@@ -2,6 +2,7 @@ import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from "lucid
 import type { ReactNode } from "react";
 
 import { useStore, type View, type ViewKind } from "@/lib/store";
+import type { SearchHit } from "@/lib/types";
 
 // The app's places: what the sidebar lists, ⌘1–9 jump to, and the command
 // palette offers. One list, so every way around agrees. Adding one:
@@ -24,6 +25,13 @@ const PLACES = {
   kit: { label: "Kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
   settings: { label: "Settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
 } satisfies Record<ViewKind, Omit<Place, "id">>;
+
+// The kinds of record the palette finds (SearchHit's kind): the group they
+// are listed under, their icon, and the view one opens on. One entry per
+// kind, so a new kind without one fails to compile.
+export const RECORD_KINDS = {
+  project: { group: "Projects", icon: <FolderKanbanIcon />, view: (id: string): View => ({ kind: "projects", id }) },
+} satisfies Record<SearchHit["kind"], { group: string; icon: ReactNode; view(id: string): View }>;
 
 export function places(): Place[] {
   return (Object.keys(PLACES) as ViewKind[]).map((id) => ({ id, ...PLACES[id] }));

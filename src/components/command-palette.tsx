@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, KeyboardIcon, PaletteIcon, PanelLeftIcon, SparklesIcon } from "lucide-react";
+import { KeyboardIcon, PaletteIcon, PanelLeftIcon, SparklesIcon } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { openShortcuts } from "@/components/shortcuts-sheet";
@@ -20,7 +20,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { openWhatsNew } from "@/components/whats-new/whats-new-dialog";
 import { useThemes } from "@/hooks/use-theme";
 import { client } from "@/lib/api";
-import { places } from "@/lib/nav";
+import { places, RECORD_KINDS } from "@/lib/nav";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { keysFor } from "@/lib/shortcuts";
 import { paletteOpenedFrom, useStore } from "@/lib/store";
@@ -110,13 +110,15 @@ export function CommandPalette() {
       { value: "cmd:shortcuts", label: "Keyboard shortcuts", icon: <KeyboardIcon />, shortcut: keysFor("shortcuts"), run: openShortcuts },
       { value: "cmd:whats-new", label: "What's new", icon: <SparklesIcon />, search: "release version changelog", run: openWhatsNew },
     ];
-    const records: Item[] = hits.map((h) => ({
-      value: `record:${h.kind}:${h.id}`,
-      label: h.name,
-      icon: <FolderKanbanIcon />,
-      detail: h.detail,
-      run: () => useStore.getState().setView({ kind: "projects", id: h.id }),
-    }));
+    // Each kind of record is a group of its own (lib/nav.tsx RECORD_KINDS).
+    const records: Group[] = Object.entries(RECORD_KINDS)
+      .map(([kind, k]) => ({
+        value: k.group,
+        items: hits
+          .filter((h) => h.kind === kind)
+          .map((h): Item => ({ value: `record:${h.kind}:${h.id}`, label: h.name, icon: k.icon, detail: h.detail, run: () => useStore.getState().setView(k.view(h.id)) })),
+      }))
+      .filter((g) => g.items.length);
     const themeItems: Item[] = themes.map((t) => ({
       value: `theme:${t.id}`,
       label: t.name,
@@ -126,7 +128,7 @@ export function CommandPalette() {
       theme: t.id,
       run: () => useStore.getState().setTheme(t.id),
     }));
-    return [...(records.length ? [{ value: "Projects", items: records }] : []), { value: "Go to", items: goTo }, { value: "Commands", items: commands }, { value: "Themes", items: themeItems }];
+    return [...records, { value: "Go to", items: goTo }, { value: "Commands", items: commands }, { value: "Themes", items: themeItems }];
   }, [themes, themeId, collapsed, hits]);
 
   return (

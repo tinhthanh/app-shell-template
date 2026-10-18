@@ -18,7 +18,7 @@ words), or `src/views/home/` for a static one.
 3. **`src/lib/routes.test.ts`**: add the view to the round-trip list.
 4. **`src/views/reports/reports-view.tsx`**: the component, with `data-testid="reports"` on its root and a `<ViewHeader title>`. Reads go through `useResource` (keyed) and `<ResourceView>`, which draws loading, failed with Try again, and the empty state you give it.
 5. **`src/App.tsx`**: a `lazyView(() => import("@/views/reports/reports-view").then((m) => m.ReportsView))`, a case in `ViewFor`, and `reports: "Reports"` in `viewTitles`.
-6. **`src/lib/nav.tsx`**: an entry in `PLACES` before `kit` (a product place goes before Kit, which stays last of the top group; ⌘1–9 follow the order, so Kit's key moves: say so in the changelog; `shell.spec.ts` reads the order from the sidebar, so it keeps passing).
+6. **`src/lib/nav.tsx`**: an entry in `PLACES` before `kit` (a product place goes before Kit, which stays last of the top group; ⌘1–9 follow the order, so Kit's key moves: say so in the changelog; `shell.spec.ts` reads the order from the sidebar, so it keeps passing). A new place changes the sidebar in every desktop picture: retake the baselines with `pnpm test:visual --update` (Docker) and commit them.
 7. **`e2e/a11y.spec.ts`**: a scene `{ id: "reports", run: … }`, and one per state worth checking; a scene opens its state with `app.open({ params, hash })`, never a hand-built address. A scene in `e2e/scenes.json` gives it a screenshot baseline and a place in `pnpm shots`.
 8. **A behaviour test** in `e2e/reports.spec.ts`: what the user gets, on the mock knobs.
 9. **`CHANGELOG.md`**: a bullet under Unreleased.
