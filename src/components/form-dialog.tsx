@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { ApiError } from "@/lib/api";
+import { t } from "@/lib/i18n";
 
 // FormDialog is a form in a dialog, the way the app does them, so a view
 // writes its fields and its save and gets the rest: the trigger, a busy
@@ -55,7 +56,7 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
         if (o) return setOpen(true);
         if (!dirty()) return close();
         // Esc, the backdrop or Cancel with edits in the fields: ask first.
-        confirm({ title: "Discard your changes?", description: "What you typed here will be lost.", confirm: "Discard", destructive: true, run: close });
+        confirm({ title: t("common.discard.title"), description: t("common.discard.description"), confirm: t("common.discard.confirm"), destructive: true, run: close });
       }}
     >
       <DialogTrigger render={trigger}>
@@ -90,7 +91,7 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
           </DialogHeader>
           <DialogPanel className="flex flex-col gap-4">{children}</DialogPanel>
           <DialogFooter>
-            <DialogClose render={<Button variant="ghost" />}>Cancel</DialogClose>
+            <DialogClose render={<Button variant="ghost" />}>{t("common.cancel")}</DialogClose>
             <Button type="submit" loading={busy}>
               {submit}
             </Button>

@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import { ApiError } from "./errors.ts";
 import { explain, looksRaw } from "./explain.ts";
+import { setLanguage } from "./i18n.ts";
 
 test("a code or status becomes words, with the raw text behind details", () => {
   const e = explain(new ApiError("upstream connect error", 503, "unavailable"));
@@ -25,4 +26,17 @@ test("text written for a program is never the message", () => {
   const e = explain(new TypeError("Failed to fetch"));
   assert.equal(e.title, "Can't reach the server");
   assert.equal(explain("ECONNREFUSED 127.0.0.1:8080").message, "The app couldn't finish that.");
+});
+
+test("in Vietnamese a busy server is explained in Vietnamese, with what it said kept as is", () => {
+  setLanguage("vi");
+  try {
+    const e = explain(new ApiError("upstream connect error", 503, "unavailable"));
+    assert.equal(e.title, "Máy chủ đang bận");
+    assert.equal(e.message, "Máy chủ đang ngừng hoặc đang khởi động lại. Hãy thử lại sau giây lát.");
+    assert.equal(e.retry, true);
+    assert.equal(e.details, "upstream connect error");
+  } finally {
+    setLanguage("en");
+  }
 });

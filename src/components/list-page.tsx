@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { t } from "@/lib/i18n";
+
 // The pieces of a list view that every resource shares (the projects
 // view is the example): ListToolbar holds the search and the filters
 // under the header, left out of print; NothingMatches is what the rows
@@ -13,7 +15,7 @@ export function ListToolbar({ children }: { children: ReactNode }) {
   );
 }
 
-export function NothingMatches({ children = "Nothing matches." }: { children?: ReactNode }) {
+export function NothingMatches({ children = t("common.nothingMatches") }: { children?: ReactNode }) {
   return (
     <p className="px-6 py-8 text-muted-foreground text-sm" data-testid="nothing-matches">
       {children}
