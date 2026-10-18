@@ -38,6 +38,14 @@ pnpm test:visual                             # when the look changed: the screen
 pnpm test:visual --update                    # …and the new baselines, committed with the change
 ```
 
+While you chase a failure, run only that test: its file and line
+(`e2e/a11y.spec.ts:150`) or `--grep "its title"`, and `--repeat-each` on
+it alone. The whole browser suite, and `A11Y_FULL=1` on all of axe, take
+minutes a run: run them once, before you commit, not after each guess. A
+failure that isn't yours and that two guesses haven't explained is a note
+in the PR with its proof (Done means, 2) and an issue, not the rest of
+your afternoon.
+
 `pnpm exec playwright test` alone serves whatever is in `dist/`, which is
 the build from before your change: always go through `test:e2e`, which
 builds. CI (`.github/workflows/ci.yml`) runs all of it, the whole browser
