@@ -3,6 +3,7 @@ import { ArrowDownIcon, ArrowUpIcon, Loader2Icon } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
 import { moveIndex, type SortDir, toggleSort } from "@/lib/list-keys";
 import type { More } from "@/lib/resource";
 import { cn } from "@/lib/utils";
@@ -202,15 +203,15 @@ export function DataTable<T>({
         <div className="flex h-row items-center justify-center gap-2 text-muted-foreground text-xs" data-testid="more-rows">
           {more.failed ? (
             <>
-              Couldn't read more
+              {t("common.table.moreFailed")}
               <Button size="xs" variant="outline" onClick={more.load}>
-                Try again
+                {t("common.tryAgain")}
               </Button>
             </>
           ) : (
             <>
               <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-              <span role="status">Reading more…</span>
+              <span role="status">{t("common.table.readingMore")}</span>
             </>
           )}
         </div>

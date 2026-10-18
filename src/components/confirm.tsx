@@ -5,6 +5,7 @@ import { AlertDialog, AlertDialogClose, AlertDialogDescription, AlertDialogFoote
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { plainError } from "@/lib/explain";
+import { t } from "@/lib/i18n";
 
 // confirm asks before something that cannot be undone, from anywhere (a
 // menu item has no room for its own dialog):
@@ -83,7 +84,7 @@ function Body({ req }: { req: ConfirmRequest }) {
       )}
       <AlertDialogFooter>
         <AlertDialogClose ref={cancel} render={<Button variant="ghost" />}>
-          Cancel
+          {t("common.cancel")}
         </AlertDialogClose>
         <Button
           ref={button}

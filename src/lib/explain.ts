@@ -1,11 +1,14 @@
 import { ApiError } from "./errors.ts";
+import { t } from "./i18n.ts";
 
 // Errors in plain words. What the server or the network said is rarely what
 // the person needs to read: explain turns an error into a short title, one
 // sentence, and whether trying again can help. The original words are kept
 // as details, shown behind "Details" (components/error-note.tsx), never as
 // the main message. Codes come from the API ({error, code}); text patterns
-// cover errors that never had one. Pure, so explain.test.ts runs it in node.
+// cover errors that never had one. The words are the common.error.* ones
+// (lib/messages/common.ts), in the language in use. Pure apart from that
+// language, so explain.test.ts runs it in node.
 
 export interface Explained {
   title: string;
@@ -24,9 +27,9 @@ export function looksRaw(text: string): boolean {
 }
 
 const sentence = (s: string) => {
-  const t = s.trim().replace(/\s+/g, " ");
-  if (!t) return t;
-  const first = t.charAt(0).toUpperCase() + t.slice(1);
+  const text = s.trim().replace(/\s+/g, " ");
+  if (!text) return text;
+  const first = text.charAt(0).toUpperCase() + text.slice(1);
   return /[.!?…)]$/.test(first) ? first : `${first}.`;
 };
 
@@ -43,20 +46,18 @@ export function explain(err: unknown): Explained {
   const status = api?.status;
   const out = (title: string, message: string, retry?: boolean): Explained => ({ title, message, retry, details: raw && raw !== message ? raw : undefined, code, status });
 
-  if (code === "timeout" || status === 504) return out("The server isn't answering", "The connection may be slow or down. Try again in a moment.", true);
-  if (code === "network" || /failed to fetch|networkerror|load failed/i.test(raw))
-    return out("Can't reach the server", "This computer may be offline, or the server may be down. Try again in a moment.", true);
-  if (code === "unavailable" || status === 502 || status === 503) return out("The server is busy", "It's down or restarting. Try again in a moment.", true);
-  if (status === 401) return out("You're signed out", "Sign in again to carry on.");
-  if (status === 403) return out("You can't do that", "Your account doesn't have access to this.");
-  if (code === "not_found" || status === 404) return out("It's gone", "It may have been removed from somewhere else.", true);
-  if (code === "conflict" || status === 409) return out("Someone changed it first", "Reload to see the latest, then try again.", true);
-  if (code === "invalid" || status === 400 || status === 422)
-    return out("That can't be saved", !raw || looksRaw(raw) ? "Something in it isn't right. Details has what the server said." : sentence(raw));
-  if (status === 429) return out("Too many tries", "Wait a minute, then try again.", true);
-  if (status !== undefined && status >= 500) return out("The server hit an error", "Something went wrong on its side. Try again in a moment.", true);
-  if (looksRaw(raw)) return out("Something went wrong", "The app couldn't finish that.", true);
-  return { title: "Something went wrong", message: sentence(raw) || "The app couldn't finish that.", code, status };
+  if (code === "timeout" || status === 504) return out(t("common.error.timeout.title"), t("common.error.timeout.message"), true);
+  if (code === "network" || /failed to fetch|networkerror|load failed/i.test(raw)) return out(t("common.error.network.title"), t("common.error.network.message"), true);
+  if (code === "unavailable" || status === 502 || status === 503) return out(t("common.error.unavailable.title"), t("common.error.unavailable.message"), true);
+  if (status === 401) return out(t("common.error.signedOut.title"), t("common.error.signedOut.message"));
+  if (status === 403) return out(t("common.error.forbidden.title"), t("common.error.forbidden.message"));
+  if (code === "not_found" || status === 404) return out(t("common.error.notFound.title"), t("common.error.notFound.message"), true);
+  if (code === "conflict" || status === 409) return out(t("common.error.conflict.title"), t("common.error.conflict.message"), true);
+  if (code === "invalid" || status === 400 || status === 422) return out(t("common.error.invalid.title"), !raw || looksRaw(raw) ? t("common.error.invalid.message") : sentence(raw));
+  if (status === 429) return out(t("common.error.tooMany.title"), t("common.error.tooMany.message"), true);
+  if (status !== undefined && status >= 500) return out(t("common.error.server.title"), t("common.error.server.message"), true);
+  if (looksRaw(raw)) return out(t("common.error.unknown.title"), t("common.error.unknown.message"), true);
+  return { title: t("common.error.unknown.title"), message: sentence(raw) || t("common.error.unknown.message"), code, status };
 }
 
 // plainError is explain's one sentence, for an error shown inline.

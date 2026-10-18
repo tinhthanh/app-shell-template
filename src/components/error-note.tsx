@@ -7,6 +7,7 @@ import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, Dia
 import { toastManager } from "@/components/ui/toast";
 import { ApiError } from "@/lib/errors";
 import { explain } from "@/lib/explain";
+import { t } from "@/lib/i18n";
 import { report } from "@/lib/report";
 import { cn } from "@/lib/utils";
 
@@ -33,26 +34,26 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           />
         }
       >
-        Details
+        {t("common.details")}
         <ChevronRightIcon aria-hidden className="size-3" />
       </DialogTrigger>
       <DialogPopup className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{title ?? "Details"}</DialogTitle>
-          <DialogDescription>What was said, word for word.</DialogDescription>
+          <DialogTitle>{title ?? t("common.details")}</DialogTitle>
+          <DialogDescription>{t("common.details.description")}</DialogDescription>
         </DialogHeader>
         <div className="px-6 pb-2">
           {/* biome-ignore lint/a11y/useSemanticElements: a <section> would not keep the text preformatted; the region is the output itself. */}
           <pre
             role="region"
-            aria-label="Full output"
+            aria-label={t("common.details.output")}
             className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 font-mono text-[0.75rem] text-foreground/90 leading-relaxed"
           >
             {text}
           </pre>
         </div>
         <DialogFooter variant="bare">
-          <DialogClose render={<Button variant="ghost" />}>Close</DialogClose>
+          <DialogClose render={<Button variant="ghost" />}>{t("common.close")}</DialogClose>
           <Button
             variant="outline"
             onClick={async () => {
@@ -66,7 +67,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
             }}
           >
             {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? "Copied" : "Copy"}
+            {copied ? t("common.copied") : t("common.copy")}
           </Button>
         </DialogFooter>
       </DialogPopup>
@@ -89,7 +90,7 @@ export function ErrorNote({ error, onRetry, className }: { error: unknown; onRet
       {onRetry && e.retry && (
         <AlertAction>
           <Button size="xs" variant="outline" onClick={onRetry}>
-            Try again
+            {t("common.tryAgain")}
           </Button>
         </AlertAction>
       )}
