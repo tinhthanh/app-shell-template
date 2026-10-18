@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 // Relative imports: prefs.test.ts runs this in node.
+import { LANGUAGE_IDS, type LanguageChoice, resolveLanguage, setLanguage } from "./i18n.ts";
 import { clampWidth, SIDEBAR_DEFAULT } from "./sidebar-width.ts";
 import { load, save } from "./storage.ts";
 
@@ -21,6 +22,8 @@ export interface Prefs {
   // The newest version whose What's new was shown, or that was running when
   // there was nothing to show (lib/whats-new.ts).
   whatsNewSeen: string | null;
+  // The language the app speaks: one of lib/i18n.ts's, or the system's.
+  language: LanguageChoice;
 }
 
 export const DEFAULTS: Prefs = {
@@ -30,6 +33,7 @@ export const DEFAULTS: Prefs = {
   sidebarWidth: SIDEBAR_DEFAULT,
   systemThemes: { light: "default-light", dark: "default-dark" },
   whatsNewSeen: null,
+  language: "system",
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to
@@ -60,6 +64,8 @@ export const usePrefs = create<Prefs>()(() => ({
   ...savedPrefs,
   systemThemes: { ...DEFAULTS.systemThemes, ...saved.systemThemes },
   sidebarWidth: clampWidth(saved.sidebarWidth ?? SIDEBAR_DEFAULT),
+  // A language this build has no words for (or no longer has) is the system's.
+  language: saved.language === "system" || LANGUAGE_IDS.includes(saved.language as never) ? (saved.language as LanguageChoice) : "system",
 }));
 
 usePrefs.subscribe((p) => save("app.prefs", { ...p, version: PREFS_VERSION }));
@@ -82,6 +88,17 @@ if (typeof document !== "undefined") {
     if (p.uiFontSize !== prev.uiFontSize || p.density !== prev.density || p.sidebarWidth !== prev.sidebarWidth) applyUiPrefs(p);
   });
 }
+
+// applyLanguage puts the chosen language in use (lib/i18n.ts) and on the
+// page, so a screen reader reads it right. The app redraws on a change
+// (App.tsx keys its frame on the language).
+function applyLanguage(p: Prefs) {
+  const l = resolveLanguage(p.language, typeof navigator === "undefined" ? [] : navigator.languages);
+  setLanguage(l);
+  if (typeof document !== "undefined") document.documentElement.lang = l;
+}
+applyLanguage(usePrefs.getState());
+usePrefs.subscribe((p, prev) => p.language !== prev.language && applyLanguage(p));
 
 export function setPrefs(patch: Partial<Prefs>) {
   usePrefs.setState(patch);

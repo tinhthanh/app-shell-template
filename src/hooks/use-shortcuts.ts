@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { toggleShortcuts } from "@/components/shortcuts-sheet";
 import { announce } from "@/lib/announce";
+import { t } from "@/lib/i18n";
 import { type ShortcutId, shortcutFor } from "@/lib/keys";
 import { places } from "@/lib/nav";
 import { IS_MAC } from "@/lib/platform";
@@ -29,7 +30,7 @@ export function run(id: ShortcutId, arg?: number): boolean {
       const folded = !usePrefs.getState().sidebarCollapsed;
       setPrefs({ sidebarCollapsed: folded });
       // Out of sight of a screen reader: say what the key did.
-      announce(folded ? "Sidebar folded to a rail" : "Sidebar shown");
+      announce(folded ? t("shell.sidebarFolded") : t("shell.sidebarShown"));
       return true;
     }
     case "shortcuts":

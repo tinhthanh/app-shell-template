@@ -28,3 +28,24 @@ test("a change is saved whole", () => {
   assert.equal(saved.uiFontSize, 14);
   assert.equal(saved.density, "comfortable");
 });
+
+// fresh loads prefs.ts again, as a new page would, over what is saved now.
+async function fresh(saved: Record<string, unknown>, tag: string) {
+  store.set("app.prefs", JSON.stringify(saved));
+  const m: typeof import("./prefs.ts") = await import(new URL(`./prefs.ts?${tag}`, import.meta.url).href);
+  return m.usePrefs.getState();
+}
+
+test("the language follows the system until one is chosen", () => {
+  assert.equal(DEFAULTS.language, "system");
+});
+
+test("prefs saved before there was a language follow the system", () => {
+  // The save at the top has no language.
+  assert.equal(usePrefs.getState().language, "system");
+});
+
+test("a chosen language is kept, and one this build has no words for follows the system", async () => {
+  assert.equal((await fresh({ language: "vi", version: 1 }, "vi")).language, "vi");
+  assert.equal((await fresh({ language: "klingon", version: 1 }, "klingon")).language, "system");
+});

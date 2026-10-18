@@ -21,7 +21,8 @@ words), or `src/views/home/` for a static one.
 6. **`src/lib/nav.tsx`**: an entry in `PLACES` before `kit` (a product place goes before Kit, which stays last of the top group; ⌘1–9 follow the order, so Kit's key moves: say so in the changelog; `shell.spec.ts` reads the order from the sidebar, so it keeps passing). A new place changes the sidebar in every desktop picture: retake the baselines with `pnpm test:visual --update` (Docker) and commit them.
 7. **`e2e/a11y.spec.ts`**: a scene `{ id: "reports", run: … }`, and one per state worth checking; a scene opens its state with `app.open({ params, hash })`, never a hand-built address. A scene in `e2e/scenes.json` gives it a screenshot baseline and a place in `pnpm shots`.
 8. **A behaviour test** in `e2e/reports.spec.ts`: what the user gets, on the mock knobs.
-9. **`CHANGELOG.md`**: a bullet under Unreleased.
+9. **The words**: every word the view shows is `t("reports.…")` from a new `src/lib/messages/reports.ts` (`en`, then `vi` with the same keys and blanks), spread into `src/lib/messages/index.ts`; the place's label is a `shell.place.<kind>` key in `nav.tsx` and `viewTitles` in `App.tsx`. A word that a constant holds (columns, options) is read in render, so a change of language reaches it.
+10. **`CHANGELOG.md`**: a bullet under Unreleased.
 
 Then `pnpm check` (typecheck, lint, `check:views`) and
 `E2E_PORT=1427 pnpm test:e2e e2e/reports.spec.ts e2e/a11y.spec.ts`.

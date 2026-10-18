@@ -8,3 +8,6 @@ dist/
 .DS_Store
 *.tsbuildinfo
 shots/
+
+# Agents' own worktrees (Claude Code isolation)
+.claude/worktrees/

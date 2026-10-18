@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { SearchField } from "@/components/search-field";
 import { Kbd } from "@/components/ui/kbd";
+import { t } from "@/lib/i18n";
 import { platformKeys } from "@/lib/platform";
-import { describe, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts";
+import { describe, groupName, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts";
 import { SettingsGroup, SettingsPage, SettingsRow } from "@/views/settings/rows";
 
 // Every shortcut, searchable, grouped; the same table as the Keyboard
@@ -17,11 +18,11 @@ export function ShortcutsSection() {
   })).filter((g) => g.items.length > 0);
 
   return (
-    <SettingsPage title="Shortcuts" description="They work everywhere in the window: the app sees them first.">
-      <SearchField value={query} onChange={setQuery} placeholder="Search shortcuts" />
-      {grouped.length === 0 && <p className="text-muted-foreground text-sm">No shortcut matches “{query}”.</p>}
+    <SettingsPage title={t("settings.section.shortcuts")} description={t("settings.shortcuts.description")}>
+      <SearchField value={query} onChange={setQuery} placeholder={t("settings.shortcuts.search")} />
+      {grouped.length === 0 && <p className="text-muted-foreground text-sm">{t("settings.shortcuts.noMatch", { query })}</p>}
       {grouped.map((g) => (
-        <SettingsGroup key={g.title} title={g.title}>
+        <SettingsGroup key={g.title} title={groupName(g.title)}>
           {g.items.map((s) => (
             <SettingsRow key={s.id} label={describe(s)}>
               <Kbd>{s.keys}</Kbd>

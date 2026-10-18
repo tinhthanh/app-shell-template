@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SearchField } from "@/components/search-field";
 import { SimpleSelect } from "@/components/simple-select";
 import { SYSTEM_THEME, useThemes } from "@/hooks/use-theme";
+import { t } from "@/lib/i18n";
 import { IS_LINUX } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { useStore } from "@/lib/store";
@@ -11,7 +12,7 @@ import type { Theme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ownThemes } from "@/themes/builtin";
 import { Segmented } from "@/views/settings/controls";
-import { Code, SettingsGroup, SettingsPage, SettingsRow } from "@/views/settings/rows";
+import { Code, fill, SettingsGroup, SettingsPage, SettingsRow } from "@/views/settings/rows";
 
 const OWN = new Set(ownThemes.map((t) => t.id));
 
@@ -25,59 +26,57 @@ export function AppearanceSection() {
   // The app's own, then every other theme by appearance; a search narrows
   // them by name.
   const q = query.trim().toLowerCase();
-  const shown = q ? themes.filter((t) => t.name.toLowerCase().includes(q) || t.id.includes(q)) : themes;
+  const shown = q ? themes.filter((th) => th.name.toLowerCase().includes(q) || th.id.includes(q)) : themes;
   const groups = [
-    { title: "Built in", themes: shown.filter((t) => OWN.has(t.id)) },
-    { title: "Dark", themes: shown.filter((t) => !OWN.has(t.id) && t.appearance === "dark") },
-    { title: "Light", themes: shown.filter((t) => !OWN.has(t.id) && t.appearance !== "dark") },
+    { title: t("settings.appearance.builtIn"), themes: shown.filter((th) => OWN.has(th.id)) },
+    { title: t("settings.appearance.dark"), themes: shown.filter((th) => !OWN.has(th.id) && th.appearance === "dark") },
+    { title: t("settings.appearance.light"), themes: shown.filter((th) => !OWN.has(th.id) && th.appearance !== "dark") },
   ].filter((g) => g.themes.length);
 
   return (
-    <SettingsPage title="Appearance">
+    <SettingsPage title={t("settings.section.appearance")}>
       <section>
         <div className="mb-2 flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="font-medium text-[0.8125rem] text-muted-foreground">Theme</h2>
-            <p className="mt-0.5 text-muted-foreground text-xs">
-              Add your own in <Code>src/themes/builtin.ts</Code>; <Code>pnpm check:themes</Code> keeps it readable.
-            </p>
+            <h2 className="font-medium text-[0.8125rem] text-muted-foreground">{t("settings.appearance.theme")}</h2>
+            <p className="mt-0.5 text-muted-foreground text-xs">{fill(t("settings.appearance.themeHint"), { file: <Code>src/themes/builtin.ts</Code>, command: <Code>pnpm check:themes</Code> })}</p>
           </div>
-          <SearchField className="w-48 shrink-0" value={query} onChange={setQuery} placeholder="Find a theme" />
+          <SearchField className="w-48 shrink-0" value={query} onChange={setQuery} placeholder={t("settings.appearance.findTheme")} />
         </div>
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
         {groups.map((g) => (
           <div key={g.title} className="mt-4">
             <h3 className="mb-2 font-medium text-[0.6875rem] text-muted-foreground uppercase tracking-wide">{g.title}</h3>
             <div className="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
-              {g.themes.map((t) => (
-                <ThemeCard key={t.id} theme={t} selected={t.id === themeId} onSelect={() => useStore.getState().setTheme(t.id)} />
+              {g.themes.map((th) => (
+                <ThemeCard key={th.id} theme={th} selected={th.id === themeId} onSelect={() => useStore.getState().setTheme(th.id)} />
               ))}
             </div>
           </div>
         ))}
-        {!groups.length && <p className="mt-4 text-muted-foreground text-xs">No theme is called “{query.trim()}”.</p>}
+        {!groups.length && <p className="mt-4 text-muted-foreground text-xs">{t("settings.appearance.noTheme", { query: query.trim() })}</p>}
       </section>
 
-      <SettingsGroup title="Interface">
-        <SettingsRow label="Text size" description="Everything in the window. ⌘+ and ⌘− step it from 11 to 20px.">
+      <SettingsGroup title={t("settings.appearance.interface")}>
+        <SettingsRow label={t("settings.appearance.textSize")} description={t("settings.appearance.textSizeDescription")}>
           <Segmented
             value={String(uiFontSize)}
             options={[
-              { value: "12", label: "Small" },
-              { value: "13", label: "Default" },
-              { value: "14", label: "Large" },
+              { value: "12", label: t("settings.appearance.small") },
+              { value: "13", label: t("settings.appearance.default") },
+              { value: "14", label: t("settings.appearance.large") },
               // A size zoomed to (⌘+, ⌘−) that none of these is.
-              ...(uiFontSize < 12 || uiFontSize > 14 ? [{ value: String(uiFontSize), label: `${uiFontSize}px` }] : []),
+              ...(uiFontSize < 12 || uiFontSize > 14 ? [{ value: String(uiFontSize), label: t("settings.appearance.px", { n: uiFontSize }) }] : []),
             ]}
             onChange={(v) => setPrefs({ uiFontSize: Number(v) })}
           />
         </SettingsRow>
-        <SettingsRow label="Density" description="How tightly the sidebar and lists are packed.">
+        <SettingsRow label={t("settings.appearance.density")} description={t("settings.appearance.densityDescription")}>
           <Segmented
             value={density}
             options={[
-              { value: "compact", label: "Compact" },
-              { value: "comfortable", label: "Comfortable" },
+              { value: "compact", label: t("settings.appearance.compact") },
+              { value: "comfortable", label: t("settings.appearance.comfortable") },
             ]}
             onChange={(density) => setPrefs({ density })}
           />
@@ -91,14 +90,14 @@ export function AppearanceSection() {
 // when the OS is dark. Its preview is half of each.
 function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }) {
   const picks = usePrefs((p) => p.systemThemes);
-  const light = themes.find((t) => t.id === picks.light) ?? themes.find((t) => t.id === "default-light");
-  const dark = themes.find((t) => t.id === picks.dark) ?? themes.find((t) => t.id === "default-dark");
+  const light = themes.find((th) => th.id === picks.light) ?? themes.find((th) => th.id === "default-light");
+  const dark = themes.find((th) => th.id === picks.dark) ?? themes.find((th) => th.id === "default-dark");
   if (!light || !dark) return null;
   const pick = (side: "light" | "dark", id: string) => {
     setPrefs({ systemThemes: { ...picks, [side]: id } });
     useStore.getState().setTheme(SYSTEM_THEME);
   };
-  const options = (appearance: "light" | "dark") => themes.filter((t) => (t.appearance === "dark") === (appearance === "dark")).map((t) => ({ value: t.id, label: t.name }));
+  const options = (appearance: "light" | "dark") => themes.filter((th) => (th.appearance === "dark") === (appearance === "dark")).map((th) => ({ value: th.id, label: th.name }));
   return (
     <div className={cn("flex flex-wrap items-center overflow-hidden rounded-xl border transition-[box-shadow,border-color]", selected ? "border-eing ring-1 ring-ring" : "hover:border-foreground/25")}>
       <button
@@ -117,16 +116,16 @@ function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }
         </div>
         <span className="flex min-w-0 flex-1 items-center gap-2 px-3.5 text-[0.8125rem]">
           <span className="min-w-0 flex-1">
-            <span className="block">Match system</span>
-            <span className="block truncate text-[0.6875rem] text-muted-foreground">{IS_LINUX ? "Follows your desktop" : "Follows macOS"}</span>
+            <span className="block">{t("settings.matchSystem")}</span>
+            <span className="block truncate text-[0.6875rem] text-muted-foreground">{IS_LINUX ? t("settings.appearance.followsDesktop") : t("settings.appearance.followsMacos")}</span>
           </span>
           {selected && <CheckIcon className="size-3.5" />}
         </span>
       </button>
       {/* On a narrow card (a small window, a big text size) the pickers take a row of their own. */}
       <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2 max-[900px]:basis-full max-[900px]:border-t">
-        <SimpleSelect size="sm" className="w-40" aria-label="Theme by day" value={light.id} options={options("light")} onChange={(id) => id && pick("light", id)} />
-        <SimpleSelect size="sm" className="w-40" aria-label="Theme when the system is dark" value={dark.id} options={options("dark")} onChange={(id) => id && pick("dark", id)} />
+        <SimpleSelect size="sm" className="w-40" aria-label={t("settings.appearance.themeByDay")} value={light.id} options={options("light")} onChange={(id) => id && pick("light", id)} />
+        <SimpleSelect size="sm" className="w-40" aria-label={t("settings.appearance.themeWhenDark")} value={dark.id} options={options("dark")} onChange={(id) => id && pick("dark", id)} />
       </div>
     </div>
   );
@@ -166,7 +165,8 @@ function Preview({ theme }: { theme: Theme }) {
   const c = theme.colors;
   const t = theme.terminal;
   return (
-    <div className="flex h-full" style={{ background: c.background }}>
+    // A picture of the theme, hidden from a screen reader where it is used; said here too, so check:words knows.
+    <div aria-hidden className="flex h-full" style={{ background: c.background }}>
       <div className="flex w-[38%] flex-col gap-1.5 border-e px-2.5 py-3" style={{ background: c.sidebar, borderColor: c.border }}>
         <div className="h-1.5 w-4/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.55 }} />
         <div className="h-1.5 w-3/5 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.3 }} />

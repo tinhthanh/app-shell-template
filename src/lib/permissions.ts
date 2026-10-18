@@ -4,6 +4,8 @@
 // one that decides: hiding a button is a courtesy, not the check
 // (docs/decisions/0012-permissions.md). Pure, so permissions.test.ts runs
 // it in node.
+
+import { t } from "./i18n.ts";
 import type { Role, User } from "./types.ts";
 
 // Each action, and the roles that may take it. A new action goes here, and
@@ -21,5 +23,5 @@ export function can(user: Pick<User, "role"> | undefined, action: Action): boole
   return Boolean(user && (ACTIONS[action] as readonly Role[]).includes(user.role));
 }
 
-// The words for a role, for the account menu.
-export const ROLE_WORDS: Record<Role, string> = { owner: "Owner", member: "Member", viewer: "Viewer" };
+// roleWords is a role in the language in use, for the account menu.
+export const roleWords = (r: Role): string => t(`shell.role.${r}`);

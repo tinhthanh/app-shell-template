@@ -112,6 +112,12 @@ configs or these rules without the `guardrail-change` label.
 - **Density and tokens:** rows use `h-row`/`py-row-pad`/`h-side-row`;
   colours use the theme's tokens or a tone, never a hard-coded hex or a
   Tailwind palette class.
+- **Words go through `t()`** (`src/lib/i18n.ts`, `docs/decisions/0013-words.md`):
+  a word a person reads is a key in `src/lib/messages/<area>.ts`, in
+  English and in every other language there (a missing one fails to
+  compile), read in render, never at module load. `pnpm check:words`
+  refuses English written straight into a view or a component; the Kit
+  page is the exception.
 - **Dates and numbers go through `src/lib/format.ts`** (`ago`, `date`,
   `dateTime`, `number`): Intl, in the person's language; never a
   hand-written format.

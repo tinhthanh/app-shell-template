@@ -1,6 +1,7 @@
 import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { type Key, t } from "@/lib/i18n";
 import { useStore, type View, type ViewKind } from "@/lib/store";
 import type { SearchHit } from "@/lib/types";
 
@@ -20,21 +21,22 @@ export interface Place {
 // One entry per view kind, in the sidebar's order (⌘1–9 follow it): a kind
 // without a place fails to compile.
 const PLACES = {
-  home: { label: "Home", icon: <HouseIcon />, view: { kind: "home" } },
-  projects: { label: "Projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
-  kit: { label: "Kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
-  settings: { label: "Settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
-} satisfies Record<ViewKind, Omit<Place, "id">>;
+  home: { label: "shell.place.home", icon: <HouseIcon />, view: { kind: "home" } },
+  projects: { label: "shell.place.projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
+  kit: { label: "shell.place.kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
+  settings: { label: "shell.place.settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
+} satisfies Record<ViewKind, Omit<Place, "id" | "label"> & { label: Key }>;
 
 // The kinds of record the palette finds (SearchHit's kind): the group they
 // are listed under, their icon, and the view one opens on. One entry per
 // kind, so a new kind without one fails to compile.
 export const RECORD_KINDS = {
-  project: { group: "Projects", icon: <FolderKanbanIcon />, view: (id: string): View => ({ kind: "projects", id }) },
-} satisfies Record<SearchHit["kind"], { group: string; icon: ReactNode; view(id: string): View }>;
+  project: { group: "shell.records.projects", icon: <FolderKanbanIcon />, view: (id: string): View => ({ kind: "projects", id }) },
+} satisfies Record<SearchHit["kind"], { group: Key; icon: ReactNode; view(id: string): View }>;
 
 export function places(): Place[] {
-  return (Object.keys(PLACES) as ViewKind[]).map((id) => ({ id, ...PLACES[id] }));
+  // The label is read here, at render, so it is in the language in use.
+  return (Object.keys(PLACES) as ViewKind[]).map((id) => ({ id, ...PLACES[id], label: t(PLACES[id].label) }));
 }
 
 // isActive says whether a place is the one in front.

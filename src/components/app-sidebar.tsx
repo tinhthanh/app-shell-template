@@ -11,8 +11,9 @@ import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButto
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
+import { t } from "@/lib/i18n";
 import { isActive, type Place, places } from "@/lib/nav";
-import { ROLE_WORDS } from "@/lib/permissions";
+import { roleWords } from "@/lib/permissions";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { signedOut, useSession } from "@/lib/session";
@@ -54,7 +55,7 @@ export function AppSidebar() {
           held to the narrowest and widest (lib/sidebar-width) even as the
           window shrinks. */}
       <aside
-        aria-label="Sidebar"
+        aria-label={t("shell.sidebar")}
         data-testid="sidebar"
         style={{ width: `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))` }}
         className="@container/side relative flex shrink-0 flex-col border-sidebar-border border-e bg-sidebar text-sidebar-foreground"
@@ -62,10 +63,10 @@ export function AppSidebar() {
         <div className="flex h-10 shrink-0 items-center gap-2 px-3">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
           <span className="min-w-0 flex-1 truncate font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
-          <Tip label="Hide the sidebar (⌘\)" side="right">
+          <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="right">
             <button
               type="button"
-              aria-label="Hide the sidebar"
+              aria-label={t("shell.hideSidebar")}
               onClick={() => setPrefs({ sidebarCollapsed: true })}
               className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
             >
@@ -81,7 +82,7 @@ export function AppSidebar() {
             className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-[0.8125rem] text-muted-foreground hover:bg-sidebar-accent"
           >
             <SearchIcon className="size-3.5" />
-            <span className="flex-1 text-start">Search</span>
+            <span className="flex-1 text-start">{t("shell.search")}</span>
             <Kbd className="h-4.5 text-[0.625rem]">⌘K</Kbd>
           </button>
           <Places footer={false} />
@@ -104,7 +105,7 @@ function Places({ footer, onGo }: { footer: boolean; onGo?: () => void }) {
   const view = useStore((s) => s.view);
   const list = places().filter((p) => !!p.footer === footer);
   return (
-    <nav aria-label={footer ? "More" : "Places"}>
+    <nav aria-label={footer ? t("shell.more") : t("shell.places")}>
       <SidebarMenu>
         {list.map((p, i) => {
           const active = isActive(p, view);
@@ -152,7 +153,7 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
   const view = useStore((s) => s.view);
   return (
     <aside
-      aria-label="Sidebar"
+      aria-label={t("shell.sidebar")}
       data-testid="sidebar-rail"
       data-fixed={fixed || undefined}
       style={{ width: RAIL_WIDTH }}
@@ -162,10 +163,10 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
         {fixed ? (
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
         ) : (
-          <Tip label="Show the sidebar (⌘\)" side="right">
+          <Tip label={t("shell.showSidebarTip", { keys: "⌘\\" })} side="right">
             <button
               type="button"
-              aria-label="Show the sidebar"
+              aria-label={t("shell.showSidebar")}
               onClick={() => setPrefs({ sidebarCollapsed: false })}
               className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
             >
@@ -174,17 +175,17 @@ function Rail({ fixed = false }: { fixed?: boolean }) {
           </Tip>
         )}
       </div>
-      <Tip label={`Search (${platformKeys("⌘K")})`} side="right">
+      <Tip label={t("shell.searchTip", { keys: platformKeys("⌘K") })} side="right">
         <button
           type="button"
-          aria-label="Search"
+          aria-label={t("shell.search")}
           onClick={() => useStore.getState().setPaletteOpen(true)}
           className="mb-2 inline-flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-background/50 text-muted-foreground hover:bg-sidebar-accent"
         >
           <SearchIcon className="size-4" />
         </button>
       </Tip>
-      <nav aria-label="Places" className="flex flex-col gap-1">
+      <nav aria-label={t("shell.places")} className="flex flex-col gap-1">
         {places()
           .filter((p) => !p.footer)
           .map((p) => (
@@ -240,14 +241,14 @@ function Account({ compact = false }: { compact?: boolean }) {
       await client.signOut();
       signedOut();
     } catch (err) {
-      toastError(err, "Couldn't sign out");
+      toastError(err, t("shell.signOutFailed"));
     }
   };
   return (
     <Menu>
       <MenuTrigger
         data-testid="account"
-        aria-label={`${user.name}, account menu`}
+        aria-label={t("shell.accountMenu", { name: user.name })}
         render={
           <button
             type="button"
@@ -266,11 +267,11 @@ function Account({ compact = false }: { compact?: boolean }) {
       <MenuPopup align="start" className="min-w-48">
         <div className="px-2 py-1.5 text-muted-foreground text-xs">
           <div className="truncate">{user.email}</div>
-          <div data-testid="account-role">{ROLE_WORDS[user.role]}</div>
+          <div data-testid="account-role">{roleWords(user.role)}</div>
         </div>
         <MenuItem onClick={() => void signOut()}>
           <LogOutIcon />
-          Sign out
+          {t("shell.signOut")}
         </MenuItem>
       </MenuPopup>
     </Menu>
@@ -285,13 +286,15 @@ export function PhoneBar() {
   return (
     <header data-testid="phone-bar" className="flex h-11 shrink-0 items-center gap-1 border-b bg-sidebar px-2 text-sidebar-foreground">
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger render={<button type="button" aria-label="Menu" className="inline-flex size-9 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground" />}>
+        <SheetTrigger
+          render={<button type="button" aria-label={t("shell.menu")} className="inline-flex size-9 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground" />}
+        >
           <MenuIcon className="size-5" />
         </SheetTrigger>
         <SheetPopup side="left" className="w-72 max-w-[85vw]">
           <SheetHeader>
             <SheetTitle>{APP_NAME}</SheetTitle>
-            <SheetDescription className="sr-only">Where to go</SheetDescription>
+            <SheetDescription className="sr-only">{t("shell.whereToGo")}</SheetDescription>
           </SheetHeader>
           <SheetPanel className="flex flex-col gap-4 px-2">
             <SidebarContext.Provider value={context}>
@@ -305,7 +308,7 @@ export function PhoneBar() {
       <span className="min-w-0 flex-1 truncate ps-1 font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
       <button
         type="button"
-        aria-label="Search"
+        aria-label={t("shell.search")}
         onClick={() => useStore.getState().setPaletteOpen(true)}
         className="inline-flex size-9 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground"
       >

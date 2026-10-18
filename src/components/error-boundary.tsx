@@ -2,6 +2,7 @@ import { TriangleAlertIcon } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { t } from "@/lib/i18n";
 import { report } from "@/lib/report";
 
 type Props = {
@@ -44,9 +45,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <EmptyMedia>
               <TriangleAlertIcon />
             </EmptyMedia>
-            <EmptyTitle>{scope ? `Something in ${scope} broke` : "The app hit an error"}</EmptyTitle>
+            <EmptyTitle>{scope ? t("common.boundary.titleIn", { scope }) : t("common.boundary.title")}</EmptyTitle>
             <EmptyDescription>
-              {scope ? "The rest of the app still works. " : ""}
+              {scope ? t("common.boundary.restWorks") : ""}
               {error.message || String(error)}
             </EmptyDescription>
           </EmptyHeader>
@@ -59,18 +60,18 @@ export class ErrorBoundary extends Component<Props, State> {
                     onLeave();
                   }}
                 >
-                  {leaveLabel ?? "Back home"}
+                  {leaveLabel ?? t("common.boundary.backHome")}
                 </Button>
               )}
               <Button variant="outline" onClick={() => this.setState({ error: undefined, details: false })}>
-                Try again
+                {t("common.tryAgain")}
               </Button>
               <Button variant="ghost" onClick={() => navigator.clipboard?.writeText(detail)}>
-                Copy details
+                {t("common.boundary.copyDetails")}
               </Button>
             </div>
             <button type="button" className="text-muted-foreground text-xs hover:text-foreground" onClick={() => this.setState({ details: !details })}>
-              {details ? "Hide details" : "Show details"}
+              {details ? t("common.boundary.hideDetails") : t("common.boundary.showDetails")}
             </button>
             {details && <pre className="max-h-64 w-full overflow-auto rounded-md bg-muted p-3 text-start text-xs leading-relaxed whitespace-pre-wrap select-text">{detail}</pre>}
           </EmptyContent>

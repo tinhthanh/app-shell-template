@@ -5,6 +5,7 @@ import { openShortcuts } from "@/components/shortcuts-sheet";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { APP_NAME } from "@/lib/app";
+import { t } from "@/lib/i18n";
 import { openSettings, useStore } from "@/lib/store";
 import { builtinThemes } from "@/themes/builtin";
 import { ViewHeader } from "@/views/view-header";
@@ -14,51 +15,37 @@ import { ViewHeader } from "@/views/view-header";
 export function HomeView() {
   return (
     <div className="flex h-full flex-col">
-      <ViewHeader title="Home" description={`Welcome to ${APP_NAME}`} />
+      <ViewHeader title={t("shell.place.home")} description={t("shell.home.welcome", { app: APP_NAME })} />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl px-8 pt-8 pb-16">
-          <h2 className="font-semibold text-xl tracking-tight">A desktop-style app shell, no backend required</h2>
+          <h2 className="font-semibold text-xl tracking-tight">{t("shell.home.headline")}</h2>
           <p className="mt-2 max-w-prose text-muted-foreground text-sm leading-relaxed">
-            Sidebar, command palette, settings, {builtinThemes.length} themes, keyboard shortcuts and a mock API, all wired. Views read data through one client (
-            <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">src/lib/api.ts</code>) that runs on fixtures until you point it at a server.
+            {t("shell.home.introBefore", { themes: builtinThemes.length })}
+            <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">src/lib/api.ts</code>
+            {t("shell.home.introAfter")}
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
-            <Card
-              icon={<FolderKanbanIcon />}
-              title="Projects"
-              description="A list read from the API, with its loading, empty and failed states."
-              onClick={() => useStore.getState().setView({ kind: "projects" })}
-            />
-            <Card icon={<SearchIcon />} title="Search and commands" description="Every place, command and theme in one list." keys="⌘K" onClick={() => useStore.getState().setPaletteOpen(true)} />
-            <Card
-              icon={<PaletteIcon />}
-              title="Themes"
-              description="Default Dark and Light, Midnight, Paper, and ports of popular editor themes, each checked for contrast."
-              onClick={() => openSettings("appearance")}
-            />
-            <Card icon={<KeyboardIcon />} title="Keyboard shortcuts" description="One table drives the handler, the sheet and Settings." keys="⌘/" onClick={openShortcuts} />
-            <Card
-              icon={<LayoutGridIcon />}
-              title="Kit"
-              description="Every component, in the theme in use: buttons, inputs, overlays, data, tones."
-              onClick={() => useStore.getState().setView({ kind: "kit" })}
-            />
+            <Card icon={<FolderKanbanIcon />} title={t("shell.place.projects")} description={t("shell.home.projects")} onClick={() => useStore.getState().setView({ kind: "projects" })} />
+            <Card icon={<SearchIcon />} title={t("shell.home.search")} description={t("shell.home.searchText")} keys="⌘K" onClick={() => useStore.getState().setPaletteOpen(true)} />
+            <Card icon={<PaletteIcon />} title={t("shell.home.themes")} description={t("shell.home.themesText")} onClick={() => openSettings("appearance")} />
+            <Card icon={<KeyboardIcon />} title={t("shell.home.shortcuts")} description={t("shell.home.shortcutsText")} keys="⌘/" onClick={openShortcuts} />
+            <Card icon={<LayoutGridIcon />} title={t("shell.place.kit")} description={t("shell.home.kitText")} onClick={() => useStore.getState().setView({ kind: "kit" })} />
           </div>
           <section className="mt-10">
-            <h3 className="font-medium text-[0.8125rem] text-muted-foreground">Try the states</h3>
-            <p className="mt-1 text-muted-foreground text-xs">The mock takes knobs in the URL, so each state is a link away.</p>
+            <h3 className="font-medium text-[0.8125rem] text-muted-foreground">{t("shell.home.states")}</h3>
+            <p className="mt-1 text-muted-foreground text-xs">{t("shell.home.statesText")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="outline" render={<a href="?mock=1&slow=1" />}>
-                Slow network
+                {t("shell.home.slow")}
               </Button>
               <Button size="sm" variant="outline" render={<a href="?mock=1&fail=1" />}>
-                Server down
+                {t("shell.home.down")}
               </Button>
               <Button size="sm" variant="outline" render={<a href="?mock=1&empty=1" />}>
-                Nothing yet
+                {t("shell.home.empty")}
               </Button>
               <Button size="sm" variant="outline" render={<a href="?mock=1&platform=linux" />}>
-                Linux keys
+                {t("shell.home.linuxKeys")}
               </Button>
             </div>
           </section>

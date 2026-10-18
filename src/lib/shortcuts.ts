@@ -1,8 +1,11 @@
+import { t } from "@/lib/i18n";
+import type { ShortcutId } from "@/lib/keys";
 import table from "@/lib/shortcuts.json";
 
 // The app's keyboard shortcuts, from shortcuts.json: the one table the key
 // handler (hooks/use-shortcuts), the Keyboard shortcuts sheet and Settings
-// › Shortcuts all read.
+// › Shortcuts all read. What people see of one (its name, its group's) is
+// in the language in use, from lib/messages/settings.ts by id.
 
 export type ShortcutGroup = "View" | "Go" | "Help";
 
@@ -23,8 +26,13 @@ export const SHORTCUTS = table.shortcuts as Shortcut[];
 // The order the lists follow.
 export const SHORTCUT_GROUPS: ShortcutGroup[] = ["Go", "View", "Help"];
 
-// describe is what a list of shortcuts calls one.
-export const describe = (s: Shortcut) => s.what ?? s.label.replace(/…$/, "");
+// describe is what a list of shortcuts calls one, in the language in use.
+// keys.test.ts holds the table's ids to ShortcutId, and the template's
+// type holds each to a word in lib/messages/settings.ts.
+export const describe = (s: Shortcut) => t(`settings.shortcut.${s.id as ShortcutId}`);
+
+// groupName is a group's heading, in the language in use.
+export const groupName = (g: ShortcutGroup) => t(`settings.shortcutGroup.${g}`);
 
 // keysFor is the keys of a shortcut, for a hint to show.
 export const keysFor = (id: string) => SHORTCUTS.find((s) => s.id === id)?.keys;

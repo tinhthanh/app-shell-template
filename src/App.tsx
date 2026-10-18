@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Fragment, Suspense, useEffect } from "react";
 
 import { Announcer } from "@/components/announcer";
 import { AppSidebar, PhoneBar, usePhone } from "@/components/app-sidebar";
@@ -16,7 +16,9 @@ import { useWindowTitle } from "@/hooks/use-window-title";
 import { client, isMock, knobsOn } from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
+import { t } from "@/lib/i18n";
 import { lazyView, preloadViews } from "@/lib/lazy-view";
+import { usePrefs } from "@/lib/prefs";
 import { signedIn, signedOut, useSession } from "@/lib/session";
 import { watchStillness } from "@/lib/still";
 import { assertNever, useStore, type View, type ViewKind } from "@/lib/store";
@@ -31,7 +33,8 @@ const SettingsView = lazyView(() => import("@/views/settings/settings-view").the
 
 // What the window is called on each view, and what an error names. Every
 // kind but home must be here: tsc says so.
-const viewTitles = { projects: "Projects", kit: "Kit", settings: "Settings" } satisfies Record<Exclude<ViewKind, "home">, string>;
+// In the language in use, so read at render.
+const viewTitles = () => ({ projects: t("shell.place.projects"), kit: t("shell.place.kit"), settings: t("shell.place.settings") }) satisfies Record<Exclude<ViewKind, "home">, string>;
 
 // ?crash=<kind> makes that view throw, so the error boundary around it can
 // be seen and tested (e2e/shell.spec.ts). Only on the fixtures or with the
@@ -58,7 +61,7 @@ function ViewFor({ view }: { view: View }) {
 export default function App() {
   useApplyTheme();
   useShortcuts();
-  useWindowTitle(viewTitles);
+  useWindowTitle(viewTitles());
   // Spinners and shimmers hold still while the window is in the background.
   useEffect(watchStillness, []);
   // The other views' code, fetched once the app has started and is idle.
@@ -75,6 +78,9 @@ export default function App() {
   const session = useSession((s) => s.status);
   const view = useStore((s) => s.view);
   const phone = usePhone();
+  // A new language redraws the frame and the dialogs in it (lib/i18n.ts);
+  // the view, what was read and the session are kept outside, so they stay.
+  const language = usePrefs((p) => p.language);
   // Away from a developer's machine, fixtures mean the API was never configured.
   const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
 
@@ -82,7 +88,9 @@ export default function App() {
     return (
       <TooltipProvider delay={300}>
         <ToastProvider position="bottom-right">
-          <SignInView />
+          <Fragment key={language}>
+            <SignInView />
+          </Fragment>
           <Announcer />
         </ToastProvider>
       </TooltipProvider>
@@ -98,35 +106,37 @@ export default function App() {
         position="bottom-right"
         viewportClassName="max-w-88 data-[position=bottom-right]:bottom-[max(calc(26px+12px),var(--app-bar-lift,0px))] data-[position=bottom-right]:right-3 data-[position=bottom-left]:bottom-[calc(26px+12px)] data-[position=bottom-left]:left-3 data-[position=top-left]:top-3 data-[position=top-left]:left-3 data-[position=top-right]:top-3 data-[position=top-right]:right-3"
       >
-        <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
-          {unconfigured && (
-            <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-xs">
-              Showing made-up data: no API is configured. Set apiUrl in config.js, or VITE_API_URL at build time (docs/deploy.md).
+        <Fragment key={language}>
+          <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
+            {unconfigured && (
+              <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-xs">
+                {t("shell.unconfigured")}
+              </div>
+            )}
+            {phone && <PhoneBar />}
+            <div className="flex min-h-0 flex-1">
+              <AppSidebar />
+              <main className="relative min-h-0 min-w-0 flex-1">
+                <ErrorBoundary
+                  key={view.kind}
+                  scope={view.kind === "home" ? undefined : viewTitles()[view.kind]}
+                  onLeave={view.kind === "home" ? undefined : () => useStore.getState().setView({ kind: "home" })}
+                >
+                  <Suspense>
+                    <ViewFor view={view} />
+                  </Suspense>
+                </ErrorBoundary>
+              </main>
             </div>
-          )}
-          {phone && <PhoneBar />}
-          <div className="flex min-h-0 flex-1">
-            <AppSidebar />
-            <main className="relative min-h-0 min-w-0 flex-1">
-              <ErrorBoundary
-                key={view.kind}
-                scope={view.kind === "home" ? undefined : viewTitles[view.kind]}
-                onLeave={view.kind === "home" ? undefined : () => useStore.getState().setView({ kind: "home" })}
-              >
-                <Suspense>
-                  <ViewFor view={view} />
-                </Suspense>
-              </ErrorBoundary>
-            </main>
+            <StatusBar />
           </div>
-          <StatusBar />
-        </div>
-        <ErrorBoundary scope="a dialog">
-          <CommandPalette />
-          <ShortcutsSheet />
-          <ConfirmHost />
-          <WhatsNewDialog />
-        </ErrorBoundary>
+          <ErrorBoundary scope={t("shell.aDialog")}>
+            <CommandPalette />
+            <ShortcutsSheet />
+            <ConfirmHost />
+            <WhatsNewDialog />
+          </ErrorBoundary>
+        </Fragment>
         <Announcer />
       </ToastProvider>
     </TooltipProvider>

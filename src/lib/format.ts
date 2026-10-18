@@ -1,8 +1,14 @@
 // Dates and numbers, in the person's language (Intl): every view formats
-// through here, never by hand. locale defaults to the browser's; the tests
-// pin one. Pure, so format.test.ts runs it in node.
+// through here, never by hand. locale defaults to the app's language
+// (lib/i18n.ts), in the browser's region when that is the same language
+// (en-GB, not en); the tests pin one. Pure, so format.test.ts runs it in node.
+import { language } from "./i18n.ts";
 
-export const lang = (): string => (typeof navigator === "undefined" ? "en" : navigator.language);
+export function lang(): string {
+  const ui = language();
+  const browser = typeof navigator === "undefined" ? undefined : navigator.language;
+  return browser && browser.toLowerCase().split("-")[0] === ui ? browser : ui;
+}
 
 // ago says how long ago an ISO time was, in a word or two: "just now",
 // "12 minutes ago", "3 days ago"; a time in the future reads "just now".
