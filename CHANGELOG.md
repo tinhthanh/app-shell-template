@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Closing a form after changing only a choice (a select) asks before it throws the change away, as it does after typing; the Kit has a form dialog with a select to copy; a loader's clock is as readable as its words.
+
 - Projects are read from the server a page at a time, filtered and sorted there: the next page comes as you reach the end of the list (with Try again if it doesn't), the count says how many match a filter, and Back from a row far down a long list puts the keyboard on it again.
 
 - In a development or demo build, `?api=` takes only this site or a server on this machine: a link can no longer send the app's requests to another server.

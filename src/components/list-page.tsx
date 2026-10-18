@@ -14,5 +14,9 @@ export function ListToolbar({ children }: { children: ReactNode }) {
 }
 
 export function NothingMatches({ children = "Nothing matches." }: { children?: ReactNode }) {
-  return <p className="px-6 py-8 text-muted-foreground text-sm">{children}</p>;
+  return (
+    <p className="px-6 py-8 text-muted-foreground text-sm" data-testid="nothing-matches">
+      {children}
+    </p>
+  );
 }
