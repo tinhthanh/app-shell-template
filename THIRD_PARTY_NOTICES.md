@@ -5,7 +5,7 @@ This template is extracted from the desktop app of
 its UI kit, themes, settings scaffolding, focus handling, sidebar and
 checks, with the product-specific parts removed. Later changes ported
 from it name it where they land: the type scale (`src/index.css`,
-`scripts/check-type.mjs`). Code derived from other
+`scripts/check-type.mjs`) and the sidebar's ink (`src/components/ink.ts`). Code derived from other
 projects, with their notices:
 
 ## What the build bundles
