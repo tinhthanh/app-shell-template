@@ -52,7 +52,7 @@ export function ZoomHud() {
           );
         })}
       </div>
-      <div className="flex items-center justify-between text-tag text-muted-foreground">
+      <div className="flex items-center justify-between text-tag text-muted-foreground leading-3.5">
         <span>{edge ?? t("shell.zoom.fromDefault", { sign: size > range.default ? "+" : "−", n: Math.abs(size - range.default) })}</span>
         <span>
           <kbd className="font-sans">{platformKeys("⌘0")}</kbd> {t("shell.zoom.resets")}

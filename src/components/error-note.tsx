@@ -47,7 +47,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           <pre
             role="region"
             aria-label={t("common.details.output")}
-            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 text-mono text-foreground/90 leading-relaxed"
+            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 font-mono text-mono text-foreground/90 leading-relaxed"
           >
             {text}
           </pre>

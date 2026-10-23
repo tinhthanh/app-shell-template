@@ -66,55 +66,53 @@
     /* The type scale: the only way the app sizes text (scripts/check-type.mjs),
        by role, so two pages that should match do. In rem, so all of it grows
        with the text size (⌘+). coss ui's own parts (components/ui) keep the
-       kit's sizes. Each sets its size, line height and, for a heading or a
-       label, its weight; a font-* class beside one still wins over the
-       weight. lib/utils.ts tells cn() these are sizes, so they merge with
-       colours. After Shipyard's (github.com/cosscom/shipyard, MIT). */
+       kit's sizes. Line heights are ratios, as Tailwind's own are, so text
+       inside takes a line in proportion to its own size; desc, section, tag
+       and mono set none and take the line they sit in. A heading or a
+       label sets its weight; a font-* class beside one still wins.
+       lib/utils.ts tells cn() these are sizes, so they merge with colours.
+       After Shipyard's (github.com/cosscom/shipyard, MIT). */
     /* A full page's title. */
     --text-page-title: 1.75rem;
-    --text-page-title--line-height: 2.125rem;
+    --text-page-title--line-height: calc(2.125 / 1.75);
     --text-page-title--letter-spacing: -0.02em;
     --text-page-title--font-weight: 600;
     /* A dialog's, sheet's or empty state's title, Home's headline. */
     --text-title: 1.25rem;
-    --text-title--line-height: 1.625rem;
-    --text-title--letter-spacing: -0.015em;
+    --text-title--line-height: calc(1.75 / 1.25);
+    --text-title--letter-spacing: -0.025em;
     --text-title--font-weight: 600;
     /* A card's, panel's or popover's own heading. */
     --text-heading: 1rem;
-    --text-heading--line-height: 1.375rem;
+    --text-heading--line-height: calc(1.375 / 1);
     --text-heading--letter-spacing: -0.01em;
     --text-heading--font-weight: 600;
     /* A lead line under a title. */
     --text-subtitle: 0.875rem;
-    --text-subtitle--line-height: 1.25rem;
+    --text-subtitle--line-height: calc(1.25 / 0.875);
     /* Running text: a paragraph, a dialog's body, a field's value. */
     --text-body: 0.875rem;
-    --text-body--line-height: 1.25rem;
-    /* A group's heading in a page (Settings' groups, Home's sections). */
-    --text-section: 0.8125rem;
-    --text-section--line-height: 1rem;
-    --text-section--font-weight: 500;
+    --text-body--line-height: calc(1.25 / 0.875);
     /* A row's or a band's name: a project in the list, a view's title. */
     --text-row: 0.875rem;
-    --text-row--line-height: 1.125rem;
+    --text-row--line-height: calc(1.25 / 0.875);
     --text-row--font-weight: 500;
+    /* A group's heading in a page (Settings' groups, Home's sections). */
+    --text-section: 0.8125rem;
+    --text-section--font-weight: 500;
     /* A row's description, the sidebar's places, a control's words. */
     --text-desc: 0.8125rem;
-    --text-desc--line-height: 1.1875rem;
     /* A column's header, a small heading over a list. */
     --text-label: 0.75rem;
-    --text-label--line-height: 1rem;
+    --text-label--line-height: calc(1 / 0.75);
     --text-label--font-weight: 500;
     /* A note under a row: a hint, a time, a count. */
     --text-meta: 0.75rem;
-    --text-meta--line-height: 1rem;
+    --text-meta--line-height: calc(1 / 0.75);
     /* The smallest: a tag, a key cap, the status bar, a code chip. */
     --text-tag: 0.6875rem;
-    --text-tag--line-height: 0.875rem;
     /* Code and raw output. */
-    --text-mono: 0.78125rem;
-    --text-mono--line-height: 1.125rem;
+    --text-mono: 0.75rem;
     /* Density: h-row, py-row-pad, gap-row-gap, h-side-row. See below. */
     --spacing-row: var(--row-h);
     --spacing-row-pad: var(--row-pad);

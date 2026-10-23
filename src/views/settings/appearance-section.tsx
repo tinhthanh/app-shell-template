@@ -46,7 +46,7 @@ export function AppearanceSection() {
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
         {groups.map((g) => (
           <div key={g.title} className="mt-4">
-            <h3 className="mb-2 text-label text-muted-foreground uppercase tracking-wide">{g.title}</h3>
+            <h3 className="mb-2 font-medium text-tag text-muted-foreground uppercase tracking-wide">{g.title}</h3>
             <div className="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
               {g.themes.map((th) => (
                 <ThemeCard key={th.id} theme={th} selected={th.id === themeId} onSelect={() => useStore.getState().setTheme(th.id)} />
