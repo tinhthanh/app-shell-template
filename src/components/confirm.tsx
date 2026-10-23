@@ -64,19 +64,19 @@ function Body({ req }: { req: ConfirmRequest }) {
         <AlertDialogDescription>{req.description}</AlertDialogDescription>
       </AlertDialogHeader>
       {(req.detail || req.options?.length || error) && (
-        <div className="flex flex-col gap-3 px-6 pb-2 text-sm">
-          {req.detail && <div className="rounded-md bg-muted/60 px-3 py-2 font-mono text-xs leading-relaxed">{req.detail}</div>}
+        <div className="flex flex-col gap-3 px-6 pb-2 text-body">
+          {req.detail && <div className="rounded-md bg-muted/60 px-3 py-2 font-mono text-meta leading-relaxed">{req.detail}</div>}
           {req.options?.map((o) => (
             <label key={o.id} className="flex items-start gap-2.5">
               <Checkbox className="mt-0.5" checked={!!checked[o.id]} onCheckedChange={(v) => setChecked((c) => ({ ...c, [o.id]: !!v }))} />
               <span>
                 {o.label}
-                {o.hint && <span className="block text-muted-foreground text-xs">{o.hint}</span>}
+                {o.hint && <span className="block text-muted-foreground text-meta">{o.hint}</span>}
               </span>
             </label>
           ))}
           {error && (
-            <p role="alert" className="text-destructive-foreground text-xs">
+            <p role="alert" className="text-destructive-foreground text-meta">
               {error}
             </p>
           )}

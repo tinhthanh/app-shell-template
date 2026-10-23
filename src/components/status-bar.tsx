@@ -11,7 +11,7 @@ import { openSettings } from "@/lib/store";
 export function StatusBar() {
   const theme = useActiveTheme();
   return (
-    <footer data-testid="status-bar" className="flex h-6.5 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-t bg-sidebar px-3 text-[0.6875rem] text-muted-foreground">
+    <footer data-testid="status-bar" className="flex h-6.5 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-t bg-sidebar px-3 text-tag text-muted-foreground">
       {isMock() && (
         <Tip label={t("shell.mockTip")}>
           <button type="button" className="rounded border border-warning/40 px-1 text-warning-foreground" aria-label={t("shell.mockLabel")} onClick={() => openSettings("about")}>

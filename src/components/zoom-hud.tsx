@@ -35,10 +35,10 @@ export function ZoomHud() {
         "opacity-0 transition-[opacity,translate] duration-200 ease-out -translate-y-[4px] data-shown:translate-y-0 data-shown:opacity-100",
       )}
     >
-      <div className="flex items-center gap-[8px] text-[13px] leading-[16px]">
+      <div className="flex items-center gap-[8px] text-desc leading-4">
         <ALargeSmallIcon className="size-[16px] shrink-0 text-muted-foreground" />
         <span className="font-medium">{t("shell.zoom.title")}</span>
-        <span className="ms-auto font-mono text-[12px] text-muted-foreground tabular-nums">{size}px</span>
+        <span className="ms-auto font-mono text-meta text-muted-foreground tabular-nums">{size}px</span>
       </div>
       {/* One notch a step; the dot under one marks the default. */}
       <div className="flex items-start gap-[3px]" aria-hidden>
@@ -52,7 +52,7 @@ export function ZoomHud() {
           );
         })}
       </div>
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground leading-[14px]">
+      <div className="flex items-center justify-between text-tag text-muted-foreground">
         <span>{edge ?? t("shell.zoom.fromDefault", { sign: size > range.default ? "+" : "−", n: Math.abs(size - range.default) })}</span>
         <span>
           <kbd className="font-sans">{platformKeys("⌘0")}</kbd> {t("shell.zoom.resets")}

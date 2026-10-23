@@ -28,7 +28,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           <button
             type="button"
             className={cn(
-              "inline-flex w-fit cursor-pointer items-center gap-0.5 rounded-sm text-muted-foreground text-xs underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+              "inline-flex w-fit cursor-pointer items-center gap-0.5 rounded-sm text-muted-foreground text-meta underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring",
               className,
             )}
           />
@@ -47,7 +47,7 @@ export function ErrorDetails({ text, title, className }: { text?: string; title?
           <pre
             role="region"
             aria-label={t("common.details.output")}
-            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 font-mono text-[0.75rem] text-foreground/90 leading-relaxed"
+            className="max-h-[50vh] select-text overflow-auto whitespace-pre-wrap break-words rounded-lg border bg-muted/60 px-3 py-2.5 text-mono text-foreground/90 leading-relaxed"
           >
             {text}
           </pre>

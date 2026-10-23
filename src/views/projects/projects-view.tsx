@@ -68,10 +68,10 @@ const columns = (): Column<Project>[] => [
     cell: (p) => (
       <span className="block min-w-0">
         <span className="flex items-center gap-2">
-          <span className="truncate font-medium text-sm">{p.name}</span>
+          <span className="truncate text-row">{p.name}</span>
           <StatusBadge status={p.status} />
         </span>
-        <span className="mt-0.5 block truncate text-muted-foreground text-xs">{p.description}</span>
+        <span className="mt-0.5 block truncate text-muted-foreground text-meta">{p.description}</span>
       </span>
     ),
   },
@@ -96,7 +96,7 @@ const columns = (): Column<Project>[] => [
     from: "sm",
     align: "end",
     className: "w-32",
-    cell: (p) => <span className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">{ago(p.updatedAt)}</span>,
+    cell: (p) => <span className="whitespace-nowrap text-muted-foreground text-meta tabular-nums">{ago(p.updatedAt)}</span>,
   },
 ];
 // Only the ids are kept, so reading the headers once at load is harmless.
@@ -282,8 +282,8 @@ function ProjectDetail({ id }: { id: string }) {
               />
             )}
           </div>
-          <p className="mt-3 text-base">{p.description}</p>
-          <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+          <p className="mt-3 text-body">{p.description}</p>
+          <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body">
             <dt className="text-muted-foreground">{t("projects.owner")}</dt>
             <dd>{p.owner}</dd>
             <dt className="text-muted-foreground">{t("projects.tags")}</dt>
@@ -372,7 +372,7 @@ function StatusBadge({ status }: { status: ProjectStatus }) {
 function Tag({ name }: { name: string }) {
   const tone = toneVar(hashTone(name));
   return (
-    <span className="rounded-full px-2 py-px text-[0.6875rem]" style={{ color: tone, background: `color-mix(in srgb, ${tone} 15%, transparent)` }}>
+    <span className="rounded-full px-2 py-px text-tag" style={{ color: tone, background: `color-mix(in srgb, ${tone} 15%, transparent)` }}>
       {name}
     </span>
   );

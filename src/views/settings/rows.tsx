@@ -25,7 +25,7 @@ export function SettingsPage({ title, badge, description, actions, children }: {
         actions={actions}
       />
       {/* Section descriptions run long, so they stay with the page. */}
-      {description && <p className="mb-6 text-muted-foreground text-sm">{description}</p>}
+      {description && <p className="mb-6 text-muted-foreground text-body">{description}</p>}
       <div className="space-y-8">{children}</div>
     </div>
   );
@@ -37,8 +37,8 @@ export function SettingsGroup({ title, description, actions, children }: { title
       {(title || actions) && (
         <div className="mb-2 flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            {title && <h2 className="font-medium text-[0.8125rem] text-muted-foreground">{title}</h2>}
-            {description && <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>}
+            {title && <h2 className="text-section text-muted-foreground">{title}</h2>}
+            {description && <p className="mt-0.5 text-muted-foreground text-meta">{description}</p>}
           </div>
           {actions}
         </div>
@@ -80,11 +80,11 @@ export function SettingsRow({ label, description, children, className }: { label
   return (
     <div className={cn("flex min-h-row items-center gap-6 px-4 py-row-pad", className)}>
       <div className="min-w-0 flex-1">
-        <div id={labelledBy} className="text-sm">
+        <div id={labelledBy} className="text-body">
           {label}
         </div>
         {description && (
-          <div id={describedBy} className="mt-0.5 text-muted-foreground text-xs leading-relaxed">
+          <div id={describedBy} className="mt-0.5 text-muted-foreground text-meta leading-relaxed">
             {typeof description === "string" ? platformKeys(description) : description}
           </div>
         )}
@@ -100,7 +100,7 @@ export function SettingsRow({ label, description, children, className }: { label
 
 // Code is a path or a command inside a description.
 export function Code({ children }: { children: ReactNode }) {
-  return <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">{children}</code>;
+  return <code className="rounded bg-muted px-1 py-px font-mono text-tag text-foreground">{children}</code>;
 }
 
 // fill puts pieces of markup (a Code, say) into a word's blanks: t() fills
@@ -111,5 +111,5 @@ export function fill(text: string, parts: Record<string, ReactNode>): ReactNode 
 
 // Value shows a setting that is read, not edited here, as a quiet chip.
 export function Value({ children }: { children: ReactNode }) {
-  return <span className="rounded-md border bg-muted/40 px-2 py-0.5 font-mono text-muted-foreground text-xs tabular-nums">{children}</span>;
+  return <span className="rounded-md border bg-muted/40 px-2 py-0.5 font-mono text-muted-foreground text-meta tabular-nums">{children}</span>;
 }

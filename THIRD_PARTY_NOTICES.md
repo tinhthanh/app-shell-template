@@ -3,7 +3,9 @@
 This template is extracted from the desktop app of
 [Shipyard](https://github.com/cosscom/shipyard) (MIT, © 2026 Sean Brydon):
 its UI kit, themes, settings scaffolding, focus handling, sidebar and
-checks, with the product-specific parts removed. Code derived from other
+checks, with the product-specific parts removed. Later changes ported
+from it name it where they land: the type scale (`src/index.css`,
+`scripts/check-type.mjs`). Code derived from other
 projects, with their notices:
 
 ## What the build bundles
