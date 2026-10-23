@@ -2,6 +2,7 @@ import { InfoIcon, KeyboardIcon, PaletteIcon, SlidersHorizontalIcon } from "luci
 import type { ComponentType } from "react";
 
 import { usePhone } from "@/components/app-sidebar";
+import { ink, inkScale } from "@/components/ink";
 import { SimpleSelect } from "@/components/simple-select";
 import { Tip } from "@/components/tip";
 import { type Key, t } from "@/lib/i18n";
@@ -57,7 +58,7 @@ export function SettingsView() {
               />
             </div>
           ) : (
-            <nav aria-label={t("settings.sectionsNav")} className="flex w-48 shrink-0 flex-col gap-px border-e px-2 pt-4 max-[1200px]:w-12 max-[1200px]:px-1.5">
+            <nav aria-label={t("settings.sectionsNav")} className={cn("flex w-48 shrink-0 flex-col gap-px border-e px-2 pt-4 max-[1200px]:w-12 max-[1200px]:px-1.5", inkScale)}>
               {SECTIONS.map((s) => (
                 <div key={s.id}>
                   {s.id === "about" && <div className="mx-2.5 my-2 border-t max-[1200px]:mx-1" />}
@@ -71,10 +72,10 @@ export function SettingsView() {
                       aria-label={t(s.title)}
                       className={cn(
                         "flex h-7.5 w-full items-center gap-2.5 rounded-md px-2.5 text-start text-desc transition-colors max-[1200px]:justify-center max-[1200px]:px-0",
-                        s.id === id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                        s.id === id ? cn("bg-accent", ink.strong) : cn(ink.row, "hover:bg-accent/50 hover:text-foreground"),
                       )}
                     >
-                      <s.icon className="size-3.5 shrink-0" />
+                      <s.icon className={cn("size-3.5 shrink-0", s.id === id ? "text-(color:--ink-row)" : ink.glyph)} />
                       <span className="max-[1200px]:hidden">{t(s.title)}</span>
                     </button>
                   </Tip>
