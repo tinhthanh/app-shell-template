@@ -20,7 +20,7 @@ export function ShortcutsSection() {
   return (
     <SettingsPage title={t("settings.section.shortcuts")} description={t("settings.shortcuts.description")}>
       <SearchField value={query} onChange={setQuery} placeholder={t("settings.shortcuts.search")} />
-      {grouped.length === 0 && <p className="text-muted-foreground text-sm">{t("settings.shortcuts.noMatch", { query })}</p>}
+      {grouped.length === 0 && <p className="text-muted-foreground text-body">{t("settings.shortcuts.noMatch", { query })}</p>}
       {grouped.map((g) => (
         <SettingsGroup key={g.title} title={groupName(g.title)}>
           {g.items.map((s) => (

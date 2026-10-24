@@ -76,7 +76,7 @@ export function KitView() {
               data-testid={`kit-nav-${s.id}`}
               onClick={() => useStore.getState().setView({ kind: "kit", section: s.id })}
               className={cn(
-                "flex h-7.5 w-full items-center rounded-md px-2.5 text-start text-[0.8125rem] transition-colors",
+                "flex h-7.5 w-full items-center rounded-md px-2.5 text-start text-desc transition-colors",
                 s.id === current ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               )}
             >
@@ -103,8 +103,8 @@ export function KitView() {
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <section className="mb-10">
-      <h2 className="font-medium text-[0.8125rem] text-muted-foreground">{title}</h2>
-      {description && <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>}
+      <h2 className="text-section text-muted-foreground">{title}</h2>
+      {description && <p className="mt-0.5 text-muted-foreground text-meta">{description}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border bg-card/40 p-4">{children}</div>
     </section>
   );
@@ -205,23 +205,23 @@ function Choices() {
   return (
     <>
       <Section title="Switch and checkbox">
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-body">
           <Switch defaultChecked /> Email me
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-body">
           <Switch /> Text me
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-body">
           <Checkbox defaultChecked /> Remember me
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-body">
           <Checkbox /> Subscribe
         </label>
       </Section>
       <Section title="Radio group">
         <RadioGroup defaultValue="a" aria-label="Choice">
           {["a", "b", "c"].map((v) => (
-            <label key={v} className="flex items-center gap-2 text-sm">
+            <label key={v} className="flex items-center gap-2 text-body">
               <Radio value={v} /> Option {v.toUpperCase()}
             </label>
           ))}
@@ -264,13 +264,13 @@ function Choices() {
             <TabsTab value="two">Second</TabsTab>
             <TabsTab value="three">Third</TabsTab>
           </TabsList>
-          <TabsPanel value="one" className="pt-3 text-muted-foreground text-sm">
+          <TabsPanel value="one" className="pt-3 text-muted-foreground text-body">
             The first panel.
           </TabsPanel>
-          <TabsPanel value="two" className="pt-3 text-muted-foreground text-sm">
+          <TabsPanel value="two" className="pt-3 text-muted-foreground text-body">
             The second panel.
           </TabsPanel>
-          <TabsPanel value="three" className="pt-3 text-muted-foreground text-sm">
+          <TabsPanel value="three" className="pt-3 text-muted-foreground text-body">
             The third panel.
           </TabsPanel>
         </Tabs>
@@ -416,7 +416,7 @@ function Overlays() {
               <SheetTitle>A sheet</SheetTitle>
               <SheetDescription>Slides in from the side for a longer task.</SheetDescription>
             </SheetHeader>
-            <SheetPanel className="text-muted-foreground text-sm">Its content scrolls on its own.</SheetPanel>
+            <SheetPanel className="text-muted-foreground text-body">Its content scrolls on its own.</SheetPanel>
             <SheetFooter>
               <Button>Done</Button>
             </SheetFooter>
@@ -528,7 +528,7 @@ function Data() {
                 cell: (r) => (
                   <span className="flex items-center gap-2">
                     <Avatar className="size-5">
-                      <AvatarFallback className="text-[0.625rem]">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-tag">{r.owner.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     {r.owner}
                   </span>
@@ -559,7 +559,7 @@ function Data() {
             <CardTitle>A card</CardTitle>
             <CardDescription>One outline per section.</CardDescription>
           </CardHeader>
-          <CardPanel className="text-muted-foreground text-sm">Its body.</CardPanel>
+          <CardPanel className="text-muted-foreground text-body">Its body.</CardPanel>
           <CardFooter>
             <Button size="sm" variant="outline">
               Act
@@ -576,21 +576,21 @@ function Tones() {
     <>
       <Section title="The six tones" description="For tags and groups: a hue each, at the lightness this theme reads them at, clear of the state colours.">
         {TONES.map((t) => (
-          <span key={t} className="rounded-full px-2.5 py-0.5 text-xs" style={{ color: toneVar(t), background: `color-mix(in srgb, ${toneVar(t)} 15%, transparent)` }}>
+          <span key={t} className="rounded-full px-2.5 py-0.5 text-meta" style={{ color: toneVar(t), background: `color-mix(in srgb, ${toneVar(t)} 15%, transparent)` }}>
             {t}
           </span>
         ))}
       </Section>
       <Section title="By name" description="hashTone picks the same tone for a name every time.">
         {["web", "mobile", "backend", "ops", "payments", "design"].map((t) => (
-          <span key={t} className="rounded-full px-2.5 py-0.5 text-xs" style={{ color: toneVar(hashTone(t)), background: `color-mix(in srgb, ${toneVar(hashTone(t))} 15%, transparent)` }}>
+          <span key={t} className="rounded-full px-2.5 py-0.5 text-meta" style={{ color: toneVar(hashTone(t)), background: `color-mix(in srgb, ${toneVar(hashTone(t))} 15%, transparent)` }}>
             {t}
           </span>
         ))}
       </Section>
       <Section title="The state colours" description="Green succeeds, amber warns, red fails, blue informs.">
         {(["success", "warning", "destructive", "info"] as const).map((s) => (
-          <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-xs", `bg-${s}/16 text-${s}-foreground`)}>
+          <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-meta", `bg-${s}/16 text-${s}-foreground`)}>
             {s}
           </span>
         ))}

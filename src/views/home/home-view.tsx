@@ -18,10 +18,10 @@ export function HomeView() {
       <ViewHeader title={t("shell.place.home")} description={t("shell.home.welcome", { app: APP_NAME })} />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl px-8 pt-8 pb-16">
-          <h2 className="font-semibold text-xl tracking-tight">{t("shell.home.headline")}</h2>
-          <p className="mt-2 max-w-prose text-muted-foreground text-sm leading-relaxed">
+          <h2 className="text-title">{t("shell.home.headline")}</h2>
+          <p className="mt-2 max-w-prose text-muted-foreground text-body leading-relaxed">
             {t("shell.home.introBefore", { themes: builtinThemes.length })}
-            <code className="rounded bg-muted px-1 py-px font-mono text-[0.6875rem] text-foreground">src/lib/api.ts</code>
+            <code className="rounded bg-muted px-1 py-px font-mono text-tag text-foreground">src/lib/api.ts</code>
             {t("shell.home.introAfter")}
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
@@ -32,8 +32,8 @@ export function HomeView() {
             <Card icon={<LayoutGridIcon />} title={t("shell.place.kit")} description={t("shell.home.kitText")} onClick={() => useStore.getState().setView({ kind: "kit" })} />
           </div>
           <section className="mt-10">
-            <h3 className="font-medium text-[0.8125rem] text-muted-foreground">{t("shell.home.states")}</h3>
-            <p className="mt-1 text-muted-foreground text-xs">{t("shell.home.statesText")}</p>
+            <h3 className="text-section text-muted-foreground">{t("shell.home.states")}</h3>
+            <p className="mt-1 text-muted-foreground text-meta">{t("shell.home.statesText")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="outline" render={<a href="?mock=1&slow=1" />}>
                 {t("shell.home.slow")}
@@ -65,11 +65,11 @@ function Card({ icon, title, description, keys, onClick }: { icon: ReactNode; ti
       <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground [&_svg]:size-4">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-medium text-sm">{title}</span>
+          <span className="text-row">{title}</span>
           {keys && <Kbd>{keys}</Kbd>}
           <ArrowRightIcon className="ms-auto size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
         </span>
-        <span className="mt-1 block text-muted-foreground text-xs leading-relaxed">{description}</span>
+        <span className="mt-1 block text-muted-foreground text-meta leading-relaxed">{description}</span>
       </span>
     </button>
   );
