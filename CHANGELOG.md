@@ -5,6 +5,10 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The sidebar and Settings' list are written in one quiet ink: places a step softer than the text, icons softer still, and the one you are on in full; every theme stays readable.
+
+- A screen reader names the account button, the version and the mock chip by the words they show (the account button is your name; the version reads "v0.1.0"), as WCAG's "label in name" asks.
+
 - Text comes in a dozen sizes by what it is (a title, a row, a note, a tag), the same on every page; a project's description reads at the body size.
 
 - The app speaks Vietnamese: Settings › General › Language picks English, Tiếng Việt, or Match system (the default, which follows your computer); dates and numbers follow the language.

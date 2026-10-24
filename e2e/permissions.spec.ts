@@ -36,6 +36,6 @@ test("a member creates and edits, but has no Delete", async ({ app }) => {
 
 test("the account menu says which role you have", async ({ app }) => {
   await app.open({ params: { role: "member" } });
-  await app.page.getByRole("button", { name: /account menu/ }).click();
+  await app.page.getByTestId("account").click();
   await expect(app.page.getByTestId("account-role")).toHaveText("Member");
 });
