@@ -57,11 +57,10 @@ try {
       await page.getByTestId("nav-home").or(page.getByTestId("settings-back")).first().waitFor();
       // The view's code loads after the shell, and its data after that: wait
       // for what says it is there, or for the view's root and its loader to go.
+      // A page's root can be there before its data, so the loader has to go too.
       if (ready) await page.getByTestId(ready).first().waitFor();
-      else {
-        await page.locator("main [data-testid]").first().waitFor();
-        await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
-      }
+      else await page.locator("main [data-testid]").first().waitFor();
+      await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
       await page.evaluate(() => Promise.all([document.fonts.ready, ...document.getAnimations().map((x) => x.finished.catch(() => {}))]));
       const name = `${a.replace(/^#\//, "").replace(/[/?&=]/g, "-") || "home"}-${theme.replace("default-", "")}.png`;
       await page.screenshot({ path: resolve(out, name) });

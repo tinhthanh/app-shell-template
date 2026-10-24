@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- In Vietnamese, the words are written one way (xóa, hủy, tùy chọn) and a status change reads "Shop hiện đang tạm dừng".
+
 - Settings is a page of its own: its list takes the sidebar's place, Back to app or Esc returns to where you were (filters and all), each section has a large title, rows sit on the page split by hairlines, and Find a setting takes you to the section that has what you type. Appearance starts with Light, Dark or Match system.
 - The sidebar's strip and every page's header are one height, and pages share one gutter.
 

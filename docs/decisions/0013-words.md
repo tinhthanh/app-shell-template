@@ -26,6 +26,18 @@ Kit page and the release notes stay English: the one is for whoever
 builds the app, the other is a record. `pnpm check:words` refuses a new
 English word written straight into a view or a component.
 
+**Vietnamese words.** One way of writing each, so the app reads as one
+voice (`i18n.test.ts` holds the tone marks to it):
+
+| Say | Not | |
+|---|---|---|
+| xóa, hủy, tùy chọn, hòa, khỏe | xoá, huỷ, tuỳ | the older tone placement, as most Vietnamese software writes it |
+| Đang đọc… | Đang tải… | a read in progress |
+| {name} hiện đang tạm dừng | {name} giờ đang… | a status toast: plain, not chatty |
+| dự án, cài đặt, chủ đề, phím tắt, giao diện | | the places and settings |
+| Free, Team, Enterprise; a product's or a plan's name | Miễn phí, Nhóm, Doanh nghiệp | names stay as the product spells them |
+| đã ngừng sử dụng | đã rời đi | a customer who left |
+
 **Revisit if.** A language needs plural forms or gender (then: ICU
 messages through a library), or the words come from a translation
 service (then: the tables are generated, the keys stay).

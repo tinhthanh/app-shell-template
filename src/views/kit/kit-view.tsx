@@ -9,6 +9,7 @@ import { FormDialog } from "@/components/form-dialog";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
 import { SimpleSelect } from "@/components/simple-select";
+import { StatusBadge, Tag } from "@/components/status-badge";
 import { Tip } from "@/components/tip";
 import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -39,7 +40,7 @@ import { toastManager } from "@/components/ui/toast";
 import { ApiError } from "@/lib/errors";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { hashTone, TONES, toneVar } from "@/themes/tones";
+import { TONES, toneVar } from "@/themes/tones";
 import { type KitSectionId, KIT_SECTIONS as SECTIONS } from "@/views/kit/sections";
 import { ViewHeader } from "@/views/view-header";
 
@@ -582,17 +583,16 @@ function Tones() {
         ))}
       </Section>
       <Section title="By name" description="hashTone picks the same tone for a name every time.">
-        {["web", "mobile", "backend", "ops", "payments", "design"].map((t) => (
-          <span key={t} className="rounded-full px-2.5 py-0.5 text-meta" style={{ color: toneVar(hashTone(t)), background: `color-mix(in srgb, ${toneVar(hashTone(t))} 15%, transparent)` }}>
-            {t}
-          </span>
+        {/* <Tag> (components/status-badge.tsx) draws a tag this way. */}
+        {["web", "mobile", "backend", "ops", "payments", "design"].map((name) => (
+          <Tag key={name} name={name} />
         ))}
       </Section>
-      <Section title="The state colours" description="Green succeeds, amber warns, red fails, blue informs.">
-        {(["success", "warning", "destructive", "info"] as const).map((s) => (
-          <span key={s} className={cn("rounded-full px-2.5 py-0.5 text-meta", `bg-${s}/16 text-${s}-foreground`)}>
-            {s}
-          </span>
+      <Section title="The state colours" description="A record's state is a <StatusBadge>: green succeeds, amber waits, blue informs, red fails, and quiet is over.">
+        {(["success", "warning", "info", "destructive", "muted"] as const).map((tone) => (
+          <StatusBadge key={tone} tone={tone}>
+            {tone}
+          </StatusBadge>
         ))}
       </Section>
     </>

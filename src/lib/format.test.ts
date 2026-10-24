@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
-import { ago, date, dateTime, number } from "./format.ts";
+import { ago, date, dateTime, money, number } from "./format.ts";
 
 test("ago reads a time in the person's language, at each boundary", () => {
   mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-14T12:00:00Z") });
@@ -28,4 +28,10 @@ test("dates and numbers follow the locale", () => {
   assert.match(dateTime("2026-10-14T12:00:00Z", "en-GB"), /^14 Oct 2026, \d{2}:\d{2}$/);
   assert.equal(number(1234567, "en-US"), "1,234,567");
   assert.equal(number(1234567, "de-DE"), "1.234.567");
+});
+
+test("an amount reads as money in the person's language, with the currency's own decimals", () => {
+  assert.equal(money(12500, "USD", "en-US"), "$12,500.00");
+  assert.equal(money(312500000, "VND", "vi-VN").replace(/\s/g, " "), "312.500.000 ₫");
+  assert.match(money(12500, "EUR", "de-DE"), /^12\.500,00\s€$/);
 });

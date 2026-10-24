@@ -36,7 +36,15 @@ E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds fir
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
 pnpm test:visual                             # when the look changed: the screenshots against e2e/snapshots/ (Docker on a Mac)
 pnpm test:visual --update                    # …and the new baselines, committed with the change
+node scripts/take-ci-baselines.mjs           # no Docker: after a push, CI's own renderings and their diffs; --take writes them
 ```
+
+With no Docker (or one that doesn't answer), push: CI renders the
+pictures on Linux, fails the ones the change moved and keeps each
+`-actual.png` and `-diff.png`. `node scripts/take-ci-baselines.mjs` fetches
+them for your branch and lists the diffs; look at every one, then
+`--take` copies them over `e2e/snapshots/`, and you commit them. Say in
+the PR that the baselines are CI's and what each diff shows.
 
 While you chase a failure, run only that test: its file and line
 (`e2e/a11y.spec.ts:150`) or `--grep "its title"`, and `--repeat-each` on
@@ -129,9 +137,12 @@ configs or these rules without the `guardrail-change` label.
   compile), read in render, never at module load. `pnpm check:words`
   refuses English written straight into a view or a component; the Kit
   page is the exception.
-- **Dates and numbers go through `src/lib/format.ts`** (`ago`, `date`,
-  `dateTime`, `number`): Intl, in the person's language; never a
-  hand-written format.
+- **Dates, numbers and money go through `src/lib/format.ts`** (`ago`, `date`,
+  `dateTime`, `number`, `money`): Intl, in the person's language; never a
+  hand-written format. An amount shown in another currency than it is
+  kept in is converted before `money()`, and says so wherever it shows
+  (a word in the column's header, a `<Tip>`); the PR says where the rate
+  comes from.
 - **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
   call signs out (`docs/decisions/0011-sessions.md`); never a token in
   storage.
@@ -185,6 +196,9 @@ no bundler. A module those tests load (and the test itself):
 - has no `enum`, `namespace` or constructor parameter properties;
 - doesn't touch the DOM or `import.meta.env` at load time (see the guard in
   `src/lib/api.ts`).
+A test that loads a module afresh (`import("./prefs.ts?case")`, to read
+another saved state) makes coverage count it as a module of its own, with
+its own uncovered functions: keep those to the one or two a case needs.
 `src/components` and `src/views` are `.tsx` and never run in node: their
 behaviour is proven in `e2e/`.
 

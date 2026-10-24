@@ -138,3 +138,12 @@ test("Light or dark picks the themes Match system uses, and Match system follows
   await app.page.reload();
   await expect(app.page.getByTestId("settings-appearance").getByRole("button", { name: "Match system", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("a second open in the same test starts from the prefs it gives", async ({ app }) => {
+  await app.open({ hash: "/settings/general" });
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "en");
+  await app.open({ prefs: { language: "vi" }, hash: "/settings/general" });
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+  await app.page.reload();
+  await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
+});
