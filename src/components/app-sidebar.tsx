@@ -248,7 +248,6 @@ function Account({ compact = false }: { compact?: boolean }) {
     <Menu>
       <MenuTrigger
         data-testid="account"
-        aria-label={t("shell.accountMenu", { name: user.name })}
         render={
           <button
             type="button"
@@ -259,10 +258,13 @@ function Account({ compact = false }: { compact?: boolean }) {
           />
         }
       >
-        <Avatar className="size-5">
+        {/* The button is named by the name it shows (on the rail, for a screen
+            reader only), so what is seen is what is said; the initials are a
+            picture of it, and that it opens a menu is aria-haspopup's to say. */}
+        <Avatar className="size-5" aria-hidden>
           <AvatarFallback className="text-[0.625rem]">{initials}</AvatarFallback>
         </Avatar>
-        {!compact && <span className="min-w-0 flex-1 truncate text-start">{user.name}</span>}
+        <span className={compact ? "sr-only" : "min-w-0 flex-1 truncate text-start"}>{user.name}</span>
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-48">
         <div className="px-2 py-1.5 text-muted-foreground text-xs">
