@@ -356,5 +356,5 @@ test("in Vietnamese the sidebar, the palette and a project's date speak Vietname
     .click();
   await expect(app.page.locator("html")).toHaveAttribute("lang", "en");
   await expect(app.page.getByTestId("settings-general")).toBeVisible();
-  await expect(app.nav("settings")).toContainText("Settings");
+  await expect(app.page.getByTestId("settings-nav-general")).toContainText("General");
 });

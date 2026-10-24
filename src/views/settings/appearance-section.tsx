@@ -21,6 +21,10 @@ export function AppearanceSection() {
   const themeId = useStore((s) => s.themeId);
   const density = usePrefs((p) => p.density);
   const uiFontSize = usePrefs((p) => p.uiFontSize);
+  const systemThemes = usePrefs((p) => p.systemThemes);
+  // Light or dark: the system's, or the themes Match system uses by day and
+  // when dark, so the choice and the cards below stay one setting.
+  const mode = themeId === SYSTEM_THEME ? "system" : themes.find((th) => th.id === themeId)?.appearance === "light" ? "light" : "dark";
   const [query, setQuery] = useState("");
 
   // The app's own, then every other theme by appearance; a search narrows
@@ -35,11 +39,24 @@ export function AppearanceSection() {
 
   return (
     <SettingsPage title={t("settings.section.appearance")}>
+      <SettingsGroup>
+        <SettingsRow label={t("settings.appearance.mode")} description={t("settings.appearance.modeDescription")}>
+          <Segmented
+            value={mode}
+            options={[
+              { value: "light", label: t("settings.appearance.modeLight") },
+              { value: "dark", label: t("settings.appearance.modeDark") },
+              { value: "system", label: t("settings.matchSystem") },
+            ]}
+            onChange={(v) => useStore.getState().setTheme(v === "system" ? SYSTEM_THEME : v === "light" ? systemThemes.light : systemThemes.dark)}
+          />
+        </SettingsRow>
+      </SettingsGroup>
       <section>
         <div className="mb-2 flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-section text-muted-foreground">{t("settings.appearance.theme")}</h2>
-            <p className="mt-0.5 text-muted-foreground text-meta">{fill(t("settings.appearance.themeHint"), { file: <Code>src/themes/builtin.ts</Code>, command: <Code>pnpm check:themes</Code> })}</p>
+            <h2 className="text-foreground text-section">{t("settings.appearance.theme")}</h2>
+            <p className="mt-0.5 text-desc text-muted-foreground">{fill(t("settings.appearance.themeHint"), { file: <Code>src/themes/builtin.ts</Code>, command: <Code>pnpm check:themes</Code> })}</p>
           </div>
           <SearchField className="w-48 shrink-0" value={query} onChange={setQuery} placeholder={t("settings.appearance.findTheme")} />
         </div>

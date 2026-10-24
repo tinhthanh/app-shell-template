@@ -17,7 +17,7 @@ export function HomeView() {
     <div className="flex h-full flex-col">
       <ViewHeader title={t("shell.place.home")} description={t("shell.home.welcome", { app: APP_NAME })} />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-8 pt-8 pb-16">
+        <div className="mx-auto w-full max-w-3xl px-page pt-8 pb-16">
           <h2 className="text-title">{t("shell.home.headline")}</h2>
           <p className="mt-2 max-w-prose text-muted-foreground text-body leading-relaxed">
             {t("shell.home.introBefore", { themes: builtinThemes.length })}

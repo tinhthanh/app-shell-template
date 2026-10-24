@@ -53,7 +53,8 @@ try {
     const page = await context.newPage();
     for (const { hash: a, ready } of addresses) {
       await page.goto(`http://localhost:${port}/?mock=1&platform=linux${a}`);
-      await page.getByTestId("nav-home").waitFor();
+      // The shell is up: the sidebar, or Settings' own list in its place.
+      await page.getByTestId("nav-home").or(page.getByTestId("settings-back")).first().waitFor();
       // The view's code loads after the shell, and its data after that: wait
       // for what says it is there, or for the view's root and its loader to go.
       if (ready) await page.getByTestId(ready).first().waitFor();

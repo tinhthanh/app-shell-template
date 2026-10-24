@@ -123,6 +123,14 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "settings with Find a setting open",
+    run: async (app) => {
+      await app.open({ hash: "/settings/general" });
+      await app.page.getByTestId("settings-find").fill("theme");
+      await expect(app.page.getByRole("option", { name: "Appearance" })).toBeVisible();
+    },
+  },
+  {
     id: "projects empty",
     run: async (app) => {
       await app.open({ params: { empty: "1" }, hash: "/projects" });

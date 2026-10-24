@@ -96,12 +96,14 @@ export const test = base.extend<{ app: App }>({
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
         await page.goto(`/?${q}${opts.hash ? `#${opts.hash}` : ""}`);
-        // The shell is up: a sidebar row, the phone bar, or the sign-in page.
-        await expect(page.getByTestId("nav-home").or(page.getByTestId("phone-bar")).or(page.getByTestId("signin")).first()).toBeVisible();
+        // The shell is up: a sidebar row, Settings' own list (a page of its
+        // own, in the sidebar's place), the phone bar, or the sign-in page.
+        await expect(page.getByTestId("nav-home").or(page.getByTestId("settings-back")).or(page.getByTestId("phone-bar")).or(page.getByTestId("signin")).first()).toBeVisible();
       },
       nav: (id) => page.getByTestId(`nav-${id}`),
       async openSettings(section) {
-        await page.getByTestId("nav-settings").click();
+        // From Settings itself its list is already there; elsewhere the sidebar opens it.
+        if (!(await page.getByTestId("settings-back").isVisible())) await page.getByTestId("nav-settings").click();
         await page.getByTestId(`settings-nav-${section}`).click();
         const body = page.getByTestId(`settings-${section}`);
         await expect(body).toBeVisible();

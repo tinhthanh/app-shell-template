@@ -80,3 +80,61 @@ test("choosing Tiếng Việt puts the app's words in Vietnamese, and it is kept
   await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
   await expect(app.page.getByTestId("settings-nav-about")).toHaveAccessibleName("Giới thiệu");
 });
+
+test("Settings takes the whole window, and Back to app or Esc returns to where it was opened, filters and all", async ({ app }) => {
+  await app.open({ hash: "/projects?status=paused" });
+  await app.nav("settings").click();
+  await expect(app.page.getByTestId("settings-general")).toBeVisible();
+  // The sidebar and the status bar step aside; Settings' list is in their place.
+  await expect(app.page.getByTestId("sidebar")).toHaveCount(0);
+  await expect(app.page.getByTestId("status-bar")).toHaveCount(0);
+  await app.page.getByTestId("settings-nav-appearance").click();
+  await app.page.getByTestId("settings-back").click();
+  await expect(app.page).toHaveURL(/#\/projects\?status=paused$/);
+  await app.nav("settings").click();
+  await expect(app.page.getByTestId("settings-general")).toBeVisible();
+  await app.page.keyboard.press("Escape");
+  await expect(app.page).toHaveURL(/#\/projects\?status=paused$/);
+  await expect(app.page.getByTestId("status-bar")).toBeVisible();
+});
+
+test("Esc in Find a setting clears it first, and leaves Settings only after", async ({ app }) => {
+  await app.open({ hash: "/settings/general" });
+  const find = app.page.getByTestId("settings-find");
+  await find.fill("theme");
+  await find.press("Escape");
+  await expect(find).toHaveValue("");
+  await expect(app.page.getByTestId("settings-general")).toBeVisible();
+});
+
+test("Find a setting opens the section that has it, and says when nothing does", async ({ app }) => {
+  await app.open({ hash: "/settings/general" });
+  const find = app.page.getByTestId("settings-find");
+  await find.fill("density");
+  await expect(app.page.getByRole("option", { name: "Appearance" })).toBeVisible();
+  await find.press("Enter");
+  await expect(app.page.getByTestId("settings-appearance")).toBeVisible();
+  await app.page.getByTestId("settings-find").fill("nothing like this");
+  await expect(app.page.getByRole("listbox", { name: "Settings found" })).toContainText("Nothing matches");
+});
+
+test("in Vietnamese, Find a setting finds a section by its Vietnamese words", async ({ app }) => {
+  await app.open({ prefs: { language: "vi" }, hash: "/settings/general" });
+  await app.page.getByTestId("settings-find").fill("phím tắt");
+  await app.page.getByRole("option", { name: "Phím tắt" }).click();
+  await expect(app.page.getByTestId("settings-shortcuts")).toBeVisible();
+});
+
+test("Light or dark picks the themes Match system uses, and Match system follows the computer again", async ({ app }) => {
+  await app.open({ hash: "/settings/appearance" });
+  const page = app.page.getByTestId("settings-appearance");
+  await page.getByRole("button", { name: "Light", exact: true }).click();
+  await expect(app.page.locator("html")).not.toHaveClass(/\bdark\b/);
+  await expect.poll(() => app.stored("app.ui")).toEqual({ themeId: "default-light" });
+  await page.getByRole("button", { name: "Dark", exact: true }).click();
+  await expect.poll(() => app.stored("app.ui")).toEqual({ themeId: "default-dark" });
+  await page.getByRole("button", { name: "Match system", exact: true }).click();
+  await expect.poll(() => app.stored("app.ui")).toEqual({ themeId: "system" });
+  await app.page.reload();
+  await expect(app.page.getByTestId("settings-appearance").getByRole("button", { name: "Match system", exact: true })).toHaveAttribute("aria-pressed", "true");
+});

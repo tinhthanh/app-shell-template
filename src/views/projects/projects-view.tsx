@@ -269,7 +269,7 @@ function ProjectDetail({ id }: { id: string }) {
       }
     >
       {(p) => (
-        <div className="mx-auto w-full max-w-2xl px-8 pt-6 pb-16">
+        <div className="mx-auto w-full max-w-2xl px-page pt-6 pb-16">
           {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
           <div className="flex items-start gap-3">
             <StatusBadge status={p.status} />

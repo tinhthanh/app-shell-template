@@ -5,6 +5,9 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Settings is a page of its own: its list takes the sidebar's place, Back to app or Esc returns to where you were (filters and all), each section has a large title, rows sit on the page split by hairlines, and Find a setting takes you to the section that has what you type. Appearance starts with Light, Dark or Match system.
+- The sidebar's strip and every page's header are one height, and pages share one gutter.
+
 - The sidebar and Settings' list are written in one quiet ink: places a step softer than the text, icons softer still, and the one you are on in full; every theme stays readable.
 
 - A screen reader names the account button, the version and the mock chip by the words they show (the account button is your name; the version reads "v0.1.0"), as WCAG's "label in name" asks.
