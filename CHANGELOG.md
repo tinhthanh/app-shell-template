@@ -7,6 +7,8 @@ about what the person gets. A release renames the heading to its version.
 
 - A screen reader names the account button, the version and the mock chip by the words they show (the account button is your name; the version reads "v0.1.0"), as WCAG's "label in name" asks.
 
+- Text comes in a dozen sizes by what it is (a title, a row, a note, a tag), the same on every page; a project's description reads at the body size.
+
 - The app speaks Vietnamese: Settings › General › Language picks English, Tiếng Việt, or Match system (the default, which follows your computer); dates and numbers follow the language.
 
 - What you can do follows your role: a viewer sees the projects but no New, Edit, status change or Delete; a member does everything but delete; the account menu says which role you have.

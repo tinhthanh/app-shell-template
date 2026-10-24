@@ -62,7 +62,7 @@ export function AppSidebar() {
       >
         <div className="flex h-10 shrink-0 items-center gap-2 px-3">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
-          <span className="min-w-0 flex-1 truncate font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
+          <span className="min-w-0 flex-1 truncate font-medium text-desc text-foreground">{APP_NAME}</span>
           <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="right">
             <button
               type="button"
@@ -79,11 +79,11 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={() => useStore.getState().setPaletteOpen(true)}
-            className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-[0.8125rem] text-muted-foreground hover:bg-sidebar-accent"
+            className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-desc text-muted-foreground hover:bg-sidebar-accent"
           >
             <SearchIcon className="size-3.5" />
             <span className="flex-1 text-start">{t("shell.search")}</span>
-            <Kbd className="h-4.5 text-[0.625rem]">⌘K</Kbd>
+            <Kbd className="h-4.5 text-tag">⌘K</Kbd>
           </button>
           <Places footer={false} />
         </div>
@@ -121,13 +121,13 @@ function Places({ footer, onGo }: { footer: boolean; onGo?: () => void }) {
                   useStore.getState().setView({ ...p.view });
                   onGo?.();
                 }}
-                className="h-side-row gap-2.5 text-[0.8125rem] [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
+                className="h-side-row gap-2.5 text-desc [&_svg]:size-4 data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground"
               >
                 {p.icon}
                 <span className="min-w-0 flex-1 truncate">{p.label}</span>
                 {/* The hint is decoration: the name is the label, the key is aria-keyshortcuts. */}
                 {!footer && (
-                  <Kbd aria-hidden className="h-4.5 text-[0.625rem] opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
+                  <Kbd aria-hidden className="h-4.5 text-tag opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
                     {`⌘${placeNumber(p, i)}`}
                   </Kbd>
                 )}
@@ -252,7 +252,7 @@ function Account({ compact = false }: { compact?: boolean }) {
           <button
             type="button"
             className={cn(
-              "mt-1 flex h-side-row items-center gap-2 rounded-md px-2 text-[0.8125rem] text-sidebar-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+              "mt-1 flex h-side-row items-center gap-2 rounded-md px-2 text-desc text-sidebar-foreground outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
               compact ? "size-9 justify-center px-0" : "w-full",
             )}
           />
@@ -262,12 +262,12 @@ function Account({ compact = false }: { compact?: boolean }) {
             reader only), so what is seen is what is said; the initials are a
             picture of it, and that it opens a menu is aria-haspopup's to say. */}
         <Avatar className="size-5" aria-hidden>
-          <AvatarFallback className="text-[0.625rem]">{initials}</AvatarFallback>
+          <AvatarFallback className="text-tag">{initials}</AvatarFallback>
         </Avatar>
         <span className={compact ? "sr-only" : "min-w-0 flex-1 truncate text-start"}>{user.name}</span>
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-48">
-        <div className="px-2 py-1.5 text-muted-foreground text-xs">
+        <div className="px-2 py-1.5 text-muted-foreground text-meta">
           <div className="truncate">{user.email}</div>
           <div data-testid="account-role">{roleWords(user.role)}</div>
         </div>
@@ -307,7 +307,7 @@ export function PhoneBar() {
           </SheetPanel>
         </SheetPopup>
       </Sheet>
-      <span className="min-w-0 flex-1 truncate ps-1 font-medium text-[0.8125rem] text-foreground">{APP_NAME}</span>
+      <span className="min-w-0 flex-1 truncate ps-1 font-medium text-desc text-foreground">{APP_NAME}</span>
       <button
         type="button"
         aria-label={t("shell.search")}

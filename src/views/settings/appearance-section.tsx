@@ -38,15 +38,15 @@ export function AppearanceSection() {
       <section>
         <div className="mb-2 flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="font-medium text-[0.8125rem] text-muted-foreground">{t("settings.appearance.theme")}</h2>
-            <p className="mt-0.5 text-muted-foreground text-xs">{fill(t("settings.appearance.themeHint"), { file: <Code>src/themes/builtin.ts</Code>, command: <Code>pnpm check:themes</Code> })}</p>
+            <h2 className="text-section text-muted-foreground">{t("settings.appearance.theme")}</h2>
+            <p className="mt-0.5 text-muted-foreground text-meta">{fill(t("settings.appearance.themeHint"), { file: <Code>src/themes/builtin.ts</Code>, command: <Code>pnpm check:themes</Code> })}</p>
           </div>
           <SearchField className="w-48 shrink-0" value={query} onChange={setQuery} placeholder={t("settings.appearance.findTheme")} />
         </div>
         {!q && <SystemCard selected={themeId === SYSTEM_THEME} themes={themes} />}
         {groups.map((g) => (
           <div key={g.title} className="mt-4">
-            <h3 className="mb-2 font-medium text-[0.6875rem] text-muted-foreground uppercase tracking-wide">{g.title}</h3>
+            <h3 className="mb-2 font-medium text-tag text-muted-foreground uppercase tracking-wide">{g.title}</h3>
             <div className="grid grid-cols-3 gap-3 max-[1100px]:grid-cols-2 max-[700px]:grid-cols-1">
               {g.themes.map((th) => (
                 <ThemeCard key={th.id} theme={th} selected={th.id === themeId} onSelect={() => useStore.getState().setTheme(th.id)} />
@@ -54,7 +54,7 @@ export function AppearanceSection() {
             </div>
           </div>
         ))}
-        {!groups.length && <p className="mt-4 text-muted-foreground text-xs">{t("settings.appearance.noTheme", { query: query.trim() })}</p>}
+        {!groups.length && <p className="mt-4 text-muted-foreground text-meta">{t("settings.appearance.noTheme", { query: query.trim() })}</p>}
       </section>
 
       <SettingsGroup title={t("settings.appearance.interface")}>
@@ -114,10 +114,10 @@ function SystemCard({ selected, themes }: { selected: boolean; themes: Theme[] }
             <Swatch theme={dark} />
           </div>
         </div>
-        <span className="flex min-w-0 flex-1 items-center gap-2 px-3.5 text-[0.8125rem]">
+        <span className="flex min-w-0 flex-1 items-center gap-2 px-3.5 text-desc">
           <span className="min-w-0 flex-1">
             <span className="block">{t("settings.matchSystem")}</span>
-            <span className="block truncate text-[0.6875rem] text-muted-foreground">{IS_LINUX ? t("settings.appearance.followsDesktop") : t("settings.appearance.followsMacos")}</span>
+            <span className="block truncate text-tag text-muted-foreground">{IS_LINUX ? t("settings.appearance.followsDesktop") : t("settings.appearance.followsMacos")}</span>
           </span>
           {selected && <CheckIcon className="size-3.5" />}
         </span>
@@ -152,7 +152,7 @@ function ThemeCard({ theme, selected, onSelect }: { theme: Theme; selected: bool
         <Preview theme={theme} />
         <Dots theme={theme} />
       </div>
-      <div className="flex items-center gap-2 border-t bg-card px-3 py-2 text-[0.8125rem]">
+      <div className="flex items-center gap-2 border-t bg-card px-3 py-2 text-desc">
         <span className="min-w-0 flex-1 truncate">{theme.name}</span>
         {selected && <CheckIcon className="size-3.5 shrink-0" />}
       </div>
@@ -176,6 +176,7 @@ function Preview({ theme }: { theme: Theme }) {
         </div>
         <div className="h-1.5 w-2/3 rounded-full" style={{ background: c.sidebarForeground, opacity: 0.3 }} />
       </div>
+      {/* type-ok: a picture of a terminal, drawn small to fit the card */}
       <div className="flex-1 px-2.5 py-2.5 font-mono text-[0.625rem] leading-[1.5]" style={{ background: t.background, color: t.foreground }}>
         <div>
           <Dot color={t.green} /> tests pass

@@ -109,7 +109,7 @@ export default function App() {
         <Fragment key={language}>
           <div className="flex h-svh flex-col overflow-hidden bg-background text-foreground">
             {unconfigured && (
-              <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-xs">
+              <div role="status" data-testid="mock-banner" className="shrink-0 border-warning/40 border-b bg-warning/16 px-4 py-1.5 text-center text-warning-foreground text-meta">
                 {t("shell.unconfigured")}
               </div>
             )}

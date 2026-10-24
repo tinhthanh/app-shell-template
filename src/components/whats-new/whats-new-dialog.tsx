@@ -48,7 +48,7 @@ export function WhatsNewDialog() {
             <DialogDescription>{t("settings.whatsNew.description")}</DialogDescription>
           </DialogHeader>
           <DialogPanel>
-            <ul className="flex flex-col gap-2 text-sm">
+            <ul className="flex flex-col gap-2 text-body">
               {release.notes.map((n) => (
                 <li key={n} className="flex gap-2">
                   <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />

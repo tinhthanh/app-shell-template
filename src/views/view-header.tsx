@@ -39,7 +39,7 @@ function Strip({ leading, crumbs, title, description, actions, children }: ViewH
         {leading}
         {crumbs?.length ? (
           <Breadcrumb>
-            <BreadcrumbList className="text-sm">
+            <BreadcrumbList className="text-body">
               {crumbs.map((c) => (
                 <BreadcrumbItem key={c.label} className="contents">
                   <BreadcrumbLink
@@ -53,8 +53,8 @@ function Strip({ leading, crumbs, title, description, actions, children }: ViewH
             </BreadcrumbList>
           </Breadcrumb>
         ) : null}
-        <h1 className="shrink-0 font-medium text-sm">{title}</h1>
-        {description && <p className="hidden min-w-0 truncate text-muted-foreground text-xs md:block">{description}</p>}
+        <h1 className="shrink-0 text-row">{title}</h1>
+        {description && <p className="hidden min-w-0 truncate text-muted-foreground text-meta md:block">{description}</p>}
       </div>
       {children}
       {actions && (

@@ -132,7 +132,7 @@ export function DataTable<T>({
   const visible = (c: Column<T>) => (c.from === "sm" ? "max-sm:hidden" : c.from === "md" ? "max-md:hidden" : c.from === "lg" ? "max-lg:hidden" : "");
   return (
     <div ref={scroller} className={cn("h-full overflow-auto", className)} data-slot="data-table">
-      <table className="w-full border-separate border-spacing-0 text-sm" aria-label={label} aria-rowcount={total ?? sorted.length}>
+      <table className="w-full border-separate border-spacing-0 text-body" aria-label={label} aria-rowcount={total ?? sorted.length}>
         <thead className="sticky top-0 z-10 bg-background">
           <tr>
             {columns.map((c) => {
@@ -143,7 +143,7 @@ export function DataTable<T>({
                   key={c.id}
                   scope="col"
                   aria-sort={ariaSort}
-                  className={cn("border-b px-3 py-1.5 text-start font-medium text-muted-foreground text-xs", c.align === "end" && "text-end", visible(c), c.className)}
+                  className={cn("border-b px-3 py-1.5 text-start text-label text-muted-foreground", c.align === "end" && "text-end", visible(c), c.className)}
                 >
                   {c.sort && onSort ? (
                     <button
@@ -200,7 +200,7 @@ export function DataTable<T>({
         </tbody>
       </table>
       {more?.has && (
-        <div className="flex h-row items-center justify-center gap-2 text-muted-foreground text-xs" data-testid="more-rows">
+        <div className="flex h-row items-center justify-center gap-2 text-muted-foreground text-meta" data-testid="more-rows">
           {more.failed ? (
             <>
               {t("common.table.moreFailed")}

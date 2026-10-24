@@ -112,6 +112,12 @@ configs or these rules without the `guardrail-change` label.
 - **Density and tokens:** rows use `h-row`/`py-row-pad`/`h-side-row`;
   colours use the theme's tokens or a tone, never a hard-coded hex or a
   Tailwind palette class.
+- **Text is sized by its role** on the type scale (`src/index.css`):
+  `text-title`, `text-heading`, `text-body`, `text-row`, `text-desc`,
+  `text-section`, `text-label`, `text-meta`, `text-tag`, `text-mono`, never
+  `text-sm`, `text-xs` or `text-[13px]` (`pnpm check:type`; the UI kit in
+  `components/ui` keeps its own). Text drawn as a picture says why in a
+  `type-ok:` comment.
 - **Words go through `t()`** (`src/lib/i18n.ts`, `docs/decisions/0013-words.md`):
   a word a person reads is a key in `src/lib/messages/<area>.ts`, in
   English and in every other language there (a missing one fails to

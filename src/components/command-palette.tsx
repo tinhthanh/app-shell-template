@@ -167,7 +167,7 @@ export function CommandPalette() {
                       <CommandItem key={item.value} value={item} className="gap-2" onClick={() => pick(item.run)}>
                         {item.icon}
                         <span className="truncate">{item.label}</span>
-                        {item.detail && <span className="ms-auto min-w-0 shrink truncate text-muted-foreground text-xs">{item.detail}</span>}
+                        {item.detail && <span className="ms-auto min-w-0 shrink truncate text-muted-foreground text-meta">{item.detail}</span>}
                         {item.shortcut && <Kbd className={item.detail ? "" : "ms-auto"}>{item.shortcut}</Kbd>}
                       </CommandItem>
                     )}
@@ -176,7 +176,7 @@ export function CommandPalette() {
               )}
             </CommandList>
           </CommandPanel>
-          <CommandFooter className="text-[0.6875rem] text-muted-foreground">
+          <CommandFooter className="text-tag text-muted-foreground">
             <span className="flex items-center gap-1">
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> {t("shell.palette.toMove")} <Kbd>↵</Kbd> {t("shell.palette.toOpen")}
