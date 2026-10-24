@@ -38,3 +38,9 @@ test("a word in another language keeps every blank the English one has", () => {
   const blanks = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort();
   for (const [id, l] of Object.entries(LANGUAGES)) for (const k of Object.keys(en) as (keyof typeof en)[]) assert.deepEqual(blanks(l.words[k]), blanks(en[k]), `${id} ${k}`);
 });
+
+test("Vietnamese words put the tone mark one way: hòa, khỏe, thủy, not hoà, khoẻ, thuỷ", () => {
+  // The older placement, the one most Vietnamese software uses; quý is the same in both.
+  const newer = /o[áàảãạéèẻẽẹ](?=$|[^a-zà-ỹ])|(?<!q)u[ýỳỷỹỵ](?=$|[^a-zà-ỹ])/i;
+  for (const [k, w] of Object.entries(LANGUAGES.vi.words)) assert.doesNotMatch(w, newer, k);
+});

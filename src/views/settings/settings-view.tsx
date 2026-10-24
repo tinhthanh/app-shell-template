@@ -104,7 +104,9 @@ export function SettingsView() {
             <NavItem key={s.id} section={s} current={id} />
           ))}
           <div className="min-h-4 flex-1" />
-          <NavItem section={SECTIONS[3] as Section} current={id} />
+          {SECTIONS.filter((s) => s.id === "about").map((s) => (
+            <NavItem key={s.id} section={s} current={id} />
+          ))}
         </div>
       </nav>
       {page}

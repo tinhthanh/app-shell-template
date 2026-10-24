@@ -11,7 +11,7 @@ import { PickOne } from "@/components/pick-one";
 import { removeRecord } from "@/components/remove-record";
 import { ResourceView } from "@/components/resource-view";
 import { SearchField } from "@/components/search-field";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone, Tag } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -21,7 +21,7 @@ import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
 import { client, listQuery } from "@/lib/api";
 import { ago, number } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { type Key, t } from "@/lib/i18n";
 import { parseSort, sortToString } from "@/lib/list-keys";
 import { editRows } from "@/lib/pages";
 import { usePages, useResource } from "@/lib/resource";
@@ -31,7 +31,6 @@ import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { hashTone, toneVar } from "@/themes/tones";
 import { ViewHeader } from "@/views/view-header";
 
 // Projects is the example resource, end to end: a list read a page at a
@@ -51,8 +50,7 @@ const statuses = (): { value: StatusFilter; label: string }[] => [
   { value: "archived", label: t("projects.status.archived") },
 ];
 
-// A status as a word in a sentence or a badge (lower case; the page raises its first letter), and the toast when it changes.
-const STATE_WORD = { active: "projects.state.active", paused: "projects.state.paused", archived: "projects.state.archived" } as const;
+// The toast when a status changes (its word and tone are STATE, below).
 const NOW = { active: "projects.nowActive", paused: "projects.nowPaused", archived: "projects.nowArchived" } as const;
 
 type ProjectsView = Extract<View, { kind: "projects" }>;
@@ -69,7 +67,7 @@ const columns = (): Column<Project>[] => [
       <span className="block min-w-0">
         <span className="flex items-center gap-2">
           <span className="truncate text-row">{p.name}</span>
-          <StatusBadge status={p.status} />
+          <ProjectState status={p.status} />
         </span>
         <span className="mt-0.5 block truncate text-muted-foreground text-meta">{p.description}</span>
       </span>
@@ -272,7 +270,7 @@ function ProjectDetail({ id }: { id: string }) {
         <div className="mx-auto w-full max-w-2xl px-page pt-6 pb-16">
           {/* The name is the page's heading, in the strip above; here its state and what it is for. */}
           <div className="flex items-start gap-3">
-            <StatusBadge status={p.status} />
+            <ProjectState status={p.status} />
             {canEdit && (
               <ProjectForm
                 project={p}
@@ -299,7 +297,7 @@ function ProjectDetail({ id }: { id: string }) {
               {canEdit ? (
                 <PickOne label={t("projects.status")} value={p.status} options={statuses().filter((s) => s.value) as { value: ProjectStatus; label: string }[]} onChange={(v) => void setStatus(v)} />
               ) : (
-                t(STATE_WORD[p.status])
+                t(STATE[p.status].word)
               )}
             </dd>
           </dl>
@@ -354,28 +352,16 @@ function ProjectForm({ project, listKey, onSaved, trigger, label }: { project?: 
   );
 }
 
-// StatusBadge colours a status with the theme's state colours: green is
-// active, amber paused, and archived is quiet. The word is the catalogue's,
-// lower case, its first letter raised in an inline block (a flex badge has
-// no first letter of its own), so "Đang hoạt động" isn't capitalised word by word.
-function StatusBadge({ status }: { status: ProjectStatus }) {
-  const tone = { active: "bg-success/16 text-success-foreground", paused: "bg-warning/16 text-warning-foreground", archived: "bg-muted text-muted-foreground" }[status];
-  return (
-    <Badge className={cn("border-transparent", tone)}>
-      <span className="inline-block first-letter:uppercase">{t(STATE_WORD[status])}</span>
-    </Badge>
-  );
-}
+// The tone and the word for each status: green is active, amber paused, and
+// archived is quiet (components/status-badge.tsx draws them).
+const STATE = {
+  active: { tone: "success", word: "projects.state.active" },
+  paused: { tone: "warning", word: "projects.state.paused" },
+  archived: { tone: "muted", word: "projects.state.archived" },
+} satisfies Record<ProjectStatus, { tone: StatusTone; word: Key }>;
 
-// Tag wears one of the six tones (themes/tones.ts), the same for a name
-// every time, and clear of the state colours.
-function Tag({ name }: { name: string }) {
-  const tone = toneVar(hashTone(name));
-  return (
-    <span className="rounded-full px-2 py-px text-tag" style={{ color: tone, background: `color-mix(in srgb, ${tone} 15%, transparent)` }}>
-      {name}
-    </span>
-  );
+function ProjectState({ status }: { status: ProjectStatus }) {
+  return <StatusBadge tone={STATE[status].tone}>{t(STATE[status].word)}</StatusBadge>;
 }
 
 export type { Project };

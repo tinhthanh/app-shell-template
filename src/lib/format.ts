@@ -37,3 +37,11 @@ export function dateTime(iso: string, locale: string = lang()): string {
 export function number(n: number, locale: string = lang(), options?: Intl.NumberFormatOptions): string {
   return new Intl.NumberFormat(locale, options).format(n);
 }
+
+// money formats an amount in a currency (ISO 4217: "USD", "EUR", "VND") the
+// way the person writes money: "$12,500.00", "12.500 €", "312.500.000 ₫",
+// with the currency's own decimals (none for the dong). Convert before, and
+// say so where it shows: a converted amount is an estimate.
+export function money(amount: number, currency: string, locale: string = lang()): string {
+  return number(amount, locale, { style: "currency", currency });
+}

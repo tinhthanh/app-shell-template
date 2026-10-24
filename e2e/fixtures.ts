@@ -57,6 +57,8 @@ export const test = base.extend<{ app: App }>({
     // A console.error is a bug too (React's warnings, a caught render error).
     const consoleErrors: string[] = [];
     const allowed: RegExp[] = [];
+    // How many opens have seeded storage: each later one is a newer generation.
+    let seeds = 0;
     page.on("console", (m) => {
       if (m.type() === "error" && !allowed.some((r) => r.test(m.text()))) consoleErrors.push(m.text());
     });
@@ -80,22 +82,29 @@ export const test = base.extend<{ app: App }>({
       allowConsoleError: (p) => void allowed.push(p),
       async open(opts = {}) {
         if (opts.prefs || opts.theme) {
-          // Seeded once, before the app's own scripts, as storage left by
-          // an earlier run would be; a reload keeps what the app saved.
+          // Seeded before the app's own scripts, as storage left by an
+          // earlier run would be, once per open: a reload keeps what the app
+          // saved, and a later open with other prefs seeds those (each open
+          // is a newer generation, and only the newest writes).
+          seeds += 1;
           await context.addInitScript(
-            ({ prefs, theme }) => {
-              if (sessionStorage.getItem("e2e.seeded")) return;
-              sessionStorage.setItem("e2e.seeded", "1");
+            ({ prefs, theme, gen }) => {
+              if (Number(sessionStorage.getItem("e2e.seeded") ?? 0) >= gen) return;
+              sessionStorage.setItem("e2e.seeded", String(gen));
               if (prefs) localStorage.setItem("app.prefs", JSON.stringify(prefs));
               if (theme) localStorage.setItem("app.ui", JSON.stringify({ themeId: theme }));
             },
             // Prefs from an earlier run would get the What's new dialog after
             // an update; it stays away unless a test asks for it.
-            { prefs: opts.prefs && { whatsNewSeen: "999.0.0", ...opts.prefs }, theme: opts.theme },
+            { prefs: opts.prefs && { whatsNewSeen: "999.0.0", ...opts.prefs }, theme: opts.theme, gen: seeds },
           );
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
-        await page.goto(`/?${q}${opts.hash ? `#${opts.hash}` : ""}`);
+        const url = `/?${q}${opts.hash ? `#${opts.hash}` : ""}`;
+        // The same address again is only a fragment change to the browser:
+        // load it afresh, so the app starts over with what was seeded.
+        if (page.url().endsWith(url)) await page.reload();
+        else await page.goto(url);
         // The shell is up: a sidebar row, Settings' own list (a page of its
         // own, in the sidebar's place), the phone bar, or the sign-in page.
         await expect(page.getByTestId("nav-home").or(page.getByTestId("settings-back")).or(page.getByTestId("phone-bar")).or(page.getByTestId("signin")).first()).toBeVisible();
