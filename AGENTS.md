@@ -112,6 +112,11 @@ configs or these rules without the `guardrail-change` label.
 - **Density and tokens:** rows use `h-row`/`py-row-pad`/`h-side-row`;
   colours use the theme's tokens or a tone, never a hard-coded hex or a
   Tailwind palette class.
+- **Bars and gutters are on the grid** (`src/index.css`, "The layout
+  grid"): a top band is `h-bar`, a full page's gutter `px-page`, a column's
+  boxes start at `px-edge` and their content at `px-lane`, never `h-12` on
+  a bar or `ps-[11px]` (`pnpm check:grid`; a deliberate exception says why
+  in a `grid-ok:` comment).
 - **Text is sized by its role** on the type scale (`src/index.css`):
   `text-title`, `text-heading`, `text-body`, `text-row`, `text-desc`,
   `text-section`, `text-label`, `text-meta`, `text-tag`, `text-mono`, never
@@ -205,7 +210,10 @@ behaviour is proven in `e2e/`.
   filter: the address wins, so a link means the same to everyone it is
   sent to (say in the PR how a link shows it). A new section also needs
   `SettingsSectionId` in `store.ts`, `SECTIONS` in `routes.ts` and in
-  `settings-view.tsx`, and an a11y scene.
+  `settings-view.tsx`, its line in Find a setting's `INDEX`
+  (`views/settings/find.tsx`, with `settings.findWords.<id>` in every
+  language), and an a11y scene. A row goes in a `SettingsGroup` on the
+  page, never in a card of its own.
 - **A shortcut:** a line in `src/lib/shortcuts.json` (a new group also goes
   in `ShortcutGroup`/`SHORTCUT_GROUPS` in `shortcuts.ts`), its id in
   `SHORTCUT_IDS` and a line in `shortcutFor` (`src/lib/keys.ts`; a Shift

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-import { hashToView, viewToHash } from "@/lib/routes";
-import { load, save } from "@/lib/storage";
-import type { ProjectStatus } from "@/lib/types";
+import { hashToView, viewToHash } from "./routes.ts";
+import { load, save } from "./storage.ts";
+import type { ProjectStatus } from "./types.ts";
 
 // The app's state that isn't a preference (lib/prefs.ts) and isn't data
 // from the API (lib/api.ts, read where it is shown with lib/resource.ts):
@@ -93,4 +93,17 @@ if (typeof window !== "undefined") {
 // openSettings shows Settings, on a section when given one.
 export function openSettings(section?: SettingsSectionId) {
   useStore.getState().setView({ kind: "settings", section });
+}
+
+// Settings is a page of its own, so leaving it goes back to wherever it was
+// opened from: the view before it, however it was opened (the sidebar, ⌘,,
+// a link). Home when it was the first thing opened.
+let beforeSettings: View = { kind: "home" };
+useStore.subscribe((s, prev) => {
+  if (s.view.kind === "settings" && prev.view.kind !== "settings") beforeSettings = prev.view;
+});
+
+// closeSettings goes back to the view Settings was opened from.
+export function closeSettings() {
+  useStore.getState().setView(beforeSettings);
 }

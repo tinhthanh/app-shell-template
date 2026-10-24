@@ -63,6 +63,17 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    /* The layout grid: every top band and gutter comes from these
+       (scripts/check-grid.mjs keeps it so). h-bar: the top band, the
+       sidebar's strip, a view's header and Settings' strip alike, so their
+       lines meet; in rem, so it grows with the text size. px-edge: where
+       boxes (rows, fields) start and end in a column; px-lane: where their
+       content (icons, labels) starts, a row's padding further in; px-page:
+       a full page's gutter. After Shipyard's (github.com/cosscom/shipyard, MIT). */
+    --spacing-bar: 2.5rem;
+    --spacing-edge: 0.5rem;
+    --spacing-lane: 1rem;
+    --spacing-page: 1.5rem;
     /* The type scale: the only way the app sizes text (scripts/check-type.mjs),
        by role, so two pages that should match do. In rem, so all of it grows
        with the text size (⌘+). coss ui's own parts (components/ui) keep the

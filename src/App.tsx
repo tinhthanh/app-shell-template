@@ -115,7 +115,8 @@ export default function App() {
             )}
             {phone && <PhoneBar />}
             <div className="flex min-h-0 flex-1">
-              <AppSidebar />
+              {/* Settings is a page of its own on a desktop: its list takes the sidebar's place. */}
+              {!(view.kind === "settings" && !phone) && <AppSidebar />}
               <main className="relative min-h-0 min-w-0 flex-1">
                 <ErrorBoundary
                   key={view.kind}
@@ -128,7 +129,7 @@ export default function App() {
                 </ErrorBoundary>
               </main>
             </div>
-            <StatusBar />
+            {!(view.kind === "settings" && !phone) && <StatusBar />}
           </div>
           <ErrorBoundary scope={t("shell.aDialog")}>
             <CommandPalette />

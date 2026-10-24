@@ -61,7 +61,7 @@ export function AppSidebar() {
         style={{ width: `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))` }}
         className={cn("@container/side relative flex shrink-0 flex-col border-sidebar-border border-e bg-sidebar text-sidebar-foreground", inkScale)}
       >
-        <div className="flex h-10 shrink-0 items-center gap-2 px-3">
+        <div className="flex h-bar shrink-0 items-center gap-2 ps-lane pe-edge">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
           <span className="min-w-0 flex-1 truncate font-medium text-desc text-foreground">{APP_NAME}</span>
           <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="right">
@@ -290,6 +290,7 @@ export function PhoneBar() {
   const context = useMemo(() => alwaysOpen, []);
   const [open, setOpen] = useState(false);
   return (
+    // grid-ok: a phone's bar is 44px, a finger's target, not the desktop's band
     <header data-testid="phone-bar" className="flex h-11 shrink-0 items-center gap-1 border-b bg-sidebar px-2 text-sidebar-foreground">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
