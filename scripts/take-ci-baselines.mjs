@@ -32,7 +32,14 @@ const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf
 if (sha !== head) console.warn(`take-ci-baselines: the last ci run is of ${sha.slice(0, 7)}, not HEAD (${head.slice(0, 7)}): push, wait for it, run again`);
 
 const dir = mkdtempSync(join(tmpdir(), "ci-baselines-"));
-gh("run", "download", id, "-n", "e2e-report", "-D", dir);
+try {
+  gh("run", "download", id, "-n", "e2e-report", "-D", dir);
+} catch (err) {
+  // A run that failed nothing may keep no report at all.
+  if (!/no valid artifacts/.test(String(err))) throw err;
+  console.log(`take-ci-baselines: run ${id} (${conclusion}) kept no report, so no picture changed`);
+  process.exit(0);
+}
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]));
 const actual = walk(dir).filter((f) => /visual-.*-actual\.png$/.test(f));
 if (!actual.length) {
