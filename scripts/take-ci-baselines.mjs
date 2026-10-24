@@ -22,7 +22,22 @@ const gh = (...args) => {
 };
 
 const branch = spawnSync("git", ["branch", "--show-current"], { cwd: root, encoding: "utf8" }).stdout.trim();
-const run = gh("run", "list", "--branch", branch, "--workflow", "ci", "--limit", "1", "--json", "databaseId,headSha,conclusion", "--jq", '.[0] | "\\(.databaseId) \\(.headSha) \\(.conclusion)"');
+// The newest run that finished: one cancelled by a newer push, or still
+// going, has nothing to take.
+const run = gh(
+  "run",
+  "list",
+  "--branch",
+  branch,
+  "--workflow",
+  "ci",
+  "--limit",
+  "10",
+  "--json",
+  "databaseId,headSha,conclusion",
+  "--jq",
+  '[.[] | select(.conclusion == "success" or .conclusion == "failure")][0] | "\\(.databaseId) \\(.headSha) \\(.conclusion)"',
+);
 const [id, sha = "", conclusion] = run.split(" ");
 if (!id || id === "null") {
   console.error(`take-ci-baselines: no ci run on ${branch} yet: push it, and wait for CI`);
