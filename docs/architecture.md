@@ -184,6 +184,7 @@ fixtures or with the knobs on.
 | URL | `?slow=1` | Every mock call takes 1.5 s |
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
 | URL | `?failMore=1` | The list's second page fails once, then comes (Try again) |
+| URL | `?failAfter=2` | The first calls work, every one after fails: a server that goes down while you work (a reload keeps the rows, with a note) |
 | URL | `?empty=1` | No records (projects, and whatever else the mock holds) |
 | URL | `?many=1` | 5,000 invented projects, for the list's scrolling and keys |
 | URL | `?role=viewer` / `member` / `owner` | Who is signed in has that role; the writes it can't take are refused with a 403 (`lib/permissions.ts`) |
