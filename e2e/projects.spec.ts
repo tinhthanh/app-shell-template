@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, mod, test } from "./fixtures";
 
 // The example list view (views/projects): its three states, its filters
 // and a detail that writes back to the mock.
@@ -33,6 +33,24 @@ test("a search that leaves nothing says so, and clearing it brings the rows back
   await app.open({ hash: "/projects?q=zzz" });
   await expect(app.page.getByTestId("nothing-matches")).toBeVisible();
   await app.page.getByRole("searchbox", { name: "Find a project" }).fill("");
+  await expect(app.page.getByTestId("project-row")).toHaveCount(8);
+});
+
+test("another filter shows the loader until its rows come, not the last filter's rows", async ({ app }) => {
+  await app.open({ params: { slow: "1" }, hash: "/projects" });
+  await expect(app.page.getByTestId("project-row").first()).toBeVisible();
+  await app.page.getByRole("button", { name: "Paused", exact: true }).click();
+  await expect(app.page.getByTestId("projects-loading")).toBeVisible();
+  await expect(app.page.getByTestId("project-row")).toHaveCount(1);
+});
+
+test("a reload that fails keeps the rows under a note that says so, with Try again", async ({ app }) => {
+  await app.open({ params: { failAfter: "2" }, hash: "/projects" });
+  await expect(app.page.getByTestId("project-row")).toHaveCount(8);
+  await app.page.getByRole("button", { name: "Reload" }).click();
+  const stale = app.page.getByTestId("projects-stale");
+  await expect(stale).toContainText("The server is busy");
+  await expect(stale.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(app.page.getByTestId("project-row")).toHaveCount(8);
 });
 
@@ -194,6 +212,17 @@ test("the first project is created from the empty state, and a project is delete
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "was deleted" })).toBeVisible();
 });
 
+test("a place's shortcut does nothing while a form is open, so what is typed stays", async ({ app }) => {
+  await app.open({ hash: "/projects/p-shop" });
+  await app.page.getByRole("button", { name: "Edit the project" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Shop 7");
+  await app.page.keyboard.press(`${mod()}+1`);
+  await app.page.keyboard.press(`${mod()}+Comma`);
+  await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Shop 7");
+  await expect(app.page).toHaveURL(/#\/projects\/p-shop$/);
+});
+
 test("closing the edit dialog with unsaved changes asks first", async ({ app }) => {
   await app.open({ hash: "/projects/p-shop" });
   await app.page.getByRole("button", { name: "Edit the project" }).click();
@@ -282,6 +311,18 @@ test("a filter is asked of the server, and the count says how many match", async
   await app.open({ params: { many: "1" }, hash: "/projects?q=harbour" });
   await expect(app.page.getByText("500 match")).toBeVisible();
   await expect(app.page.getByRole("table", { name: "Projects" })).toHaveAttribute("aria-rowcount", "500");
+});
+
+test("scrolled far from the row the keyboard was on, Tab still lands in the table", async ({ app }) => {
+  await app.open({ params: { many: "1" }, hash: "/projects" });
+  const rows = app.page.getByTestId("project-row");
+  await rows.first().focus();
+  await app.page.locator("[data-slot=data-table]").evaluate((el) => {
+    el.scrollTop = 1500;
+  });
+  // The first row has left the DOM; a row on screen holds the Tab stop instead.
+  await expect(app.page.locator("[data-testid=project-row][data-project=p-1]")).toHaveCount(0);
+  await expect(app.page.locator('[data-testid=project-row][tabindex="0"]')).toHaveCount(1);
 });
 
 test("on a phone the table leaves out the Updated column, so a row fits the width", async ({ app }) => {

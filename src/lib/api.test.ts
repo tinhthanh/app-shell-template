@@ -150,9 +150,25 @@ test("?api= may point at this origin or this machine, never at a stranger's serv
   assert.equal(urlApi("?api=http://localhost:8080", here), "http://localhost:8080");
   assert.equal(urlApi("?api=http://127.0.0.1:9000", here), "http://127.0.0.1:9000");
   assert.equal(urlApi("?api=http://[::1]:9000", here), "http://[::1]:9000");
-  for (const bad of ["https://evil.test", "//evil.test", "https://demo.acme.test.evil.test", "http://localhost.evil.test", "javascript:alert(1)", "not a url"])
+  // A path the URL parser reads as another host (a backslash, a tab) is a stranger's too.
+  for (const bad of [
+    "https://evil.test",
+    "//evil.test",
+    "/\\evil.test",
+    "/\t/evil.test",
+    "/\\/evil.test",
+    "https://demo.acme.test.evil.test",
+    "http://localhost.evil.test",
+    "javascript:alert(1)",
+    "not a url",
+  ])
     assert.equal(urlApi(`?api=${encodeURIComponent(bad)}`, here), null, bad);
   // Refused, the app falls back to what the build or the host said.
   const demo = { VITE_KNOBS: "1", VITE_API_URL: "https://api.acme.test" };
   assert.equal(apiBase("?api=https://evil.test", demo, {}, here), "https://api.acme.test");
+});
+
+test("an answer that isn't JSON is the app's error, with what came back as its details", async () => {
+  answer = { status: 200, body: "<!doctype html><title>App</title>" };
+  await assert.rejects(client.project("p-shop"), (e: unknown) => e instanceof ApiError && e.code === "bad_response" && e.message.startsWith("<!doctype html>"));
 });

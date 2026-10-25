@@ -40,3 +40,9 @@ test("in Vietnamese a busy server is explained in Vietnamese, with what it said 
     setLanguage("en");
   }
 });
+
+test("an answer that isn't the API's is explained as such, with what came back behind Details", () => {
+  const e = explain(new ApiError("<!doctype html>", 200, "bad_response"));
+  assert.equal(e.title, "The server's answer made no sense");
+  assert.equal(e.details, "<!doctype html>");
+});

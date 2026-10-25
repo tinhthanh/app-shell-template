@@ -147,6 +147,12 @@ export function CommandPalette() {
           value={query}
           onValueChange={setQuery}
           itemToStringValue={(i: unknown) => `${(i as Item).label} ${(i as Item).detail ?? ""} ${(i as Item).search ?? ""}`}
+          // The server already matched the records (by their description, an
+          // owner…): they stay as it ranked them; places, commands and themes
+          // are matched here, by their words.
+          filter={(i: unknown, q: string) =>
+            (i as Item).value.startsWith("record:") || `${(i as Item).label} ${(i as Item).detail ?? ""} ${(i as Item).search ?? ""}`.toLowerCase().includes(q.trim().toLowerCase())
+          }
           onItemHighlighted={(i: unknown) => {
             // A highlight that lands while the popup animates out is not a preview.
             const picked = (i as Item | undefined)?.theme;

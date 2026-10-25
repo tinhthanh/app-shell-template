@@ -38,6 +38,15 @@ test("the palette opens with ⌘K, finds a place and goes there", async ({ app }
   await expect(app.page.getByTestId("projects")).toBeVisible();
 });
 
+test("the palette finds a record by what the server matched, not only by its name", async ({ app }) => {
+  await app.open();
+  await app.page.keyboard.press(`${mod()}+k`);
+  const palette = app.page.getByTestId("command-palette");
+  await palette.getByRole("combobox").fill("checkout");
+  // "The storefront and its checkout." is Shop's description.
+  await expect(palette.getByRole("option", { name: /^Shop/ })).toBeVisible();
+});
+
 test("highlighting a theme in the palette previews it, and Esc puts the old one back", async ({ app }) => {
   await app.open({ theme: "default-dark" });
   const html = app.page.locator("html");
@@ -230,6 +239,13 @@ test("the palette closed gives the keyboard back to what opened it", async ({ ap
   await app.page.keyboard.press("Escape");
   await expect(app.page.getByTestId("command-palette")).toHaveCount(0);
   await expect(search).toBeFocused();
+});
+
+test("a sign-out the server doesn't hear still signs this browser out", async ({ app }) => {
+  await app.open({ params: { failWrites: "1" }, hash: "/projects" });
+  await app.page.getByTestId("account").click();
+  await app.page.getByRole("menuitem", { name: "Sign out" }).click();
+  await expect(app.page.getByTestId("signin")).toBeVisible();
 });
 
 test("signed out, the sign-in page covers the app; signing in returns to the address asked for; the account menu signs out", async ({ app }) => {

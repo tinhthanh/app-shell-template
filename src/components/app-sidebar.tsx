@@ -240,12 +240,15 @@ function Account({ compact = false }: { compact?: boolean }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  // Signing out signs this browser out whatever the server answers: on a
+  // shared machine, a sign-out that failed must not leave the next person in.
   const signOut = async () => {
     try {
       await client.signOut();
-      signedOut();
     } catch (err) {
       toastError(err, t("shell.signOutFailed"));
+    } finally {
+      signedOut();
     }
   };
   return (

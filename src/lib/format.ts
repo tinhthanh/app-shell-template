@@ -24,13 +24,19 @@ export function ago(iso?: string, locale: string = lang()): string {
 }
 
 // date is an ISO time as a date, the way the person writes them.
+// A time that isn't one (a server's typo) reads as nothing, rather than
+// taking the view down with Intl's RangeError.
 export function date(iso: string, locale: string = lang()): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(iso));
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
 }
 
 // dateTime adds the time, for a tooltip behind an "ago".
 export function dateTime(iso: string, locale: string = lang()): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(d);
 }
 
 // number formats a count with the person's grouping ("1,234" or "1.234").

@@ -142,3 +142,9 @@ test("a viewer reads but every write is refused with a 403, and a member may not
   await assert.rejects(member.deleteProject("p-shop"), forbidden);
   assert.equal((await mockClient({ latency: 0 }).me()).role, "owner");
 });
+
+test("failAfter lets the first calls through and fails every one after", async () => {
+  const c = mockClient({ latency: 0, failAfter: 1 });
+  assert.equal((await c.projects()).total, FIXTURES.length);
+  await assert.rejects(c.projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
+});

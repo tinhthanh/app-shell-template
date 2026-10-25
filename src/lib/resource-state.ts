@@ -12,7 +12,7 @@ export type ResourceState<T> = { loading: boolean } & (
   | { status: "ready"; data: T; error?: unknown }
 );
 
-export type ResourceEvent<T> = { type: "start" } | { type: "loaded"; data: T } | { type: "failed"; error: unknown };
+export type ResourceEvent<T> = { type: "start" } | { type: "loaded"; data: T } | { type: "failed"; error: unknown } | { type: "reset"; data?: T };
 
 export const initial = <T>(): ResourceState<T> => ({ status: "loading", loading: true });
 
@@ -30,5 +30,9 @@ export function next<T>(s: ResourceState<T>, e: ResourceEvent<T>): ResourceState
       return { status: "ready", data: e.data, loading: false };
     case "failed":
       return s.status === "ready" ? { status: "ready", data: s.data, error: e.error, loading: false } : { status: "failed", error: e.error, loading: false };
+    case "reset":
+      // Another key (a list's other filter): what was kept for it, or the
+      // loader, never the last key's data passed off as this one's.
+      return initialFrom(e.data);
   }
 }

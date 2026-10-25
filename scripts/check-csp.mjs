@@ -36,4 +36,16 @@ for (const bad of ["'unsafe-inline'", "'unsafe-eval'", "*"]) {
     process.exit(1);
   }
 }
-console.log(`check-csp: the inline script is ${hash.slice(0, 20)}…, named in deploy/csp.txt`);
+// The container serves the same policy (deploy/security.conf), with the API's
+// origin put in at start where csp.txt has its example one.
+const conf = await readFile(resolve(root, "deploy/security.conf"), "utf8");
+const served = /Content-Security-Policy "([^"]*)"/.exec(conf)?.[1];
+const policy = csp
+  .replace(/^Content-Security-Policy:\s*/, "")
+  .trim()
+  .replace("https://api.example.com", "__API_ORIGIN__");
+if (served !== policy) {
+  console.error(`check-csp: deploy/security.conf's policy is not deploy/csp.txt's (with __API_ORIGIN__ for the API):\n  csp.txt:       ${policy}\n  security.conf: ${served}`);
+  process.exit(1);
+}
+console.log(`check-csp: the inline script is ${hash.slice(0, 20)}…, named in deploy/csp.txt and served by deploy/security.conf`);

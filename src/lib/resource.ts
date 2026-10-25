@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { appendPage, PAGE_SIZE } from "./pages.ts";
-import { cached, mutate, remember, subscribe } from "./resource-cache.ts";
+import { cached, mutate, remember, subscribe, writeCount } from "./resource-cache.ts";
 import { initial, initialFrom, next, type ResourceState } from "./resource-state.ts";
 import type { Page } from "./types.ts";
 
@@ -31,11 +31,15 @@ export function useResource<T>(read: () => Promise<T>, deps: unknown[], opts: { 
   // biome-ignore lint/correctness/useExhaustiveDependencies: deps is the caller's list, and tick is the reload.
   useEffect(() => {
     const id = ++run.current;
+    // A write while this read is out makes its answer older than the screen.
+    const since = key ? writeCount(key) : 0;
     dispatch({ type: "start" });
     read().then(
       (data) => {
         if (id !== run.current) return;
-        if (key) remember(key, data);
+        const kept = key ? cached<T>(key) : undefined;
+        if (key && writeCount(key) !== since && kept !== undefined) dispatch({ type: "loaded", data: kept });
+        else if (key) remember(key, data);
         else dispatch({ type: "loaded", data });
       },
       (error) => id === run.current && dispatch({ type: "failed", error }),
@@ -44,6 +48,13 @@ export function useResource<T>(read: () => Promise<T>, deps: unknown[], opts: { 
       run.current++;
     };
   }, [...deps, tick]);
+  // Another key starts from what is kept for it, not the last key's data.
+  const shown = useRef(key);
+  useEffect(() => {
+    if (shown.current === key) return;
+    shown.current = key;
+    dispatch({ type: "reset", data: key ? cached<T>(key) : undefined });
+  }, [key]);
   // What is kept under the key changes (an answer, a mutate): draw it.
   useEffect(() => (key ? subscribe<T>(key, (data) => dispatch({ type: "loaded", data })) : undefined), [key]);
   const reload = useCallback(() => bump(), []);

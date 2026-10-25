@@ -46,6 +46,7 @@ export function explain(err: unknown): Explained {
   const status = api?.status;
   const out = (title: string, message: string, retry?: boolean): Explained => ({ title, message, retry, details: raw && raw !== message ? raw : undefined, code, status });
 
+  if (code === "bad_response") return out(t("common.error.badResponse.title"), t("common.error.badResponse.message"));
   if (code === "timeout" || status === 504) return out(t("common.error.timeout.title"), t("common.error.timeout.message"), true);
   if (code === "network" || /failed to fetch|networkerror|load failed/i.test(raw)) return out(t("common.error.network.title"), t("common.error.network.message"), true);
   if (code === "unavailable" || status === 502 || status === 503) return out(t("common.error.unavailable.title"), t("common.error.unavailable.message"), true);
