@@ -35,3 +35,9 @@ test("an amount reads as money in the person's language, with the currency's own
   assert.equal(money(312500000, "VND", "vi-VN").replace(/\s/g, " "), "312.500.000 ₫");
   assert.match(money(12500, "EUR", "de-DE"), /^12\.500,00\s€$/);
 });
+
+test("a time that isn't one reads as nothing, rather than throwing", () => {
+  assert.equal(date("not a date", "en-GB"), "");
+  assert.equal(dateTime("2026-13-45", "en-GB"), "");
+  assert.equal(ago("nope", "en-GB"), "");
+});

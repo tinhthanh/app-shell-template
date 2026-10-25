@@ -121,6 +121,10 @@ export function DataTable<T>({
     setWanted(to);
   };
   const items = virtualizer.getVirtualItems();
+  // The one Tab stop is always a row that is drawn: the last one the
+  // keyboard was on while it is, else the first on screen (after a filter
+  // left fewer rows, or a scroll took that one out of the DOM).
+  const tabStop = items.some((i) => i.index === current) ? current : (items[0]?.index ?? 0);
   // The last rows are on screen (or the keyboard went to End): ask for the
   // next page. A failed one waits for Try again.
   const last = items.at(-1)?.index ?? -1;
@@ -177,7 +181,7 @@ export function DataTable<T>({
                 data-index={item.index}
                 data-testid={rowTestId}
                 {...rowProps?.(row)}
-                tabIndex={item.index === current ? 0 : -1}
+                tabIndex={item.index === tabStop ? 0 : -1}
                 aria-rowindex={item.index + 1}
                 onFocus={() => setCurrent(item.index)}
                 onKeyDown={(e) => onKey(e, item.index, row)}

@@ -5,6 +5,14 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Another filter shows the loader until its rows come, never the last filter's rows; a reload that fails keeps the rows under a note that says so, with Try again.
+- Two quick changes to one record keep the second; a refused change puts a list's row back even when the record was never opened.
+- While a form or a confirm is open, a place's shortcut, ⌘, and ⌘\ do nothing, so what was typed stays.
+- ⌘K finds a record by what the server matched (its description, an owner), not only by its name.
+- Signing out signs this browser out even when the server doesn't answer.
+- A table keeps its Tab stop after a long scroll; Esc in an empty Find a setting leaves Settings; a date the server got wrong reads as nothing instead of breaking the page.
+- The container (deploy/) puts the API's origin in its CSP, so a docker run with API_URL can reach it, and refuses an API_URL that isn't a plain URL; ?api= can no longer be bent to another host.
+
 - In Vietnamese, the words are written one way (xóa, hủy, tùy chọn) and a status change reads "Shop hiện đang tạm dừng".
 
 - Settings is a page of its own: its list takes the sidebar's place, Back to app or Esc returns to where you were (filters and all), each section has a large title, rows sit on the page split by hairlines, and Find a setting takes you to the section that has what you type. Appearance starts with Light, Dark or Match system.

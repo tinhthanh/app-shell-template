@@ -52,12 +52,23 @@ export function run(id: ShortcutId, arg?: number): boolean {
   }
 }
 
+// A dialog or a confirm that holds the keyboard, other than the palette:
+// while one is open, a key that would leave the page under it (a place,
+// Settings, the sidebar, the palette) would drop what is in it unasked.
+const MODAL = "[role=dialog]:not([data-slot^=toast-viewport] *):not([data-testid=command-palette]), [role=alertdialog]:not([data-slot^=toast-viewport] *)";
+const LEAVES: ShortcutId[] = ["place", "settings", "sidebar", "palette"];
+
 export function useShortcuts() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.isComposing) return;
       const hit = shortcutFor(e, IS_MAC);
       if (!hit) return;
+      // Kept from the browser too (⌘1 would switch its tab), but done nothing with.
+      if (LEAVES.includes(hit.id) && !(hit.id === "palette" && useStore.getState().paletteOpen) && document.querySelector(MODAL)) {
+        e.preventDefault();
+        return;
+      }
       if (run(hit.id, hit.arg)) {
         e.preventDefault();
         e.stopPropagation();

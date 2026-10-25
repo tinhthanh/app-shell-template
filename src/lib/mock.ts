@@ -20,6 +20,8 @@ import { rankEach } from "./search-rank.ts";
 //   ?mock=1&empty=1       there are no projects
 //   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
 //   ?mock=1&many=1        5,000 projects, for the list's scrolling and keys
+//   ?mock=1&failAfter=2   the first two calls work, every one after fails (a server
+//                         that goes down while you work: a reload keeps what was read)
 //   ?mock=1&role=viewer   signed in as a viewer (or member): the writes
 //                         their role can't take are refused with a 403
 //   ?mock=1&failMore=1    the list's second page fails once, then comes (Try again)
@@ -62,6 +64,8 @@ export interface MockOptions {
   fail?: boolean;
   // Only the first call fails: what Try again recovers from.
   failOnce?: boolean;
+  // Every call after the first this many fails.
+  failAfter?: number;
   // Writes fail, reads don't.
   failWrites?: boolean;
   // Start with no projects.
@@ -90,6 +94,7 @@ const fromUrl = (): MockOptions => {
     latency: q.has("slow") ? 1500 : 250,
     fail: q.has("fail"),
     failOnce: q.has("failOnce"),
+    failAfter: q.has("failAfter") ? Number(q.get("failAfter")) : undefined,
     failWrites: q.has("failWrites"),
     empty: q.has("empty"),
     signedOut: q.has("signedOut"),
@@ -120,7 +125,7 @@ export function mockClient(given: MockOptions = {}): Client {
   const guard = async (write = false, action?: Action) => {
     await wait();
     calls++;
-    if (opts.fail || (opts.failOnce && calls === 1) || (write && opts.failWrites)) throw down();
+    if (opts.fail || (opts.failOnce && calls === 1) || (opts.failAfter !== undefined && calls > opts.failAfter) || (write && opts.failWrites)) throw down();
     if (!user) throw unauthorized();
     if (action && !can(user, action)) throw new ApiError("Your role doesn't allow that.", 403, "forbidden");
   };
@@ -203,7 +208,10 @@ export function mockClient(given: MockOptions = {}): Client {
       return structuredClone(user);
     },
     async signOut() {
+      // failWrites fails it too, as a server that is down would; the app
+      // signs out here all the same (components/app-sidebar.tsx).
       await wait();
+      if (opts.fail || opts.failWrites) throw down();
       user = null;
     },
   };
