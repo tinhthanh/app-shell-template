@@ -6,7 +6,7 @@ UI, zustand, Playwright. There is no backend here; the views read through
 `VITE_API_URL` is set. `docs/architecture.md` has the map and the
 vocabulary; `docs/decisions/` has why things are the way they are; the
 skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`, `trial`,
-`add-theme`) walk through the recipes below step by step.
+`add-theme`, `release`) walk through the recipes below step by step.
 
 ## Tooling
 
@@ -30,7 +30,7 @@ Run these before you call something done, and paste their last lines in
 the PR:
 
 ```sh
-pnpm check                                   # typecheck, lint, titles, themes, unit tests, build
+pnpm check                                   # typecheck, lint, check:titles, check:words, check:type, check:grid, check:node, check:views, check:csp, check:themes, test, build, check:size
 pnpm test:coverage                           # the node-run modules: lines 90%, branches and functions 80% (CI runs it)
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds first, then Playwright
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
@@ -126,7 +126,7 @@ configs or these rules without the `guardrail-change` label.
   a bar or `ps-[11px]` (`pnpm check:grid`; a deliberate exception says why
   in a `grid-ok:` comment).
 - **Text is sized by its role** on the type scale (`src/index.css`):
-  `text-title`, `text-heading`, `text-body`, `text-row`, `text-desc`,
+  `text-page-title`, `text-title`, `text-heading`, `text-subtitle`, `text-body`, `text-row`, `text-desc`,
   `text-section`, `text-label`, `text-meta`, `text-tag`, `text-mono`, never
   `text-sm`, `text-xs` or `text-[13px]` (`pnpm check:type`; the UI kit in
   `components/ui` keeps its own). Text drawn as a picture says why in a
@@ -194,8 +194,9 @@ configs or these rules without the `guardrail-change` label.
 
 ## Node-run modules
 
-`pnpm test` runs `src/**/*.test.ts` with `node --test --experimental-strip-types`,
-no bundler. A module those tests load (and the test itself):
+`pnpm test` runs `src/lib/**/*.test.ts` and `scripts/*.test.mjs` with
+`node --test --experimental-strip-types`, no bundler (the themes' test,
+`src/themes/contrast.test.ts`, runs under `pnpm check:themes`). A module those tests load (and the test itself):
 - imports at runtime by relative path with the extension (`./x.ts`,
   `./x.json` with `with { type: "json" }`); `@/` works only in `import type`;
 - has no `enum`, `namespace` or constructor parameter properties;
@@ -240,7 +241,9 @@ behaviour is proven in `e2e/`.
   clear of the browser's own keys such as ⌘⇧T, ⌘W, ⌘N, ⌘T), a press in
   `keys.test.ts`'s reachability list, and a case in `run`
   (`src/hooks/use-shortcuts.ts`); an item in the palette if it should be
-  searchable; `announce()` what it did when nothing shows on screen.
+  searchable; `announce()` what it did when nothing shows on screen; and
+  its name, `settings.shortcut.<id>`, in English and Vietnamese
+  (`src/lib/messages/settings.ts`, read by `describe` in `shortcuts.ts`).
 - **A theme:** a `Theme` in `src/themes/builtin.ts` (colours and the full
   terminal palette; a unique id); `pnpm check:themes` must pass
   (`THEME_REPORT=1` prints the margins; nudge lightness only, and note it);
@@ -259,7 +262,8 @@ behaviour is proven in `e2e/`.
   Assumptions what the task left open and you decided (fields, statuses,
   defaults, where the place goes), and under Not done what you left out.
 - **A component in the kit:** show it on the Kit page (`src/views/kit/`); a
-  new section goes in its `SECTIONS` and in the list in `e2e/a11y.spec.ts`.
+  new section goes in `KIT_SECTIONS` (`src/views/kit/sections.ts`), and the
+  axe scenes in `e2e/a11y.spec.ts` follow that list on their own.
 
 ## House style
 

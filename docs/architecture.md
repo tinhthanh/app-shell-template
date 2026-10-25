@@ -15,12 +15,20 @@ view            useResource((signal) => client.project(id, { signal }), [id])   
                 failed    → <ErrorNote error onRetry>          src/components/error-note.tsx (lib/explain.ts)
                 ready     → empty, or the data through children
                 (the status is a union: lib/resource-state.ts has the transitions)
-a write         await client.updateProject(...); reload()     toastError on failure
+a write         optimistic({ key, listKey, id, patch, write: () => client.updateProject(id, patch) })   src/lib/resource-cache.ts
+                shown at once, put back and toastError on refusal
                 a 422 with code "invalid" lands on the field   views/projects (the edit form)
 ```
 
-`client` is chosen once, at load (the fixtures' code comes as its own chunk, at the first call, only in mock mode): the fixtures when `?mock=1` is in the
-URL or no API is configured (`isMock()`), else HTTP. Views never call
+`client` is chosen once, at load (the fixtures' code comes as its own
+chunk, at the first call, only in mock mode), by `isMock()` in
+`src/lib/api.ts`: the fixtures when the host's `config.js`
+(`window.__APP_CONFIG__`) says `mock: true`, when no API is configured
+(no `?api=`, `apiUrl` in `config.js` or `VITE_API_URL`), or when the URL
+says `?mock=1`; else HTTP. The URL may choose (`?mock=1`, `?api=`) only
+while the knobs are on (`knobsOn()`): in a dev build, or one built with
+`VITE_KNOBS=1`. A production build ignores them, so a link can't point
+the app at another server. Views never call
 `fetch` (Biome refuses it outside `api.ts`). `useResource` keeps the old
 data while reloading and drops an answer that arrives after a newer
 request, so a late reply never overtakes a later one. With a `key`, the
@@ -44,7 +52,7 @@ bounded list (the tags in use) is read whole with `useResource`.
 | State | Module | Persists as | Notes |
 |---|---|---|---|
 | The view in front, the theme, whether the palette is open | `src/lib/store.ts` (zustand) | `app.ui` (theme only) | The view mirrors the URL's hash |
-| The person's settings: density, text size, sidebar, system themes | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
+| The person's settings: density, text size, sidebar, system themes, language, the last What's new seen (`whatsNewSeen`) | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
 | Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
@@ -83,6 +91,54 @@ trip, the axe scene).
 press is (⌘ on a Mac, Ctrl elsewhere, from the browser's platform or
 `?platform=`); `hooks/use-shortcuts.ts` does it; the sheet and Settings
 list it. Key hints are written for a Mac and `<Kbd>` rewrites them.
+Each shortcut's name is a word, `settings.shortcut.<id>` (`describe` in
+`lib/shortcuts.ts`).
+
+## Settings
+
+Settings is a page of its own: on a desktop its list of sections takes
+the sidebar's place (`settings-view.tsx`), with a way back
+(`settings-back`, or Esc) that calls `closeSettings()` (`lib/store.ts`)
+and returns to the view it was opened from. Find a setting
+(`views/settings/find.tsx`) sits at the top of every section and matches
+what is typed against each section's name and its `settings.findWords.<id>`
+in the language in use; a new section gets a line in its `INDEX`.
+
+## Words
+
+Every word a person reads goes through `t()` (`lib/i18n.ts`, ADR 0013):
+a key in `lib/messages/<area>.ts`, English first and Vietnamese typed
+against it, so a missing word fails to compile. `t()` is called in
+render, never at module load, so a change of language (the Language
+setting in `lib/prefs.ts`) reaches every word; dates, numbers and money
+follow it through `lib/format.ts`. `pnpm check:words` refuses English
+written straight into a view or a component (the Kit page excepted).
+
+## Permissions
+
+What a person may do is one table, `ACTIONS` in `lib/permissions.ts`
+(ADR 0012): an action and the roles that may take it. A view asks
+`useCan("project.delete")` (`lib/session.ts`) and leaves out what isn't
+theirs; the mock refuses the same with a 403 (`?role=viewer`), as a
+server would. Hiding a button is a courtesy; the server decides.
+
+## Type and the grid
+
+Text is sized by its role on the type scale in `src/index.css`
+(`text-page-title`, `text-title`, `text-heading`, `text-body`, `text-row`,
+`text-meta` and the rest), never `text-sm` or a pixel size;
+`pnpm check:type` holds it. The layout grid beside it gives every top band
+`h-bar`, a page's gutter `px-page`, and a column's boxes and their content
+`px-edge` and `px-lane`, so lines meet across the sidebar, a view's header
+and Settings; `pnpm check:grid` holds that. Both are in rem, so they grow
+with the text size.
+
+## Marks on a row
+
+`StatusBadge` and `Tag` (`components/status-badge.tsx`) are the two small
+marks a row wears: a record's state, in a tone the view names (`success`,
+`warning`, `info`, `destructive`, `muted`) with its word, and a tag, in one
+of the six tones, the same for a name every time.
 
 ## What the browser tests guarantee
 
@@ -97,26 +153,41 @@ that moves.
 
 ## Modules that run in node
 
-`pnpm test` runs `src/**/*.test.ts` with `node --test --experimental-strip-types`
-and no bundler. What those tests import must load as it is: relative
-imports with extensions, `@/` only in `import type`, no enum/namespace/
-parameter properties, no DOM or `import.meta.env` at load time.
-`scripts/check-node-imports.mjs` walks the imports and refuses what node
-can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
-`keys`, `prefs`, `storage`, `sidebar-width`, `zoom`, `format`, `platform`,
-`poll`, `last-of`, and `themes/*`.
+`pnpm test` runs `src/lib/**/*.test.ts` and `scripts/*.test.mjs` with
+`node --test --experimental-strip-types` and no bundler; the themes'
+contrast test runs the same way under `pnpm check:themes`. What those
+tests import must load as it is: relative imports with extensions, `@/`
+only in `import type`, no enum/namespace/parameter properties, no DOM or
+`import.meta.env` at load time. `pnpm check:node`
+(`scripts/check-node-imports.mjs`) walks the imports from every test and
+refuses what node can't load; it, not a list here, says which modules
+run in node.
 
 ## Knobs
 
+The URL knobs that choose where the app reads from (`?mock=1`, `?api=`)
+work only while the knobs are on: a dev build, or one built with
+`VITE_KNOBS=1`. The mock's own knobs (`?slow=1` to `?failMore=1`) change
+the fixtures whenever the app runs on them. `?crash=` works on the
+fixtures or with the knobs on.
+
 | Where | Knob | What it does |
 |---|---|---|
-| env | `VITE_API_URL` | The HTTP client's base; unset means the mock |
+| env | `VITE_API_URL` | The HTTP client's base; unset (and no `apiUrl` in `config.js`) means the mock |
+| env | `VITE_KNOBS=1` | Keeps `?mock=1`, `?api=` and `?crash=` in a production build, for a demo; never on a build that talks to a real API |
 | env | `PORT` | The dev server's port (1420) |
-| URL | `?mock=1` | The fixtures, whatever the env says |
-| URL | `?api=<url>` | The HTTP client's base, over the env: a path, this origin or localhost only (`urlApi`) |
+| env | `BASE_PATH` | An absolute base for the built assets (`vite.config.ts`); relative (`./`) by default |
+| env | `SOURCEMAPS=1` | Hidden source maps in the build, for an error reporter (`docs/deploy.md`) |
+| config.js | `apiUrl`, `mock` | Set by the host after the build (`window.__APP_CONFIG__`): the API's base, over `VITE_API_URL`, or `mock: true` for the fixtures |
+| URL | `?mock=1` | The fixtures, whatever the env says (knobs on) |
+| URL | `?api=<url>` | The HTTP client's base, over `config.js` and the env: a path, this origin or localhost only (`urlApi`; knobs on) |
 | URL | `?slow=1` | Every mock call takes 1.5 s |
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
+| URL | `?failMore=1` | The list's second page fails once, then comes (Try again) |
+| URL | `?failAfter=2` | The first calls work, every one after fails: a server that goes down while you work (a reload keeps the rows, with a note) |
 | URL | `?empty=1` | No records (projects, and whatever else the mock holds) |
+| URL | `?many=1` | 5,000 invented projects, for the list's scrolling and keys |
+| URL | `?role=viewer` / `member` / `owner` | Who is signed in has that role; the writes it can't take are refused with a 403 (`lib/permissions.ts`) |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
 | URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
@@ -135,6 +206,13 @@ can't load. Today: `api`, `mock`, `errors`, `explain`, `types`, `routes`,
 | mock, knobs | The fixtures in `mock.ts`, and the URL flags that change them |
 | Kit | The `#/kit` page that shows every component; axe checks it in both appearances |
 | tone | One of six tag colours (`themes/tones.ts`), kept clear of the state colours |
+| StatusBadge, Tag | A record's state in a state colour, and a tag in a tone (`components/status-badge.tsx`) |
+| t(), key, messages | A word in the person's language: `t("shell.place.home")`, from `lib/messages/<area>.ts` (`lib/i18n.ts`, ADR 0013) |
+| action, useCan | Something a role may do (`ACTIONS` in `lib/permissions.ts`), and the hook a view asks (ADR 0012) |
+| type scale | The text sizes by role (`text-title`, `text-row`…) in `index.css`; `check:type` |
+| grid | `h-bar`, `px-page`, `px-edge`, `px-lane`: where bands and gutters fall (`index.css`); `check:grid` |
+| Find a setting | The search at the top of Settings (`views/settings/find.tsx`), over each section's `settings.findWords.<id>` |
+| closeSettings | Leaves Settings for the view it was opened from (`lib/store.ts`) |
 | state colours | success, warning, destructive, info; `--destructive-strong` is the fill white reads on |
 | density | compact or comfortable, as `data-density`; rows read `h-row`, `py-row-pad`, `h-side-row` |
 | rail | The folded sidebar: icons only |

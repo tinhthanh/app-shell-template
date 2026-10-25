@@ -17,7 +17,7 @@ words), or `src/views/home/` for a static one.
 2. **`src/lib/routes.ts`**: a case in `viewToHash` (`#/reports`, `#/reports/<id>`) and in `hashToView`.
 3. **`src/lib/routes.test.ts`**: add the view to the round-trip list.
 4. **`src/views/reports/reports-view.tsx`**: the component, with `data-testid="reports"` on its root and a `<ViewHeader title>`. Reads go through `useResource` (keyed) and `<ResourceView>`, which draws loading, failed with Try again, and the empty state you give it.
-5. **`src/App.tsx`**: a `lazyView(() => import("@/views/reports/reports-view").then((m) => m.ReportsView))`, a case in `ViewFor`, and `reports: "Reports"` in `viewTitles`.
+5. **`src/App.tsx`**: a `lazyView(() => import("@/views/reports/reports-view").then((m) => m.ReportsView))`, a case in `ViewFor`, and `reports: t("shell.place.reports")` in `viewTitles` (a function, so the window's title is in the language in use).
 6. **`src/lib/nav.tsx`**: an entry in `PLACES` before `kit` (a product place goes before Kit, which stays last of the top group; ⌘1–9 follow the order, so Kit's key moves: say so in the changelog; `shell.spec.ts` reads the order from the sidebar, so it keeps passing). A new place changes the sidebar in every desktop picture: retake the baselines with `pnpm test:visual --update` (Docker) and commit them.
 7. **`e2e/a11y.spec.ts`**: a scene `{ id: "reports", run: … }`, and one per state worth checking; a scene opens its state with `app.open({ params, hash })`, never a hand-built address. A scene in `e2e/scenes.json` gives it a screenshot baseline and a place in `pnpm shots`.
 8. **A behaviour test** in `e2e/reports.spec.ts`: what the user gets, on the mock knobs.
@@ -29,4 +29,10 @@ Then `pnpm check` (typecheck, lint, `check:views`) and
 
 A settings section instead: `SettingsSectionId` in `store.ts`, `SECTIONS`
 in `routes.ts` and `settings-view.tsx`, a component of `SettingsPage`,
-`SettingsGroup`, `SettingsRow` (`rows.tsx`), and a `settings <id>` scene.
+`SettingsGroup`, `SettingsRow` (`rows.tsx`), its line in Find a setting's
+`INDEX` (`src/views/settings/find.tsx`) with `settings.findWords.<id>` in
+every language (`src/lib/messages/settings.ts`), and a `settings <id>`
+scene. Settings is a page of its own that takes the sidebar's place, so
+there the sidebar's `nav-*` ids are gone: a test reaches a section with
+`app.openSettings("<id>")` (it clicks `settings-nav-<id>`), and leaves
+through `settings-back`.

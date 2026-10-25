@@ -1,3 +1,7 @@
+// The segmented control's classes (a row of buttons, one pressed): its
+// sizes, its root and its items. Kept apart from any component so the
+// kit's tabs (components/ui/tabs.tsx) draw their items to the same sizes
+// and layout; no view uses it directly.
 import { cva } from "class-variance-authority";
 
 export type SegmentedControlSize = "default" | "lg" | "sm";

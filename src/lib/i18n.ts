@@ -1,6 +1,6 @@
-// The app's words in the person's language: t("nav.home") is the word for
-// the language in use, and t("projects.count", { n }) fills in what it is
-// given. The words live in lib/messages/, one file per area, English first;
+// The app's words in the person's language: t("shell.place.home") is the
+// word for the language in use, and t("projects.countAll", { n }) fills in
+// what it is given. The words live in lib/messages/, one file per area, English first;
 // every other language is typed against English, so a missing word fails
 // to compile. The language follows the Language setting (lib/prefs.ts),
 // "Match system" by default; dates and numbers follow it (lib/format.ts).
