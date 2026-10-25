@@ -1,7 +1,8 @@
-import { LogOutIcon, MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
+import { ChevronDownIcon, LogOutIcon, MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toastError } from "@/components/error-note";
 import { ink, inkScale } from "@/components/ink";
+import { NotificationBell } from "@/components/notices";
 import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { Tip } from "@/components/tip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,8 +13,9 @@ import { SidebarContext, type SidebarContextProps, SidebarMenu, SidebarMenuButto
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
+import { usePlaceBadges } from "@/lib/badges";
 import { t } from "@/lib/i18n";
-import { isActive, type Place, places } from "@/lib/nav";
+import { isActive, type Place, places, RECORD_KINDS } from "@/lib/nav";
 import { roleWords } from "@/lib/permissions";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
@@ -64,6 +66,7 @@ export function AppSidebar() {
         <div className="flex h-bar shrink-0 items-center gap-2 ps-lane pe-edge">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
           <span className="min-w-0 flex-1 truncate font-medium text-desc text-foreground">{APP_NAME}</span>
+          <NotificationBell />
           <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="right">
             <button
               type="button"
@@ -88,6 +91,7 @@ export function AppSidebar() {
           </button>
           <Places footer={false} />
         </div>
+        <Recent />
 
         <div className="mt-auto px-2 pb-2">
           <Places footer />
@@ -104,6 +108,7 @@ export function AppSidebar() {
 // onGo is told when one is chosen (the phone's sheet closes).
 function Places({ footer, onGo }: { footer: boolean; onGo?: () => void }) {
   const view = useStore((s) => s.view);
+  const badges = usePlaceBadges();
   const list = places().filter((p) => !!p.footer === footer);
   return (
     <nav aria-label={footer ? t("shell.more") : t("shell.places")}>
@@ -129,17 +134,90 @@ function Places({ footer, onGo }: { footer: boolean; onGo?: () => void }) {
               >
                 {p.icon}
                 <span className="min-w-0 flex-1 truncate">{p.label}</span>
-                {/* The hint is decoration: the name is the label, the key is aria-keyshortcuts. */}
-                {!footer && (
-                  <Kbd aria-hidden className="h-4.5 text-tag text-(color:--ink-faint) opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100">
-                    {`⌘${placeNumber(p, i)}`}
-                  </Kbd>
-                )}
+                {/* The count is part of the row's name ("Projects 8"); under a hover or the keyboard, the key's
+                    hint takes its place (both in one grid cell). The hint is decoration: the key is aria-keyshortcuts. */}
+                <span className="grid justify-items-end">
+                  {badges[p.id] && (
+                    <span
+                      data-testid={`place-badge-${p.id}`}
+                      className={cn(
+                        "col-start-1 row-start-1 text-tag tabular-nums transition-opacity",
+                        !footer && "group-focus-within/menu-item:opacity-0 group-hover/menu-item:opacity-0",
+                        badges[p.id]?.loud ? "rounded-full bg-warning/16 px-1.5 text-warning-foreground" : "text-(color:--ink-faint)",
+                      )}
+                    >
+                      {badges[p.id]?.count}
+                    </span>
+                  )}
+                  {!footer && (
+                    <Kbd
+                      aria-hidden
+                      className="col-start-1 row-start-1 h-4.5 text-tag text-(color:--ink-faint) opacity-0 transition-opacity group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100"
+                    >
+                      {`⌘${placeNumber(p, i)}`}
+                    </Kbd>
+                  )}
+                </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           );
         })}
       </SidebarMenu>
+    </nav>
+  );
+}
+
+// Recent is the sidebar's section of the records opened last (lib/recent.ts),
+// under a heading that folds it away (remembered in prefs). Nothing opened
+// yet, nothing shown. After Shipyard's sections (github.com/cosscom/shipyard, MIT).
+function Recent() {
+  const recent = usePrefs((p) => p.recent);
+  const folded = usePrefs((p) => p.folded.includes("recent"));
+  const view = useStore((s) => s.view);
+  if (!recent.length) return null;
+  const title = t("shell.recent");
+  return (
+    <nav aria-label={title} className="px-2 pt-3 pb-1" data-testid="recent">
+      <button
+        type="button"
+        aria-expanded={!folded}
+        aria-label={folded ? t("shell.showSection", { section: title }) : t("shell.foldSection", { section: title })}
+        data-testid="recent-fold"
+        onClick={() => {
+          const rest = usePrefs.getState().folded.filter((f) => f !== "recent");
+          setPrefs({ folded: folded ? rest : [...rest, "recent"] });
+        }}
+        className={cn("flex h-6 w-full items-center gap-1 rounded-md px-2 text-start text-label outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring", ink.faint)}
+      >
+        <ChevronDownIcon aria-hidden className={cn("size-3 transition-transform", folded && "-rotate-90 rtl:rotate-90")} />
+        {title}
+      </button>
+      {!folded && (
+        <SidebarMenu>
+          {recent.map((r) => {
+            const kind = RECORD_KINDS[r.kind];
+            const target = kind.view(r.id);
+            const active = view.kind === target.kind && "id" in view && view.id === r.id;
+            return (
+              <SidebarMenuItem key={`${r.kind}:${r.id}`}>
+                <SidebarMenuButton
+                  isActive={active}
+                  aria-current={active ? "page" : undefined}
+                  data-testid={`recent-${r.kind}-${r.id}`}
+                  onClick={() => useStore.getState().setView(target)}
+                  className={cn(
+                    "h-side-row gap-2.5 text-desc hover:text-foreground [&_svg]:size-4 [&_svg]:text-(color:--ink-glyph) data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground",
+                    ink.row,
+                  )}
+                >
+                  {kind.icon}
+                  <span className="min-w-0 flex-1 truncate">{r.name}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      )}
     </nav>
   );
 }

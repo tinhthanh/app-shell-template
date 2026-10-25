@@ -5,11 +5,13 @@ import { AppSidebar, PhoneBar, usePhone } from "@/components/app-sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { ConfirmHost } from "@/components/confirm";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { NoticeToasts } from "@/components/notices";
 import { ShortcutsSheet } from "@/components/shortcuts-sheet";
 import { StatusBar } from "@/components/status-bar";
 import { ToastProvider } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useWhatsNewAfterUpdate, WhatsNewDialog } from "@/components/whats-new/whats-new-dialog";
+import { useOnlineStatus } from "@/hooks/use-online";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
@@ -68,6 +70,8 @@ export default function App() {
   useEffect(preloadViews, []);
   // The keyboard is never dropped on <body> by what had it going away.
   useRescueRemovedFocus();
+  // Offline, the status bar says so (hooks/use-online.ts).
+  useOnlineStatus();
   // Once after an update: the release's notes (lib/whats-new.ts).
   useWhatsNewAfterUpdate();
   // Who is signed in: a 401 means nobody (the sign-in view); any other
@@ -138,6 +142,7 @@ export default function App() {
             <WhatsNewDialog />
           </ErrorBoundary>
         </Fragment>
+        <NoticeToasts />
         <Announcer />
       </ToastProvider>
     </TooltipProvider>

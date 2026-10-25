@@ -183,6 +183,14 @@ configs or these rules without the `guardrail-change` label.
   Coming back to a list, the keyboard lands on the row it left through
   `returnFocusTo`/`useReturnFocus` (hooks/use-return-focus.ts).
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).
+- **The frame takes what views tell it**, never a copy of the sidebar or
+  the status bar: something that happened is `notify({ title, tone, action })`
+  (lib/notifications.ts: a toast now, a line in the sidebar's bell); a
+  place's count is `setPlaceBadge(placeId, n)` (lib/badges.ts); a fact in
+  the status bar is `useStatusItem({ id, label, tip })` (hooks/); a record
+  opened goes in the sidebar's Recent with `withRecent` (lib/recent.ts);
+  Home's first steps are `STEPS` in lib/onboarding.ts, ticked by what the
+  person does.
 - **Browser tests** import `test` and `expect` from `./fixtures` (it refuses
   page errors and requests off the page), wait on what they expect
   (`toBeVisible`, `expect.poll`), never on time, and use `data-testid` or

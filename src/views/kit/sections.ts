@@ -8,6 +8,7 @@ export const KIT_SECTIONS = [
   { id: "overlays", title: "Overlays" },
   { id: "data", title: "Data" },
   { id: "tones", title: "Tones" },
+  { id: "shell", title: "Shell" },
 ] as const;
 
 export type KitSectionId = (typeof KIT_SECTIONS)[number]["id"];

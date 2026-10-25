@@ -6,6 +6,7 @@ import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
+import { GettingStarted } from "@/components/getting-started";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
 import { SimpleSelect } from "@/components/simple-select";
@@ -37,7 +38,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
+import { setPlaceBadge } from "@/lib/badges";
 import { ApiError } from "@/lib/errors";
+import { notify } from "@/lib/notifications";
+import { dropStatusItem, putStatusItem } from "@/lib/status-items";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { TONES, toneVar } from "@/themes/tones";
@@ -94,6 +98,7 @@ export function KitView() {
             {current === "overlays" && <Overlays />}
             {current === "data" && <Data />}
             {current === "tones" && <Tones />}
+            {current === "shell" && <Shell />}
           </div>
         </div>
       </div>
@@ -594,6 +599,42 @@ function Tones() {
             {tone}
           </StatusBadge>
         ))}
+      </Section>
+    </>
+  );
+}
+
+// Shell shows the frame's shared pieces at work: a notice (lib/notifications.ts),
+// a place's count (lib/badges.ts), a status bar item (lib/status-items.ts),
+// and Home's getting-started list.
+function Shell() {
+  return (
+    <>
+      <Section title="Notifications" description="notify() shows a toast now and keeps a line, with its button, in the sidebar's bell.">
+        <Button variant="outline" onClick={() => notify({ title: "Export finished", body: "214 orders, as CSV.", tone: "success", action: { label: "Open", view: { kind: "projects" } } })}>
+          Send a notification
+        </Button>
+      </Section>
+      <Section title="A place's count" description="setPlaceBadge() puts a count beside a place in the sidebar; loud asks for the person.">
+        <Button variant="outline" onClick={() => setPlaceBadge("kit", 3, true)}>
+          Count 3 on Kit
+        </Button>
+        <Button variant="outline" onClick={() => setPlaceBadge("kit", 0)}>
+          Clear it
+        </Button>
+      </Section>
+      <Section title="The status bar" description="useStatusItem() (or putStatusItem) puts a fact in the status bar while it holds.">
+        <Button variant="outline" onClick={() => putStatusItem({ id: "kit-sync", label: "Syncing 2 of 5", tip: "Two of five folders are synced", order: 10 })}>
+          Show a status item
+        </Button>
+        <Button variant="outline" onClick={() => dropStatusItem("kit-sync")}>
+          Take it away
+        </Button>
+      </Section>
+      <Section title="Getting started" description="Home's list: each step ticks itself as the person does it (lib/onboarding.ts).">
+        <div className="w-full">
+          <GettingStarted />
+        </div>
       </Section>
     </>
   );

@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 // Relative imports: prefs.test.ts runs this in node.
 import { LANGUAGE_IDS, type LanguageChoice, resolveLanguage, setLanguage } from "./i18n.ts";
+import { isRecentItem, MAX_RECENT, type RecentItem } from "./recent.ts";
 import { clampWidth, SIDEBAR_DEFAULT } from "./sidebar-width.ts";
 import { load, save } from "./storage.ts";
 
@@ -24,6 +25,12 @@ export interface Prefs {
   whatsNewSeen: string | null;
   // The language the app speaks: one of lib/i18n.ts's, or the system's.
   language: LanguageChoice;
+  // The records opened last, newest first, for the sidebar's Recent (lib/recent.ts).
+  recent: RecentItem[];
+  // The sidebar's sections folded away, by id (Recent).
+  folded: string[];
+  // Home's getting-started list: the steps taken, and whether it was put away (lib/onboarding.ts).
+  onboarding: { done: string[]; dismissed: boolean };
 }
 
 export const DEFAULTS: Prefs = {
@@ -34,6 +41,9 @@ export const DEFAULTS: Prefs = {
   systemThemes: { light: "default-light", dark: "default-dark" },
   whatsNewSeen: null,
   language: "system",
+  recent: [],
+  folded: [],
+  onboarding: { done: [], dismissed: false },
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to
@@ -66,6 +76,10 @@ export const usePrefs = create<Prefs>()(() => ({
   sidebarWidth: clampWidth(saved.sidebarWidth ?? SIDEBAR_DEFAULT),
   // A language this build has no words for (or no longer has) is the system's.
   language: saved.language === "system" || LANGUAGE_IDS.includes(saved.language as never) ? (saved.language as LanguageChoice) : "system",
+  // A save from before these, or one that isn't their shape, starts them afresh.
+  recent: Array.isArray(saved.recent) ? saved.recent.filter(isRecentItem).slice(0, MAX_RECENT) : [],
+  folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
+  onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
 }));
 
 usePrefs.subscribe((p) => save("app.prefs", { ...p, version: PREFS_VERSION }));

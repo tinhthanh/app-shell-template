@@ -1,6 +1,6 @@
 import { ArrowRightIcon, FolderKanbanIcon, KeyboardIcon, LayoutGridIcon, PaletteIcon, SearchIcon } from "lucide-react";
 import type { ReactNode } from "react";
-
+import { GettingStarted } from "@/components/getting-started";
 import { openShortcuts } from "@/components/shortcuts-sheet";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
@@ -24,6 +24,7 @@ export function HomeView() {
             <code className="rounded bg-muted px-1 py-px font-mono text-tag text-foreground">src/lib/api.ts</code>
             {t("shell.home.introAfter")}
           </p>
+          <GettingStarted />
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
             <Card icon={<FolderKanbanIcon />} title={t("shell.place.projects")} description={t("shell.home.projects")} onClick={() => useStore.getState().setView({ kind: "projects" })} />
             <Card icon={<SearchIcon />} title={t("shell.home.search")} description={t("shell.home.searchText")} keys="⌘K" onClick={() => useStore.getState().setPaletteOpen(true)} />

@@ -49,3 +49,10 @@ test("a chosen language is kept, and one this build has no words for follows the
   assert.equal((await fresh({ language: "vi", version: 1 }, "vi")).language, "vi");
   assert.equal((await fresh({ language: "klingon", version: 1 }, "klingon")).language, "system");
 });
+
+test("an old save gets an empty Recent, nothing folded and a fresh getting-started list", () => {
+  const p = usePrefs.getState();
+  assert.deepEqual(p.recent, []);
+  assert.deepEqual(p.folded, []);
+  assert.deepEqual(p.onboarding, { done: [], dismissed: false });
+});

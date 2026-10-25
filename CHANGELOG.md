@@ -5,6 +5,11 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The sidebar has a bell: what happened while you were elsewhere (a status change, an export) shows as a toast and stays there, unread until you look, with a way back to it.
+- A place in the sidebar shows its count (Projects 8), and the records you opened last sit under Recent, which folds away and remembers it.
+- Offline, the status bar says so; back online the word goes. Views can put their own facts there.
+- Home starts with a short getting-started list that ticks each step as you do it, and goes for good once you put it away.
+
 - Typing in a list's search asks the server once you pause, not once a letter, and a search or a filter you've moved on from stops its request; a read the network dropped or a busy server turned away is tried twice more by itself before it says so.
 
 - Another filter shows the loader until its rows come, never the last filter's rows; a reload that fails keeps the rows under a note that says so, with Try again.
