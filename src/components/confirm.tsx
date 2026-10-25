@@ -10,8 +10,9 @@ import { t } from "@/lib/i18n";
 // confirm asks before something that cannot be undone, from anywhere (a
 // menu item has no room for its own dialog):
 //
-//   confirm({ title: "Delete the project?", description: "…", confirm: "Delete", destructive: true, run: () => client.remove(id) });
+//   confirm({ title: t("common.remove.title", { name }), description: t("projects.deleteDescription"), confirm: t("common.delete"), destructive: true, run: () => client.deleteProject(id) });
 //
+// (removeRecord, components/remove-record.ts, does this for a record.)
 // Options become checkboxes, and run gets their values. If run throws, the
 // dialog stays open with the error, so the person can try again. App.tsx
 // mounts ConfirmHost once.

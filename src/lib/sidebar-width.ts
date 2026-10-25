@@ -1,5 +1,6 @@
-// How wide the sidebar is, dragged by its right edge (components/sidebar/
-// sidebar-resize-handle.tsx) and kept in prefs. Pure, so it is tested on its own
+// How wide the sidebar is, dragged by its end edge (the right, or the left
+// in a right-to-left page; components/sidebar-resize-handle.tsx) and kept
+// in prefs. Pure, so it is tested on its own
 // (sidebar-width.test.ts).
 //
 // 200px is the narrowest that keeps a row readable: its indent,

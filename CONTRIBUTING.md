@@ -10,10 +10,9 @@ Node 22.12 or later and pnpm (`corepack enable` gives you the version in
 `package.json`). Then:
 
 ```sh
-pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile   # also points git at .githooks/: format on commit, checks on push
 pnpm dev                      # http://localhost:1420/?mock=1 on the fixtures
 pnpm exec playwright install chromium
-git config core.hooksPath .githooks   # format on commit, checks on push
 ```
 
 Docker is needed only for `pnpm test:visual` on a Mac or Windows machine
@@ -22,7 +21,7 @@ Docker is needed only for `pnpm test:visual` on a Mac or Windows machine
 ## Before you open a pull request
 
 ```sh
-pnpm check                               # typecheck, lint, unit tests, build, budgets
+pnpm check                               # typecheck, lint, the rule checks (check:*), themes, unit tests, build, size budget
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs for what you touched
 pnpm test:visual                         # when the look changed (then --update, and commit the baselines)
 ```

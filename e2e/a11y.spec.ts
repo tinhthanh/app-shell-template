@@ -31,7 +31,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   ...KIT_SECTIONS.map(({ id }) => ({
     id: `kit ${id}`,
     run: async (app: App) => {
-      await app.page.goto(`/?mock=1#/kit/${id}`);
+      await app.open({ hash: `/kit/${id}` });
       await expect(app.page.getByTestId(`kit-${id}`)).toBeVisible();
     },
   })),

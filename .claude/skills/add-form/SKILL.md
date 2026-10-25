@@ -11,39 +11,50 @@ the app's own field errors and the server's refusal on the field it
 names. You write the fields and the save. `ProjectForm` in
 `src/views/projects/projects-view.tsx` is the worked example.
 
-1. **The dialog**:
+1. **The dialog**. Every word in it is a key, `t("reports.…")`, from
+   `src/lib/messages/reports.ts` (`en`, then `vi` with the same keys and
+   blanks, spread into `src/lib/messages/index.ts`); `pnpm check:words`
+   refuses English written into a view. Offer the trigger only to whoever
+   may create (`useCan`, with the action in `ACTIONS` in
+   `lib/permissions.ts`), as `ProjectList` does:
 
    ```tsx
-   <FormDialog
-     trigger={<Button size="sm" />}
-     icon={<PlusIcon />}
-     label="New report"
-     title="New report"
-     description="Its title and what it covers."
-     initial={{ title: "", scope: "" }}          // every field, as it starts: the dirty check compares with these
-     submit="Create"
-     failTitle="Couldn't save the report"
-     onSubmit={async (v) => {                      // v: the fields, trimmed; throw to refuse
-       const saved = await client.createReport({ title: v.title ?? "", scope: v.scope ?? "" });
-       mutate<Report[]>("reports", (l) => l && [saved, ...l]);   // a paged list: editRows(l, (rows) => [saved, ...rows]) on its listKey
-       onSaved(saved);
-       toastManager.add({ type: "success", title: `${saved.title} was created` });
-     }}
-   >
-     …fields…
-   </FormDialog>
+   const canCreate = useCan("report.create");
+   …
+   {canCreate && (
+     <FormDialog
+       trigger={<Button size="sm" />}
+       icon={<PlusIcon />}
+       label={t("reports.new")}
+       title={t("reports.new")}
+       description={t("reports.form.description")}
+       initial={{ title: "", scope: "" }}          // every field, as it starts: the dirty check compares with these
+       submit={t("common.create")}
+       failTitle={t("reports.saveFailed")}
+       onSubmit={async (v) => {                      // v: the fields, trimmed; throw to refuse
+         const saved = await client.createReport({ title: v.title ?? "", scope: v.scope ?? "" });
+         mutate<Page<Report>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Report> | undefined);   // the key the list was read under (usePages)
+         onSaved(saved);
+         toastManager.add({ type: "success", title: t("reports.created", { name: saved.title }) });
+       }}
+     >
+       …fields…
+     </FormDialog>
+   )}
    ```
 
-   For an edit, pass the record's values as `initial`, `submit="Save"`, and
-   `client.updateReport` in `onSubmit`; the trigger can be an icon button
-   with `aria-label`.
+   A short list read whole with `useResource` is a plain array under its
+   key: `mutate<Report[]>("reports", (l) => l && [saved, ...l])`. For an
+   edit, pass the record's values as `initial`, `submit={t("common.save")}`,
+   and `client.updateReport` in `onSubmit`, behind `useCan("report.edit")`;
+   the trigger can be an icon button with `aria-label={t("reports.edit")}`.
 
 2. **A text field**, validated in the app's own words (the one `FieldError`
    shows them or the server's refusal, never the browser's copy):
 
    ```tsx
-   <Field name="title" validate={(v) => (String(v ?? "").trim() ? null : "A report needs a title.")}>
-     <FieldLabel>Title<span aria-hidden className="text-muted-foreground">*</span></FieldLabel>
+   <Field name="title" validate={(v) => (String(v ?? "").trim() ? null : t("reports.title.needed"))}>
+     <FieldLabel>{t("reports.title")}<span aria-hidden className="text-muted-foreground">*</span></FieldLabel>
      <FieldControl render={<Input defaultValue={initial.title} aria-required maxLength={80} autoFocus />} />
      <FieldError />
    </Field>

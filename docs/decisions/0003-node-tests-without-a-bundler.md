@@ -7,7 +7,9 @@ the key mapper) deserves tests that start in milliseconds and need no
 test framework, DOM or transform pipeline.
 
 **Decision.** `pnpm test` is `node --test --experimental-strip-types` over
-`src/**/*.test.ts`. A module those tests load must run as it is:
+`src/lib/**/*.test.ts` and `scripts/*.test.mjs` (the themes' contrast
+test, `src/themes/contrast.test.ts`, runs the same way under
+`pnpm check:themes`). A module those tests load must run as it is:
 relative imports with extensions, `@/` only in `import type`, no enum,
 namespace or parameter properties, no DOM or `import.meta.env` at load.
 `tsconfig` sets `erasableSyntaxOnly` and `verbatimModuleSyntax`, and
@@ -15,7 +17,7 @@ namespace or parameter properties, no DOM or `import.meta.env` at load.
 (`.tsx`) are never unit-tested: Playwright on the real build is their
 proof (ADR 0010).
 
-**Consequences.** Zero test dependencies; 39 tests in 0.1 s. A `.tsx`
+**Consequences.** Zero test dependencies, and the suite starts in milliseconds. A `.tsx`
 can't be imported by a test. Logic that wants a unit test lives in
 `src/lib`, not in a component.
 
