@@ -1,5 +1,5 @@
 import { PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { type Column, DataTable } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
@@ -21,10 +21,14 @@ import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
 import { useSettled } from "@/hooks/use-settled";
 import { client, listQuery } from "@/lib/api";
+import { setPlaceBadge } from "@/lib/badges";
 import { ago, number } from "@/lib/format";
 import { type Key, t } from "@/lib/i18n";
 import { parseSort, sortToString } from "@/lib/list-keys";
+import { notify } from "@/lib/notifications";
 import { editRows } from "@/lib/pages";
+import { setPrefs, usePrefs } from "@/lib/prefs";
+import { withRecent } from "@/lib/recent";
 import { usePages, useResource } from "@/lib/resource";
 import { mutate, optimistic } from "@/lib/resource-cache";
 import { useCan } from "@/lib/session";
@@ -134,6 +138,11 @@ function ProjectList() {
   // A tag that is set stays a chip even if no project wears it any more.
   const allTags = [...new Set([...(tagsInUse.status === "ready" ? tagsInUse.data : []), ...tags])].sort();
   const filtered = Boolean(query.trim() || status || tags.size);
+  // The sidebar's Projects shows how many there are, once an unfiltered read says (lib/badges.ts).
+  const total = projects.status === "ready" && !filtered ? projects.data.total : undefined;
+  useEffect(() => {
+    if (total !== undefined) setPlaceBadge("projects", total);
+  }, [total]);
 
   // Back from a project, the keyboard lands on its row.
   const backTo = useReturnFocus("data-project");
@@ -226,6 +235,11 @@ function ProjectDetail({ id }: { id: string }) {
   const project = useResource((signal) => client.project(id, { signal }), [id], { key: key(id) });
   const p = project.status === "ready" ? project.data : undefined;
   useTitle(p?.name);
+  // Opened, it goes first in the sidebar's Recent (lib/recent.ts).
+  const opened = p?.name;
+  useEffect(() => {
+    if (opened) setPrefs({ recent: withRecent(usePrefs.getState().recent, { kind: "project", id, name: opened }) });
+  }, [id, opened]);
   // Back to the list, with the filters it had; the row gets the keyboard.
   const back = () => {
     returnFocusTo("data-project", id);
@@ -236,7 +250,8 @@ function ProjectDetail({ id }: { id: string }) {
   const setStatus = async (status: ProjectStatus) => {
     try {
       const saved = await optimistic<Project>({ key: key(id), listKey: listKey(view), id, patch: { status }, write: () => client.updateProject(id, { status }) });
-      toastManager.add({ type: "success", title: t(NOW[status], { name: saved.name }) });
+      // A notice: a toast now, and a line in the notification centre with a way back (lib/notifications.ts).
+      notify({ title: t(NOW[status], { name: saved.name }), tone: "success", action: { label: t("shell.notice.open"), view: { kind: "projects", id } } });
     } catch (err) {
       toastError(err, t("projects.updateFailed"));
     }

@@ -131,6 +131,15 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "notification centre with a notice",
+    run: async (app) => {
+      await app.open({ hash: "/kit/shell" });
+      await app.page.getByRole("button", { name: "Send a notification" }).click();
+      await app.page.getByTestId("notifications").click();
+      await expect(app.page.getByTestId("notification-centre").getByTestId("notice")).toBeVisible();
+    },
+  },
+  {
     id: "projects empty",
     run: async (app) => {
       await app.open({ params: { empty: "1" }, hash: "/projects" });

@@ -217,6 +217,11 @@ fixtures or with the knobs on.
 | density | compact or comfortable, as `data-density`; rows read `h-row`, `py-row-pad`, `h-side-row` |
 | rail | The folded sidebar: icons only |
 | Tip, tip layer | The app's tooltip (`tip.tsx`), never `title=`; a layer shares one tooltip over many rows |
+| Notice, notification centre | `notify()` (`lib/notifications.ts`): a toast now and a line in the sidebar's bell, with a way back |
+| Place badge | A count beside a place in the sidebar, `setPlaceBadge()` (`lib/badges.ts`); loud when it wants the person |
+| Status item | A fact a view puts in the status bar, `useStatusItem()` (`lib/status-items.ts`); offline is one |
+| Recent | The sidebar's section of the records opened last (`lib/recent.ts`, kept in prefs), folded by its heading |
+| Getting started | Home's first steps (`lib/onboarding.ts`), each ticked by doing it, put away for good by its close button |
 | explain, ErrorNote, toastError | An error in plain words, the raw text behind Details |
 | confirm | `confirm()` from anywhere; `ConfirmHost` draws it |
 | ListToolbar, NothingMatches, DetailPage, removeRecord | The shape of a list view and a record's page, shared (`components/list-page.tsx`, `detail-page.tsx`, `remove-record.ts`) |
