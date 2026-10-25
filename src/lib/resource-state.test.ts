@@ -31,3 +31,9 @@ test("trying again after a first failure goes back to loading, with nothing to s
   const failed = next(initial<number>(), { type: "failed", error: "down" });
   assert.deepEqual(next(failed, { type: "start" }), { status: "loading", loading: true });
 });
+
+test("another key starts from what is kept for it, or the loader, never the last key's data", () => {
+  const ready = next(initial<number[]>(), { type: "loaded", data: [1, 2] });
+  assert.deepEqual(next(ready, { type: "reset" }), { status: "loading", loading: true });
+  assert.deepEqual(next(ready, { type: "reset", data: [9] }), { status: "ready", data: [9], loading: true });
+});

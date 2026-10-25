@@ -53,7 +53,9 @@ export function SettingsView() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable=true], [role=dialog], [role=menu], [role=listbox]")) return;
+      // Find a setting, once empty, lets its second Esc through (data-esc-leaves).
+      const leaves = target instanceof HTMLInputElement && "escLeaves" in target.dataset && !target.value;
+      if (!leaves && target?.closest("input, textarea, select, [contenteditable=true], [role=dialog], [role=menu], [role=listbox]")) return;
       if (document.querySelector("[role=dialog], [role=alertdialog]")) return;
       closeSettings();
     };

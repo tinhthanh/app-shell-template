@@ -73,6 +73,7 @@ export function SettingsFind() {
           placeholder={t("settings.find")}
           aria-label={t("settings.find")}
           data-testid="settings-find"
+          data-esc-leaves
           className="min-w-0 flex-1 bg-transparent text-desc text-foreground outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
         />
       </label>

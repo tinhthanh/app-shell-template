@@ -105,6 +105,8 @@ test("Esc in Find a setting clears it first, and leaves Settings only after", as
   await find.press("Escape");
   await expect(find).toHaveValue("");
   await expect(app.page.getByTestId("settings-general")).toBeVisible();
+  await find.press("Escape");
+  await expect(app.page.getByTestId("settings-general")).toHaveCount(0);
 });
 
 test("Find a setting opens the section that has it, and says when nothing does", async ({ app }) => {

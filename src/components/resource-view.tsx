@@ -7,12 +7,13 @@ import type { Resource } from "@/lib/resource";
 // ResourceView draws a read in every state it can be in, so no view forgets
 // one: the loader while nothing is here yet, an ErrorNote with Try again
 // when the first read failed, the empty state when there is nothing, and
-// else the data through children. A reload, or a reload that failed, keeps
-// the data on screen; the caller shows `loading` and `error` beside it if
-// it wants (a spinning Reload button, a toast).
+// else the data through children. A reload keeps the data on screen (the
+// caller can spin its Reload button on `loading`); a reload that failed
+// keeps it too, under a note that says so, with Try again, so data that
+// may be stale never passes for fresh.
 //
 // testid gives the states names a test can find: <testid>-loading,
-// <testid>-failed, <testid>-empty.
+// <testid>-failed, <testid>-empty, <testid>-stale.
 export function ResourceView<T>({
   resource,
   label,
@@ -46,6 +47,15 @@ export function ResourceView<T>({
         return (
           <div className="h-full" data-testid={testid && `${testid}-empty`}>
             {empty}
+          </div>
+        );
+      if (resource.error !== undefined && !resource.loading)
+        return (
+          <div className="flex h-full flex-col">
+            <div className="shrink-0 px-page pt-3" data-testid={testid && `${testid}-stale`}>
+              <ErrorNote error={resource.error} onRetry={resource.reload} />
+            </div>
+            <div className="min-h-0 flex-1">{children(resource.data)}</div>
           </div>
         );
       return <>{children(resource.data)}</>;

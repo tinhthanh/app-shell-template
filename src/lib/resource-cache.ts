@@ -47,27 +47,58 @@ export function clearCache() {
   data.clear();
 }
 
+// How many writes each key has seen: an answer from before the newest
+// write (a read that set out first, a write a newer one overtook) is older
+// than what is on screen, and is dropped rather than drawn over it.
+const writes = new Map<string, number>();
+
+export function writeCount(key: string): number {
+  return writes.get(key) ?? 0;
+}
+
+function wrote(key: string): number {
+  const n = writeCount(key) + 1;
+  writes.set(key, n);
+  return n;
+}
+
+// rowIn finds a row in a kept list, whole or a page at a time.
+function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: string): T | undefined {
+  const rows = Array.isArray(list) ? list : list?.items;
+  return rows?.find((r) => r.id === id);
+}
+
 // optimistic shows a write's result before the server confirms it: the
 // patch goes into the record (key) and its row in the list (listKey) at
 // once (kept whole or a page at a time, lib/pages.ts), write runs, and
-// what the server returns replaces both. If the
-// server refuses, both go back as they were and the error is thrown on,
-// for the caller to explain (toastError).
+// what the server returns replaces both. If the server refuses, both go
+// back as they were (the row as the list had it, even when the record was
+// never read) and the error is thrown on, for the caller to explain
+// (toastError). A newer write to the same record owns the screen: an older
+// one's answer, or its refusal, changes nothing.
 export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T> }): Promise<T> {
   const before = cached<T>(o.key);
+  const rowBefore = o.listKey ? rowIn(cached<T[] | Page<T>>(o.listKey), o.id) : undefined;
   const inList = (fn: (row: T) => T) => {
     if (o.listKey) mutate<T[] | Page<T>>(o.listKey, (l) => editRows(l, (rows) => rows.map((row) => (row.id === o.id ? fn(row) : row))));
   };
+  const mine = wrote(o.key);
+  if (o.listKey) wrote(o.listKey);
+  const newest = () => writeCount(o.key) === mine;
   mutate<T>(o.key, (x) => x && { ...x, ...o.patch });
   inList((row) => ({ ...row, ...o.patch }));
   try {
     const saved = await o.write();
-    remember(o.key, saved);
-    inList(() => saved);
+    if (newest()) {
+      remember(o.key, saved);
+      inList(() => saved);
+    }
     return saved;
   } catch (err) {
-    mutate<T>(o.key, () => before);
-    if (before) inList(() => before);
+    if (newest()) {
+      mutate<T>(o.key, () => before);
+      if (rowBefore) inList(() => rowBefore);
+    }
     throw err;
   }
 }

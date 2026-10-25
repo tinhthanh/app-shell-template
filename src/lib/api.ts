@@ -64,10 +64,13 @@ const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
 export function urlApi(s: string, origin: string = pageOrigin()): string | null {
   const raw = new URLSearchParams(s).get("api");
   if (!raw) return null;
-  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
   try {
-    const u = new URL(raw);
-    if ((u.protocol === "http:" || u.protocol === "https:") && (u.origin === origin || LOOPBACK.has(u.hostname))) return raw;
+    // Read as the browser will, against this page: a path that the parser
+    // turns into another host (/\evil.test, a tab after the slash) is a
+    // stranger's server like any other.
+    const u = new URL(raw, origin || "http://localhost");
+    if (raw.startsWith("/")) return u.origin === (origin || "http://localhost") && !/[\\\s]/.test(raw) ? raw : null;
+    if (/^https?:\/\//i.test(raw) && (u.origin === origin || LOOPBACK.has(u.hostname))) return raw;
   } catch {
     // Not a URL: refused like a stranger's.
   }
@@ -131,7 +134,15 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
     if (res.status === 401) o.onUnauthorized?.();
     throw new ApiError(message, res.status, code, field);
   }
-  return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+  if (res.status === 204) return undefined as T;
+  // A 200 that isn't JSON (a host serving index.html for a wrong apiUrl) is
+  // the API failing, said as the app's error, not a SyntaxError.
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(text.trim().slice(0, 200) || "An empty answer.", res.status, "bad_response");
+  }
 }
 
 // listQuery writes a list's query as a URL's search, leaving out what is

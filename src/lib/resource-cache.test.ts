@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { cached, clearCache, forget, mutate, optimistic, remember, subscribe } from "./resource-cache.ts";
+import { cached, clearCache, forget, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
 
 test.beforeEach(clearCache);
 
@@ -66,4 +66,30 @@ test("an optimistic write with nothing kept yet keeps what the server returned",
   const saved = await optimistic<Row>({ key: "row:z", id: "z", patch: { status: "paused" }, write: async () => ({ id: "z", status: "paused", name: "Z" }) });
   assert.equal(saved.id, "z");
   assert.equal(cached<Row>("row:z")?.name, "Z");
+});
+
+test("of two quick writes to one record, the newer owns the screen whichever answers last", async () => {
+  remember<Row>("row:q", { id: "q", status: "active", name: "Q" });
+  remember<Row[]>("rows:q", [{ id: "q", status: "active", name: "Q" }]);
+  let first: (r: Row) => void = () => {};
+  const a = optimistic<Row>({ key: "row:q", listKey: "rows:q", id: "q", patch: { status: "paused" }, write: () => new Promise((r) => (first = r)) });
+  const b = optimistic<Row>({ key: "row:q", listKey: "rows:q", id: "q", patch: { status: "archived" }, write: async () => ({ id: "q", status: "archived", name: "Q" }) });
+  await b;
+  first({ id: "q", status: "paused", name: "Q" });
+  await a;
+  assert.equal(cached<Row>("row:q")?.status, "archived");
+  assert.equal(cached<Row[]>("rows:q")?.[0]?.status, "archived");
+});
+
+test("a refused write puts the list's row back even when the record itself was never read", async () => {
+  remember<Row[]>("rows:never", [{ id: "n", status: "active", name: "N" }]);
+  await assert.rejects(optimistic<Row>({ key: "row:never", listKey: "rows:never", id: "n", patch: { status: "paused" }, write: () => Promise.reject(new Error("no")) }), /no/);
+  assert.equal(cached<Row[]>("rows:never")?.[0]?.status, "active");
+});
+
+test("a write counts against its record and its list, so a read that set out before it is older", async () => {
+  const before = writeCount("row:w");
+  await optimistic<Row>({ key: "row:w", listKey: "rows:w", id: "w", patch: { status: "paused" }, write: async () => ({ id: "w", status: "paused", name: "W" }) });
+  assert.equal(writeCount("row:w"), before + 1);
+  assert.equal(writeCount("rows:w"), 1);
 });
