@@ -5,23 +5,38 @@ import { mock, test } from "node:test";
 
 import { ApiError, errorBody, httpClient, listQuery, READ_TIMEOUT_MS } from "./api.ts";
 
-type Answer = { status: number; body?: string; json?: unknown; hang?: boolean; throws?: Error };
+type Answer = { status: number; body?: string; json?: unknown; hang?: boolean; throws?: Error; headers?: Record<string, string> };
 const calls: { url: string; init: RequestInit }[] = [];
 let answer: Answer = { status: 200, json: [] };
+// Answers given one call each, before `answer` takes over.
+let queue: Answer[] = [];
 (globalThis as unknown as { fetch: unknown }).fetch = (url: string, init: RequestInit) => {
   calls.push({ url, init });
+  return reply(queue.shift() ?? answer, init);
+};
+function reply(answer: Answer, init: RequestInit) {
   if (answer.throws) return Promise.reject(answer.throws);
   if (answer.hang)
     return new Promise((_, reject) => {
       init.signal?.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })));
     });
   const text = answer.body ?? JSON.stringify(answer.json);
-  return Promise.resolve({ ok: answer.status < 400, status: answer.status, statusText: "", text: () => Promise.resolve(text), json: () => Promise.resolve(JSON.parse(text)) });
-};
-const client = httpClient("http://api.test");
+  const headers = new Map(Object.entries(answer.headers ?? {}));
+  return Promise.resolve({
+    ok: answer.status < 400,
+    status: answer.status,
+    statusText: "",
+    headers: { get: (k: string) => headers.get(k) ?? null },
+    text: () => Promise.resolve(text),
+    json: () => Promise.resolve(JSON.parse(text)),
+  });
+}
+// No waiting between retries here; the delays themselves are RETRY_DELAYS_MS.
+const client = httpClient("http://api.test", { retryDelays: [0, 0] });
 
 test.beforeEach(() => {
   calls.length = 0;
+  queue = [];
   answer = { status: 200, json: [] };
 });
 
@@ -171,4 +186,49 @@ test("?api= may point at this origin or this machine, never at a stranger's serv
 test("an answer that isn't JSON is the app's error, with what came back as its details", async () => {
   answer = { status: 200, body: "<!doctype html><title>App</title>" };
   await assert.rejects(client.project("p-shop"), (e: unknown) => e instanceof ApiError && e.code === "bad_response" && e.message.startsWith("<!doctype html>"));
+});
+
+test("a read the network dropped or a busy server turned away is tried twice more, then comes", async () => {
+  queue = [
+    { status: 0, throws: new TypeError("Failed to fetch") },
+    { status: 503, body: "busy" },
+  ];
+  answer = { status: 200, json: { id: "p", name: "P" } };
+  assert.equal((await client.project("p")).name, "P");
+  assert.equal(calls.length, 3);
+});
+
+test("a read that keeps failing gives up after the third try, with the server's error", async () => {
+  answer = { status: 503, body: "busy" };
+  await assert.rejects(client.project("p"), (e: unknown) => e instanceof ApiError && e.status === 503);
+  assert.equal(calls.length, 3);
+});
+
+test("a write, a refusal or a 404 is never tried again", async () => {
+  answer = { status: 503, body: "busy" };
+  await assert.rejects(client.updateProject("p", { status: "paused" }));
+  assert.equal(calls.length, 1);
+  answer = { status: 404, body: "gone" };
+  await assert.rejects(client.project("p"));
+  assert.equal(calls.length, 2);
+});
+
+test("a server's Retry-After sets the wait before the next try", async () => {
+  const slow = httpClient("http://api.test", { retryDelays: [5000] });
+  queue = [{ status: 429, body: "slow down", headers: { "Retry-After": "0.05" } }];
+  answer = { status: 200, json: [] };
+  const started = Date.now();
+  await slow.projectTags();
+  assert.ok(Date.now() - started < 1000, "waited the server's 50 ms, not the 5 s default");
+  assert.equal(calls.length, 2);
+});
+
+test("a read called off stops, and isn't tried again", async () => {
+  const slow = httpClient("http://api.test", { retryDelays: [5000] });
+  answer = { status: 503, body: "busy" };
+  const ctrl = new AbortController();
+  const read = slow.project("p", { signal: ctrl.signal });
+  setTimeout(() => ctrl.abort(), 10);
+  await assert.rejects(read, (e: unknown) => e instanceof ApiError && e.code === "aborted");
+  assert.equal(calls.length, 1);
 });

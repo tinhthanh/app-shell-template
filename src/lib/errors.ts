@@ -9,6 +9,9 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code?: string;
   readonly field?: string;
+  // How long the server asked to be left before the next try (a 429's or a
+  // 503's Retry-After), in milliseconds.
+  retryAfter?: number;
   constructor(message: string, status: number, code?: string, field?: string) {
     super(message);
     this.name = "ApiError";

@@ -64,15 +64,16 @@ export function CommandPalette() {
       setHits([]);
       return;
     }
-    let live = true;
+    // A newer query calls the older one's request off, not only its answer.
+    const ctrl = new AbortController();
     const timer = window.setTimeout(() => {
-      client.search(q).then(
-        (h) => live && setHits(h),
-        () => live && setHits([]),
+      client.search(q, { signal: ctrl.signal }).then(
+        (h) => !ctrl.signal.aborted && setHits(h),
+        () => !ctrl.signal.aborted && setHits([]),
       );
     }, 150);
     return () => {
-      live = false;
+      ctrl.abort();
       window.clearTimeout(timer);
     };
   }, [query]);

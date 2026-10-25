@@ -10,13 +10,24 @@ import type { Page } from "./types.ts";
 const data = new Map<string, unknown>();
 const subscribers = new Map<string, Set<(value: unknown) => void>>();
 
+// How many answers are kept: a list's every filter and every record opened
+// is a key, so a long session would keep them all. The least lately used go
+// first; one on screen (with a subscriber) is never dropped.
+export const MAX_KEPT = 100;
+
 export function cached<T>(key: string): T | undefined {
   return data.get(key) as T | undefined;
 }
 
 // remember keeps an answer and tells whoever shows that key.
 export function remember<T>(key: string, value: T) {
+  // Set afresh, so the key is the newest in the map's order.
+  data.delete(key);
   data.set(key, value);
+  for (const old of data.keys()) {
+    if (data.size <= MAX_KEPT) break;
+    if (!subscribers.get(old)?.size) data.delete(old);
+  }
   for (const fn of subscribers.get(key) ?? []) fn(value);
 }
 

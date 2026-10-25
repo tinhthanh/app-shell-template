@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Typing in a list's search asks the server once you pause, not once a letter, and a search or a filter you've moved on from stops its request; a read the network dropped or a busy server turned away is tried twice more by itself before it says so.
+
 - Another filter shows the loader until its rows come, never the last filter's rows; a reload that fails keeps the rows under a note that says so, with Try again.
 - Two quick changes to one record keep the second; a refused change puts a list's row back even when the record was never opened.
 - While a form or a confirm is open, a place's shortcut, ⌘, and ⌘\ do nothing, so what was typed stays.

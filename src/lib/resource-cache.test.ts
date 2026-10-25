@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { cached, clearCache, forget, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
+import { cached, clearCache, forget, MAX_KEPT, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
 
 test.beforeEach(clearCache);
 
@@ -92,4 +92,19 @@ test("a write counts against its record and its list, so a read that set out bef
   await optimistic<Row>({ key: "row:w", listKey: "rows:w", id: "w", patch: { status: "paused" }, write: async () => ({ id: "w", status: "paused", name: "W" }) });
   assert.equal(writeCount("row:w"), before + 1);
   assert.equal(writeCount("rows:w"), 1);
+});
+
+test("a long session keeps the answers used last, and never drops one on screen", () => {
+  clearCache();
+  const stop = subscribe("on-screen", () => {});
+  remember("on-screen", 0);
+  for (let i = 0; i < MAX_KEPT + 20; i++) remember(`k${i}`, i);
+  assert.equal(cached("on-screen"), 0);
+  assert.equal(cached("k0"), undefined);
+  assert.equal(cached(`k${MAX_KEPT + 19}`), MAX_KEPT + 19);
+  // Used again, an old key is the newest.
+  remember("k30", "again");
+  for (let i = 0; i < 40; i++) remember(`n${i}`, i);
+  assert.equal(cached("k30"), "again");
+  stop();
 });
