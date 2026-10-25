@@ -72,7 +72,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     id: "new project dialog",
     run: async (app) => {
       await app.nav("projects").click();
-      await app.page.getByRole("button", { name: "New project" }).click();
+      await app.page.getByTestId("projects").getByRole("button", { name: "New project" }).click();
       await expect(app.page.getByRole("dialog", { name: "New project" })).toBeVisible();
     },
   },
@@ -137,6 +137,22 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
       await app.page.getByRole("button", { name: "Send a notification" }).click();
       await app.page.getByTestId("notifications").click();
       await expect(app.page.getByTestId("notification-centre").getByTestId("notice")).toBeVisible();
+    },
+  },
+  {
+    id: "the rail's more places open",
+    run: async (app) => {
+      await app.open();
+      await app.page.getByTestId("more-places").click();
+      await expect(app.page.getByTestId("pin-kit")).toBeVisible();
+    },
+  },
+  {
+    id: "new workspace dialog",
+    run: async (app) => {
+      await app.open();
+      await app.page.getByTestId("new-workspace").click();
+      await expect(app.page.getByRole("dialog", { name: "New workspace" })).toBeVisible();
     },
   },
   {

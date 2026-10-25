@@ -4,6 +4,8 @@
 // raises its first letter, so the English on the page is the raw value.
 
 export const en = {
+  "projects.column.empty": "No projects here yet.",
+  "projects.column.new": "New project",
   "projects.title": "Projects",
   "projects.countMatch": "{n} match",
   "projects.countAll": "{n} in all",
@@ -42,6 +44,8 @@ export const en = {
 } as const;
 
 export const vi: Record<keyof typeof en, string> = {
+  "projects.column.empty": "Chưa có dự án nào ở đây.",
+  "projects.column.new": "Dự án mới",
   "projects.title": "Dự án",
   "projects.countMatch": "{n} kết quả phù hợp",
   "projects.countAll": "Tổng cộng {n}",

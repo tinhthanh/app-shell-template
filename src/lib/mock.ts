@@ -1,5 +1,5 @@
 import type { Client } from "@/lib/api";
-import type { Project, Role, SearchHit, User } from "@/lib/types";
+import type { Project, Role, SearchHit, User, Workspace } from "@/lib/types";
 import { ApiError } from "./errors.ts";
 import { pageOf, sortRows } from "./pages.ts";
 import { type Action, can } from "./permissions.ts";
@@ -30,14 +30,51 @@ const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
 
 export const FIXTURES: Project[] = [
-  { id: "p-shop", name: "Shop", description: "The storefront and its checkout.", status: "active", owner: "alex", tags: ["web", "payments"], updatedAt: ago(12) },
-  { id: "p-api", name: "Public API", description: "REST and webhooks for partners.", status: "active", owner: "sam", tags: ["backend"], updatedAt: ago(45) },
-  { id: "p-ios", name: "iOS app", description: "The customer app on iPhone.", status: "active", owner: "priya", tags: ["mobile"], updatedAt: ago(130) },
-  { id: "p-android", name: "Android app", description: "The customer app on Android.", status: "paused", owner: "priya", tags: ["mobile"], updatedAt: ago(60 * 26) },
-  { id: "p-warehouse", name: "Warehouse", description: "Stock, picking and shipping labels.", status: "active", owner: "jordan", tags: ["backend", "ops"], updatedAt: ago(60 * 5) },
-  { id: "p-docs", name: "Docs", description: "The help centre and the API reference.", status: "active", owner: "alex", tags: ["web"], updatedAt: ago(60 * 50) },
-  { id: "p-legacy", name: "Legacy admin", description: "The old back office, read only since the move.", status: "archived", owner: "sam", tags: ["web", "ops"], updatedAt: ago(60 * 24 * 40) },
-  { id: "p-design", name: "Design system", description: "Tokens, components and the Figma library.", status: "active", owner: "mina", tags: ["web", "design"], updatedAt: ago(60 * 24 * 3) },
+  { id: "p-shop", workspace: "w-acme", name: "Shop", description: "The storefront and its checkout.", status: "active", owner: "alex", tags: ["web", "payments"], updatedAt: ago(12) },
+  { id: "p-api", workspace: "w-acme", name: "Public API", description: "REST and webhooks for partners.", status: "active", owner: "sam", tags: ["backend"], updatedAt: ago(45) },
+  { id: "p-ios", workspace: "w-acme", name: "iOS app", description: "The customer app on iPhone.", status: "active", owner: "priya", tags: ["mobile"], updatedAt: ago(130) },
+  { id: "p-android", workspace: "w-acme", name: "Android app", description: "The customer app on Android.", status: "paused", owner: "priya", tags: ["mobile"], updatedAt: ago(60 * 26) },
+  {
+    id: "p-warehouse",
+    workspace: "w-acme",
+    name: "Warehouse",
+    description: "Stock, picking and shipping labels.",
+    status: "active",
+    owner: "jordan",
+    tags: ["backend", "ops"],
+    updatedAt: ago(60 * 5),
+  },
+  { id: "p-docs", workspace: "w-acme", name: "Docs", description: "The help centre and the API reference.", status: "active", owner: "alex", tags: ["web"], updatedAt: ago(60 * 50) },
+  {
+    id: "p-legacy",
+    workspace: "w-acme",
+    name: "Legacy admin",
+    description: "The old back office, read only since the move.",
+    status: "archived",
+    owner: "sam",
+    tags: ["web", "ops"],
+    updatedAt: ago(60 * 24 * 40),
+  },
+  {
+    id: "p-design",
+    workspace: "w-acme",
+    name: "Design system",
+    description: "Tokens, components and the Figma library.",
+    status: "active",
+    owner: "mina",
+    tags: ["web", "design"],
+    updatedAt: ago(60 * 24 * 3),
+  },
+  // Globex's: a second workspace on the rail (lib/workspace.ts).
+  { id: "p-billing", workspace: "w-globex", name: "Billing", description: "Invoices, plans and the card vault.", status: "active", owner: "jordan", tags: ["payments"], updatedAt: ago(20) },
+  { id: "p-portal", workspace: "w-globex", name: "Partner portal", description: "Where resellers place their orders.", status: "paused", owner: "mina", tags: ["web"], updatedAt: ago(60 * 30) },
+];
+
+// The workspaces the person belongs to: Acme holds the projects above,
+// Globex two more, with one thing waiting (the rail's dot).
+export const WORKSPACES: Workspace[] = [
+  { id: "w-acme", name: "Acme" },
+  { id: "w-globex", name: "Globex", attention: 1 },
 ];
 
 // many is 5,000 invented projects, the same every time.
@@ -48,6 +85,7 @@ export function many(count = 5000): Project[] {
   const statuses: Project["status"][] = ["active", "active", "paused", "archived"];
   return Array.from({ length: count }, (_, i) => ({
     id: `p-${i + 1}`,
+    workspace: "w-acme",
     name: `${words[i % words.length]} ${Math.floor(i / words.length) + 1}`,
     description: `Project number ${i + 1} of the acme fleet.`,
     status: statuses[i % statuses.length] as Project["status"],
@@ -110,6 +148,7 @@ export function mockClient(given: MockOptions = {}): Client {
   const opts = { ...fromUrl(), ...given };
   const latency = opts.latency ?? 0;
   let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? (opts.many ? many() : FIXTURES));
+  let workspaces: Workspace[] = structuredClone(WORKSPACES);
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
   const me = { ...ALEX, role: opts.role ?? ALEX.role };
   let user: User | null = opts.signedOut ? null : me;
@@ -146,13 +185,40 @@ export function mockClient(given: MockOptions = {}): Client {
       if (query.cursor && opts.failMore && ++laterPages === 1) throw down();
       const q = query.q?.trim().toLowerCase();
       const match = projects.filter(
-        (p) => (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) && (!query.status || p.status === query.status) && (query.tags ?? []).every((t) => p.tags.includes(t)),
+        (p) =>
+          (!query.workspace || p.workspace === query.workspace) &&
+          (!q || `${p.name} ${p.description} ${p.owner}`.toLowerCase().includes(q)) &&
+          (!query.status || p.status === query.status) &&
+          (query.tags ?? []).every((t) => p.tags.includes(t)),
       );
       return structuredClone(pageOf(sortRows(match, query.sort, SORTS), query.cursor, query.limit));
     },
-    async projectTags() {
+    async projectTags(o = {}) {
       await guard();
-      return [...new Set(projects.flatMap((p) => p.tags))].sort();
+      return [...new Set(projects.filter((p) => !o.workspace || p.workspace === o.workspace).flatMap((p) => p.tags))].sort();
+    },
+    async workspaces() {
+      // Asked once after signing in, as me() is: it isn't failOnce's first
+      // call, which is for the read the person is looking at.
+      await wait();
+      if (opts.fail) throw down();
+      if (!user) throw unauthorized();
+      return structuredClone(workspaces);
+    },
+    async createWorkspace(input) {
+      await guard(true);
+      const name = input.name.trim();
+      if (!name) throw new ApiError("A workspace needs a name.", 422, "invalid", "name");
+      if (workspaces.some((w) => w.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`You're already in a workspace called ${name}.`, 422, "invalid", "name");
+      const w: Workspace = {
+        id: `w-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}`,
+        name,
+      };
+      workspaces = [...workspaces, w];
+      return structuredClone(w);
     },
     async project(id) {
       await guard();
@@ -177,7 +243,16 @@ export function mockClient(given: MockOptions = {}): Client {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")}`;
-      const p: Project = { id, name, description: input.description.trim(), status: "active", owner: "you", tags: [], updatedAt: new Date().toISOString() };
+      const p: Project = {
+        id,
+        workspace: input.workspace ?? WORKSPACES[0]?.id ?? "w-acme",
+        name,
+        description: input.description.trim(),
+        status: "active",
+        owner: "you",
+        tags: [],
+        updatedAt: new Date().toISOString(),
+      };
       projects = [p, ...projects];
       return structuredClone(p);
     },

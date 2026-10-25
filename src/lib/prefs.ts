@@ -29,6 +29,10 @@ export interface Prefs {
   recent: RecentItem[];
   // The sidebar's sections folded away, by id (Recent).
   folded: string[];
+  // The workspace on show (lib/workspace.ts): null until the list says which.
+  workspace: string | null;
+  // The places pinned to the rail, in order; the rest are under its "…" (components/app-sidebar.tsx).
+  railPlaces: string[] | null;
   // Home's getting-started list: the steps taken, and whether it was put away (lib/onboarding.ts).
   onboarding: { done: string[]; dismissed: boolean };
 }
@@ -43,6 +47,8 @@ export const DEFAULTS: Prefs = {
   language: "system",
   recent: [],
   folded: [],
+  workspace: null,
+  railPlaces: null,
   onboarding: { done: [], dismissed: false },
 };
 
@@ -78,6 +84,8 @@ export const usePrefs = create<Prefs>()(() => ({
   language: saved.language === "system" || LANGUAGE_IDS.includes(saved.language as never) ? (saved.language as LanguageChoice) : "system",
   // A save from before these, or one that isn't their shape, starts them afresh.
   recent: Array.isArray(saved.recent) ? saved.recent.filter(isRecentItem).slice(0, MAX_RECENT) : [],
+  workspace: typeof saved.workspace === "string" ? saved.workspace : null,
+  railPlaces: Array.isArray(saved.railPlaces) ? saved.railPlaces.filter((p): p is string => typeof p === "string") : null,
   folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
   onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
 }));

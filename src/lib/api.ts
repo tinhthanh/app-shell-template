@@ -1,7 +1,7 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
 import { ApiError } from "./errors.ts";
 import { signedOut } from "./session.ts";
-import type { Page, Project, ProjectQuery, SearchHit, User } from "./types.ts";
+import type { Page, Project, ProjectQuery, SearchHit, User, Workspace } from "./types.ts";
 
 // What a read can be given: a signal that calls it off when its answer is
 // no longer wanted (another filter, a view that left; lib/resource.ts).
@@ -21,10 +21,14 @@ export interface Client {
   // A page of the projects that match, filtered and sorted by the server.
   projects(query?: ProjectQuery, o?: ReadOptions): Promise<Page<Project>>;
   // Every tag in use, for the list's filter chips.
-  projectTags(o?: ReadOptions): Promise<string[]>;
+  // Every tag in use in a workspace (all of them when left out).
+  projectTags(o?: ReadOptions & { workspace?: string }): Promise<string[]>;
+  // The workspaces the person belongs to, and making a new one.
+  workspaces(o?: ReadOptions): Promise<Workspace[]>;
+  createWorkspace(input: Pick<Workspace, "name">): Promise<Workspace>;
   project(id: string, o?: ReadOptions): Promise<Project>;
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
-  createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
+  createProject(input: Pick<Project, "name" | "description"> & { workspace?: string }): Promise<Project>;
   deleteProject(id: string): Promise<void>;
   // The records that match a few letters, best first (the palette).
   search(query: string, o?: ReadOptions): Promise<SearchHit[]>;
@@ -213,7 +217,9 @@ export function httpClient(base: string, o: ClientOptions = {}): Client {
   const c = <T>(method: string, path: string, body?: unknown, signal?: AbortSignal) => call<T>(base, method, path, body, o, signal);
   return {
     projects: (query, r) => c("GET", `/projects${listQuery(query)}`, undefined, r?.signal),
-    projectTags: (r) => c("GET", "/project-tags", undefined, r?.signal),
+    projectTags: (r) => c("GET", `/project-tags${listQuery({ workspace: r?.workspace })}`, undefined, r?.signal),
+    workspaces: (r) => c("GET", "/workspaces", undefined, r?.signal),
+    createWorkspace: (input) => c("POST", "/workspaces", input),
     project: (id, r) => c("GET", `/projects/${encodeURIComponent(id)}`, undefined, r?.signal),
     updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
     createProject: (input) => c("POST", "/projects", input),

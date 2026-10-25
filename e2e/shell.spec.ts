@@ -14,7 +14,6 @@ test("the sidebar's places open their views, and ⌘1–9 jump to them", async (
   // One place is current, and only one, in the sidebar and in the rail.
   await expect(app.page.locator("[data-testid=sidebar] [aria-current=page]")).toHaveCount(1);
   await expect(app.nav("projects")).toHaveAttribute("aria-current", "page");
-  await expect(app.page.locator("[data-testid=sidebar] [data-active=true]")).toHaveCount(1);
   await expect(app.page).toHaveTitle(`Projects — ${APP_NAME}`);
   // ⌘1–9 follow the sidebar's order, whatever it is.
   const ids = await app.page.locator("[data-testid=sidebar] [data-testid^=nav-]").evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!.slice(4)));
@@ -84,7 +83,8 @@ test("the keyboard shortcuts sheet lists every shortcut", async ({ app }) => {
   await expect(sheet).toHaveCount(0);
 });
 
-const width = async (page: Page) => Math.round((await page.getByTestId("sidebar").boundingBox())!.width);
+// The sheet beside the rail is what the edge sizes.
+const width = async (page: Page) => Math.round((await page.getByTestId("sidebar-sheet").boundingBox())!.width);
 
 test("the sidebar's edge drags it wider, and double-click puts the default back", async ({ app }) => {
   await app.open();
@@ -357,7 +357,7 @@ test("a right-to-left page mirrors: the sidebar sits on the right, and its edge'
 test("in Vietnamese the sidebar, the palette and a project's date speak Vietnamese, and the section stays in front when the language changes", async ({ app }) => {
   await app.open({ prefs: { language: "vi" }, hash: "/projects/p-shop" });
   await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
-  await expect(app.nav("settings")).toContainText("Cài đặt");
+  await expect(app.nav("settings")).toHaveAttribute("aria-label", "Cài đặt");
   const detail = app.page.getByTestId("project-detail");
   await expect(detail.getByText("12 phút trước")).toBeVisible();
   await app.page.keyboard.press(`${mod()}+k`);

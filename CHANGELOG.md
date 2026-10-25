@@ -5,6 +5,9 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The sidebar is a rail beside a sheet, as Shipyard's is: the rail has the places (the rest under its "…", where you choose which stay on it), your workspaces as tiles (the one on show raised, a dot when something in one waits, a + to make another) and Settings; the sheet shows the workspace, search and the open place's own list, with Projects grouped by status. ⌘\ folds the sheet away and leaves the rail.
+- Projects belong to a workspace: picking another on the rail lists its projects, and a project opened from a link brings its workspace with it. The list-only sidebar is gone.
+
 - The sidebar has a bell: what happened while you were elsewhere (a status change, an export) shows as a toast and stays there, unread until you look, with a way back to it.
 - A place in the sidebar shows its count (Projects 8), and the records you opened last sit under Recent, which folds away and remembers it.
 - Offline, the status bar says so; back online the word goes. Views can put their own facts there.

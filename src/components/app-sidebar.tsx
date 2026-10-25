@@ -1,8 +1,9 @@
-import { ChevronDownIcon, LogOutIcon, MenuIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SearchIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronDownIcon, LogOutIcon, MenuIcon, PanelLeftCloseIcon, SearchIcon } from "lucide-react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { toastError } from "@/components/error-note";
 import { ink, inkScale } from "@/components/ink";
 import { NotificationBell } from "@/components/notices";
+import { RAIL, WorkspaceAvatar, WorkspaceHeader, WorkspaceRail } from "@/components/sidebar-rail";
 import { SidebarResizeHandle } from "@/components/sidebar-resize-handle";
 import { Tip } from "@/components/tip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,12 +18,13 @@ import { usePlaceBadges } from "@/lib/badges";
 import { t } from "@/lib/i18n";
 import { isActive, type Place, places, RECORD_KINDS } from "@/lib/nav";
 import { roleWords } from "@/lib/permissions";
-import { IS_MAC, platformKeys } from "@/lib/platform";
+import { IS_MAC } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { signedOut, useSession } from "@/lib/session";
-import { RAIL_WIDTH, SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN } from "@/lib/sidebar-width";
+import { SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN } from "@/lib/sidebar-width";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 
 // The sidebar is always open on a desktop window; coss ui's menu pieces only
 // need to know that.
@@ -50,57 +52,83 @@ export function AppSidebar() {
   const narrow = useIsMobile();
   const phone = usePhone();
   if (phone) return null;
-  if (collapsed || narrow) return <Rail fixed={narrow} />;
+  const folded = collapsed || narrow;
+  // The sheet's width is --sidebar-w (prefs), or --sidebar-live as a drag
+  // runs, held to the narrowest and widest (lib/sidebar-width) even as the
+  // window shrinks; the rail sits beside it.
+  const sheet = `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))`;
 
   return (
     <SidebarContext.Provider value={context}>
-      {/* Its width is --sidebar-w (prefs), or --sidebar-live as a drag runs,
-          held to the narrowest and widest (lib/sidebar-width) even as the
-          window shrinks. */}
       <aside
         aria-label={t("shell.sidebar")}
-        data-testid="sidebar"
-        style={{ width: `clamp(${SIDEBAR_MIN}px, var(--sidebar-live, var(--sidebar-w, ${SIDEBAR_DEFAULT}px)), max(${SIDEBAR_DEFAULT}px, min(${SIDEBAR_MAX}px, 40vw)))` }}
+        data-testid={folded ? "sidebar-rail" : "sidebar"}
+        data-fixed={(folded && narrow) || undefined}
+        // Its own end border comes on top, so the sheet is the width it was given.
+        style={{ width: folded ? RAIL + 1 : `calc(${RAIL}px + ${sheet} + 1px)` }}
         className={cn("@container/side relative flex shrink-0 flex-col border-sidebar-border border-e bg-sidebar text-sidebar-foreground", inkScale)}
       >
-        <div className="flex h-bar shrink-0 items-center gap-2 ps-lane pe-edge">
-          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
-          <span className="min-w-0 flex-1 truncate font-medium text-desc text-foreground">{APP_NAME}</span>
-          <NotificationBell />
-          <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="right">
-            <button
-              type="button"
-              aria-label={t("shell.hideSidebar")}
-              onClick={() => setPrefs({ sidebarCollapsed: true })}
-              className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-            >
-              <PanelLeftCloseIcon className="size-3.5" />
-            </button>
-          </Tip>
-        </div>
-
-        <div className="px-2 pb-1">
-          <button
-            type="button"
-            onClick={() => useStore.getState().setPaletteOpen(true)}
-            className="mb-1.5 flex h-7 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2 text-desc text-muted-foreground hover:bg-sidebar-accent"
-          >
-            <SearchIcon className="size-3.5" />
-            <span className="flex-1 text-start">{t("shell.search")}</span>
-            <Kbd className="h-4.5 text-tag">⌘K</Kbd>
-          </button>
-          <Places footer={false} />
-        </div>
-        <Recent />
-
-        <div className="mt-auto px-2 pb-2">
-          <Places footer />
-          <Account />
+        {!folded && <TopStrip />}
+        <div className="flex min-h-0 flex-1">
+          <WorkspaceRail folded={folded} fixed={narrow} />
+          {!folded && <SidebarSheet />}
         </div>
         {/* Last in the Tab order: the edge is reached after the places, not before the app's name. */}
-        <SidebarResizeHandle />
+        {!narrow && <SidebarResizeHandle folded={folded} />}
       </aside>
     </SidebarContext.Provider>
+  );
+}
+
+// TopStrip is the band over the rail and the sheet: the app's mark and name,
+// then the notifications and the way to fold the sheet away.
+function TopStrip() {
+  return (
+    <div className="flex h-bar shrink-0 items-center gap-2 ps-lane pe-edge">
+      <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
+      <span className="min-w-0 flex-1 truncate font-medium text-desc text-foreground">{APP_NAME}</span>
+      <NotificationBell className="size-7 rounded-lg [&_svg]:size-4" />
+      <Tip label={t("shell.hideSidebarTip", { keys: "⌘\\" })} side="bottom">
+        <button
+          type="button"
+          aria-label={t("shell.hideSidebar")}
+          onClick={() => setPrefs({ sidebarCollapsed: true })}
+          className={cn("inline-flex size-7 items-center justify-center rounded-lg hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-4", ink.glyph)}
+        >
+          <PanelLeftCloseIcon className="rtl:-scale-x-100" />
+        </button>
+      </Tip>
+    </div>
+  );
+}
+
+// SidebarSheet is beside the rail, on its own raised card: the workspace on show,
+// search, and the open place's own list (Projects' by status; elsewhere
+// the records opened last). Its top and start border carry on the strip's.
+const ProjectsColumn = lazy(() => import("@/views/projects/projects-column"));
+
+function SidebarSheet() {
+  const kind = useStore((s) => s.view.kind);
+  const role = useSession((s) => s.user?.role);
+  return (
+    <div data-testid="sidebar-sheet" className="flex min-w-0 flex-1 flex-col rounded-ss-xl border-sidebar-border border-s border-t bg-background">
+      <WorkspaceHeader subtitle={role ? roleWords(role) : undefined} />
+      <div className="shrink-0 px-edge pb-1">
+        <button
+          type="button"
+          onClick={() => useStore.getState().setPaletteOpen(true)}
+          className="flex h-8 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-background px-2.5 text-start shadow-xs/5 hover:border-foreground/20"
+        >
+          <SearchIcon className={cn("size-3.5 shrink-0", ink.glyph)} />
+          <span className={cn("flex-1 text-desc", ink.faint)}>{t("shell.search")}</span>
+          <Kbd className="h-4.5 text-tag">⌘K</Kbd>
+        </button>
+      </div>
+      <Suspense>{kind === "projects" ? <ProjectsColumn /> : <Recent />}</Suspense>
+      <div className="mt-auto px-edge pb-2">
+        <Account />
+      </div>
+    </div>
   );
 }
 
@@ -229,84 +257,6 @@ function placeNumber(p: Place, fallback: number): number {
   return (i >= 0 ? i : fallback) + 1;
 }
 
-// Rail is the folded sidebar: the places as icons, each with a tooltip.
-// fixed: the window is too narrow to open it.
-function Rail({ fixed = false }: { fixed?: boolean }) {
-  const view = useStore((s) => s.view);
-  return (
-    <aside
-      aria-label={t("shell.sidebar")}
-      data-testid="sidebar-rail"
-      data-fixed={fixed || undefined}
-      style={{ width: RAIL_WIDTH }}
-      className={cn("relative flex shrink-0 flex-col items-center border-sidebar-border border-e bg-sidebar text-sidebar-foreground", inkScale)}
-    >
-      <div className="flex h-10 shrink-0 items-center">
-        {fixed ? (
-          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-4.5 rounded" />
-        ) : (
-          <Tip label={t("shell.showSidebarTip", { keys: "⌘\\" })} side="right">
-            <button
-              type="button"
-              aria-label={t("shell.showSidebar")}
-              onClick={() => setPrefs({ sidebarCollapsed: false })}
-              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-            >
-              <PanelLeftOpenIcon className="size-4" />
-            </button>
-          </Tip>
-        )}
-      </div>
-      <Tip label={t("shell.searchTip", { keys: platformKeys("⌘K") })} side="right">
-        <button
-          type="button"
-          aria-label={t("shell.search")}
-          onClick={() => useStore.getState().setPaletteOpen(true)}
-          className="mb-2 inline-flex size-9 items-center justify-center rounded-lg border border-sidebar-border bg-background/50 text-muted-foreground hover:bg-sidebar-accent"
-        >
-          <SearchIcon className="size-4" />
-        </button>
-      </Tip>
-      <nav aria-label={t("shell.places")} className="flex flex-col gap-1">
-        {places()
-          .filter((p) => !p.footer)
-          .map((p) => (
-            <RailButton key={p.id} place={p} active={isActive(p, view)} />
-          ))}
-      </nav>
-      <div className="mt-auto flex flex-col items-center gap-1 pb-2">
-        {places()
-          .filter((p) => p.footer)
-          .map((p) => (
-            <RailButton key={p.id} place={p} active={isActive(p, view)} />
-          ))}
-        <Account compact />
-      </div>
-      {!fixed && <SidebarResizeHandle folded />}
-    </aside>
-  );
-}
-
-function RailButton({ place, active }: { place: Place; active: boolean }) {
-  return (
-    <Tip label={place.label} side="right">
-      <button
-        type="button"
-        aria-label={place.label}
-        aria-current={active ? "page" : undefined}
-        data-testid={`nav-${place.id}`}
-        onClick={() => useStore.getState().setView({ ...place.view })}
-        className={cn(
-          "inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-4.5",
-          active && "bg-sidebar-accent text-foreground",
-        )}
-      >
-        {place.icon}
-      </button>
-    </Tip>
-  );
-}
-
 // Account is who is signed in, with Sign out in its menu (lib/session.ts);
 // nothing while the app has no session yet or runs without one.
 function Account({ compact = false }: { compact?: boolean }) {
@@ -386,6 +336,7 @@ export function PhoneBar() {
           </SheetHeader>
           <SheetPanel className="flex flex-col gap-4 px-2">
             <SidebarContext.Provider value={context}>
+              <PhoneWorkspaces onGo={() => setOpen(false)} />
               <Places footer={false} onGo={() => setOpen(false)} />
               <Places footer onGo={() => setOpen(false)} />
               <Account />
@@ -403,5 +354,37 @@ export function PhoneBar() {
         <SearchIcon className="size-4.5" />
       </button>
     </header>
+  );
+}
+
+// PhoneWorkspaces is the rail's workspaces in the phone's sheet: a row each,
+// the one on show lit.
+function PhoneWorkspaces({ onGo }: { onGo(): void }) {
+  const list = useWorkspaces((s) => s.list);
+  const current = useWorkspaceId();
+  if (list.length < 2) return null;
+  return (
+    <nav aria-label={t("shell.workspaces")}>
+      <SidebarMenu>
+        {list.map((w) => (
+          <SidebarMenuItem key={w.id}>
+            <SidebarMenuButton
+              isActive={w.id === current}
+              aria-current={w.id === current ? "true" : undefined}
+              data-testid="phone-workspace"
+              onClick={() => {
+                if (useStore.getState().view.kind === "projects") useStore.getState().setView({ kind: "projects" });
+                pickWorkspace(w.id);
+                onGo();
+              }}
+              className={cn("h-side-row gap-2.5 text-desc", ink.row)}
+            >
+              <WorkspaceAvatar name={w.name} size={20} />
+              <span className="min-w-0 flex-1 truncate">{w.name}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </nav>
   );
 }

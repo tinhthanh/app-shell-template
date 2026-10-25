@@ -8,6 +8,7 @@ import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
 import { ListToolbar, NothingMatches } from "@/components/list-page";
 import { PickOne } from "@/components/pick-one";
+import { PixelLoader } from "@/components/pixel-loader";
 import { removeRecord } from "@/components/remove-record";
 import { ResourceView } from "@/components/resource-view";
 import { SearchField } from "@/components/search-field";
@@ -36,6 +37,7 @@ import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 import { ViewHeader } from "@/views/view-header";
 
 // Projects is the example resource, end to end: a list read a page at a
@@ -110,8 +112,15 @@ const key = (id: string) => `project:${id}`;
 
 // What the list asks the server for, from the view's filters; each one is
 // kept under its own key, so a filter that comes back draws at once.
-const listOf = (v: ProjectsView): ProjectQuery => ({ q: v.q?.trim() || undefined, status: v.status, tags: v.tags, sort: parseSort(v.sort, SORTABLE) && v.sort });
-const listKey = (v: ProjectsView) => `projects${listQuery(listOf(v))}`;
+// In the workspace on show (lib/workspace.ts), so each workspace's lists are kept apart.
+export const listOf = (v: ProjectsView): ProjectQuery => ({
+  workspace: usePrefs.getState().workspace ?? undefined,
+  q: v.q?.trim() || undefined,
+  status: v.status,
+  tags: v.tags,
+  sort: parseSort(v.sort, SORTABLE) && v.sort,
+});
+export const listKey = (v: ProjectsView) => `projects${listQuery(listOf(v))}`;
 
 export function ProjectsView({ id }: { id?: string }) {
   if (id) return <ProjectDetail id={id} />;
@@ -119,15 +128,29 @@ export function ProjectsView({ id }: { id?: string }) {
 }
 
 function ProjectList() {
+  // The list is a workspace's: while the workspaces load, so does it.
+  const workspaces = useWorkspaces((s) => s.status);
+  if (workspaces === "loading")
+    return (
+      <div className="flex h-full items-center justify-center" data-testid="projects-loading">
+        <PixelLoader label={t("projects.reading")} />
+      </div>
+    );
+  return <WorkspaceProjects />;
+}
+
+function WorkspaceProjects() {
   const view = useStore((s) => s.view) as ProjectsView;
   // What isn't the person's to do isn't offered (lib/permissions.ts); the server still decides.
   const canCreate = useCan("project.create");
   // The search is asked of the server once the typing settles; the field and
   // the address follow every letter (hooks/use-settled.ts).
+  // A list reads again in another workspace.
+  const workspace = useWorkspaceId();
   const asked = { ...view, q: useSettled(view.q) };
   const lk = listKey(asked);
   const projects = usePages((page, signal) => client.projects({ ...listOf(asked), ...page }, { signal }), { key: lk });
-  const tagsInUse = useResource((signal) => client.projectTags({ signal }), [], { key: "project-tags" });
+  const tagsInUse = useResource((signal) => client.projectTags({ signal, workspace: workspace ?? undefined }), [workspace], { key: `project-tags:${workspace}` });
   // The filters are the view's; typing replaces the address rather than
   // adding a history entry per letter.
   const set = (patch: Partial<ProjectsView>) => useStore.getState().setView({ ...view, ...patch }, { replace: true });
@@ -236,6 +259,11 @@ function ProjectDetail({ id }: { id: string }) {
   const p = project.status === "ready" ? project.data : undefined;
   useTitle(p?.name);
   // Opened, it goes first in the sidebar's Recent (lib/recent.ts).
+  // Opened from another workspace (a link, the palette), it brings its own with it.
+  const home = p?.workspace;
+  useEffect(() => {
+    if (home) pickWorkspace(home);
+  }, [home]);
   const opened = p?.name;
   useEffect(() => {
     if (opened) setPrefs({ recent: withRecent(usePrefs.getState().recent, { kind: "project", id, name: opened }) });
@@ -331,7 +359,7 @@ function ProjectDetail({ id }: { id: string }) {
 // refusal lands on the field it names). With a project it edits; without,
 // it creates, at the top of the list it was opened from (listKey).
 // FormDialog does the rest (components/form-dialog.tsx).
-function ProjectForm({ project, listKey, onSaved, trigger, label }: { project?: Project; listKey?: string; onSaved(saved: Project): void; trigger: React.ReactElement; label: ReactNode }) {
+export function ProjectForm({ project, listKey, onSaved, trigger, label }: { project?: Project; listKey?: string; onSaved(saved: Project): void; trigger: React.ReactElement; label: ReactNode }) {
   return (
     <FormDialog
       trigger={trigger}
@@ -344,7 +372,7 @@ function ProjectForm({ project, listKey, onSaved, trigger, label }: { project?: 
       failTitle={t("projects.saveFailed")}
       onSubmit={async (v) => {
         const input = { name: v.name ?? "", description: v.description ?? "" };
-        const saved = project ? await client.updateProject(project.id, input) : await client.createProject(input);
+        const saved = project ? await client.updateProject(project.id, input) : await client.createProject({ ...input, workspace: usePrefs.getState().workspace ?? undefined });
         if (!project && listKey) mutate<Page<Project>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Project> | undefined);
         onSaved(saved);
         toastManager.add({ type: "success", title: project ? t("projects.saved") : t("projects.created", { name: saved.name }) });
