@@ -3,6 +3,12 @@ import { ApiError } from "./errors.ts";
 import { signedOut } from "./session.ts";
 import type { Page, Project, ProjectQuery, SearchHit, User } from "./types.ts";
 
+// What a read can be given: a signal that calls it off when its answer is
+// no longer wanted (another filter, a view that left; lib/resource.ts).
+export interface ReadOptions {
+  signal?: AbortSignal;
+}
+
 export type * from "@/lib/types";
 export { ApiError };
 
@@ -13,15 +19,15 @@ export { ApiError };
 
 export interface Client {
   // A page of the projects that match, filtered and sorted by the server.
-  projects(query?: ProjectQuery): Promise<Page<Project>>;
+  projects(query?: ProjectQuery, o?: ReadOptions): Promise<Page<Project>>;
   // Every tag in use, for the list's filter chips.
-  projectTags(): Promise<string[]>;
-  project(id: string): Promise<Project>;
+  projectTags(o?: ReadOptions): Promise<string[]>;
+  project(id: string, o?: ReadOptions): Promise<Project>;
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
   createProject(input: Pick<Project, "name" | "description">): Promise<Project>;
   deleteProject(id: string): Promise<void>;
   // The records that match a few letters, best first (the palette).
-  search(query: string): Promise<SearchHit[]>;
+  search(query: string, o?: ReadOptions): Promise<SearchHit[]>;
   // Who is signed in (401 when nobody is), signing in, and out.
   me(): Promise<User>;
   signIn(email: string, password: string): Promise<User>;
@@ -109,13 +115,51 @@ export interface ClientOptions {
   headers?: () => Record<string, string>;
   credentials?: RequestCredentials;
   onUnauthorized?: () => void;
+  // How long to wait before each retry of a read (RETRY_DELAYS_MS); the tests
+  // give [0, 0].
+  retryDelays?: number[];
 }
 
-async function call<T>(base: string, method: string, path: string, body?: unknown, o: ClientOptions = {}): Promise<T> {
+// A read that the network dropped, or that a busy server turned away (502,
+// 503, 429), is tried twice more, after these waits (give or take a quarter,
+// so many tabs don't come back at once), or after the server's Retry-After.
+// A write is never tried again: it may have landed.
+export const RETRY_DELAYS_MS = [400, 1200];
+
+const retriable = (err: unknown) => err instanceof ApiError && (err.code === "network" || err.status === 502 || err.status === 503 || err.status === 429);
+
+// pause waits ms, or rejects at once when the read is called off.
+const pause = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((done, fail) => {
+    const t = setTimeout(done, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(t);
+      fail(new ApiError("Asked for something else.", 0, "aborted"));
+    });
+  });
+
+async function call<T>(base: string, method: string, path: string, body?: unknown, o: ClientOptions = {}, signal?: AbortSignal): Promise<T> {
+  const delays = method === "GET" ? (o.retryDelays ?? RETRY_DELAYS_MS) : [];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await once<T>(base, method, path, body, o, signal);
+    } catch (err) {
+      const wait = delays[attempt];
+      if (wait === undefined || !retriable(err) || signal?.aborted) throw err;
+      await pause((err as ApiError).retryAfter ?? wait * (0.75 + Math.random() * 0.5), signal);
+    }
+  }
+}
+
+async function once<T>(base: string, method: string, path: string, body: unknown, o: ClientOptions, signal?: AbortSignal): Promise<T> {
   const ctrl = method === "GET" ? new AbortController() : undefined;
   const timer = ctrl ? setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : undefined;
+  // Called off by the caller (another filter): the fetch stops too.
+  const callOff = () => ctrl?.abort();
+  signal?.addEventListener("abort", callOff);
   let res: Response;
   try {
+    if (signal?.aborted) ctrl?.abort();
     res = await fetch(`${base}${path}`, {
       method,
       headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...o.headers?.() },
@@ -124,15 +168,20 @@ async function call<T>(base: string, method: string, path: string, body?: unknow
       signal: ctrl?.signal,
     });
   } catch (err) {
+    if (signal?.aborted) throw new ApiError("Asked for something else.", 0, "aborted");
     if (ctrl?.signal.aborted) throw new ApiError("The server didn't answer.", 0, "timeout");
     throw new ApiError(err instanceof Error ? err.message : String(err), 0, "network");
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", callOff);
   }
   if (!res.ok) {
     const { message, code, field } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
     if (res.status === 401) o.onUnauthorized?.();
-    throw new ApiError(message, res.status, code, field);
+    const err = new ApiError(message, res.status, code, field);
+    const after = Number(res.headers?.get?.("Retry-After"));
+    if (after > 0) err.retryAfter = Math.min(after, 30) * 1000;
+    throw err;
   }
   if (res.status === 204) return undefined as T;
   // A 200 that isn't JSON (a host serving index.html for a wrong apiUrl) is
@@ -161,15 +210,15 @@ export function listQuery(query: ProjectQuery = {}): string {
 // GET /project-tags, GET /projects/:id, PATCH /projects/:id,
 // GET/POST/DELETE /session. Change the paths to your server's.
 export function httpClient(base: string, o: ClientOptions = {}): Client {
-  const c = <T>(method: string, path: string, body?: unknown) => call<T>(base, method, path, body, o);
+  const c = <T>(method: string, path: string, body?: unknown, signal?: AbortSignal) => call<T>(base, method, path, body, o, signal);
   return {
-    projects: (query) => c("GET", `/projects${listQuery(query)}`),
-    projectTags: () => c("GET", "/project-tags"),
-    project: (id) => c("GET", `/projects/${encodeURIComponent(id)}`),
+    projects: (query, r) => c("GET", `/projects${listQuery(query)}`, undefined, r?.signal),
+    projectTags: (r) => c("GET", "/project-tags", undefined, r?.signal),
+    project: (id, r) => c("GET", `/projects/${encodeURIComponent(id)}`, undefined, r?.signal),
     updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
     createProject: (input) => c("POST", "/projects", input),
     deleteProject: (id) => c("DELETE", `/projects/${encodeURIComponent(id)}`),
-    search: (query) => c("GET", `/search?q=${encodeURIComponent(query)}`),
+    search: (query, r) => c("GET", `/search?q=${encodeURIComponent(query)}`, undefined, r?.signal),
     me: () => c("GET", "/session"),
     signIn: (email, password) => c("POST", "/session", { email, password }),
     signOut: () => c("DELETE", "/session"),

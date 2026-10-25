@@ -23,7 +23,10 @@ import type { Page } from "./types.ts";
 
 export type Resource<T> = ResourceState<T> & { reload(): void };
 
-export function useResource<T>(read: () => Promise<T>, deps: unknown[], opts: { key?: string } = {}): Resource<T> {
+// read is given a signal that calls it off when its answer is no longer
+// wanted (the deps changed, the view left): pass it to the client, so the
+// request stops rather than finishing for nobody.
+export function useResource<T>(read: (signal: AbortSignal) => Promise<T>, deps: unknown[], opts: { key?: string } = {}): Resource<T> {
   const key = opts.key;
   const [state, dispatch] = useReducer(next<T>, key, (k) => (k ? initialFrom(cached<T>(k)) : initial<T>()));
   const run = useRef(0);
@@ -31,10 +34,11 @@ export function useResource<T>(read: () => Promise<T>, deps: unknown[], opts: { 
   // biome-ignore lint/correctness/useExhaustiveDependencies: deps is the caller's list, and tick is the reload.
   useEffect(() => {
     const id = ++run.current;
+    const ctrl = new AbortController();
     // A write while this read is out makes its answer older than the screen.
     const since = key ? writeCount(key) : 0;
     dispatch({ type: "start" });
-    read().then(
+    read(ctrl.signal).then(
       (data) => {
         if (id !== run.current) return;
         const kept = key ? cached<T>(key) : undefined;
@@ -46,6 +50,7 @@ export function useResource<T>(read: () => Promise<T>, deps: unknown[], opts: { 
     );
     return () => {
       run.current++;
+      ctrl.abort();
     };
   }, [...deps, tick]);
   // Another key starts from what is kept for it, not the last key's data.
@@ -80,10 +85,13 @@ export interface More {
 //
 //   const projects = usePages((page) => client.projects({ ...filters, ...page }), { key: `projects${listQuery(filters)}` });
 //   <DataTable rows={projects.data.items} total={projects.data.total} more={projects.more} … />
-export function usePages<T extends { id: string }>(read: (page: { cursor?: string; limit: number }) => Promise<Page<T>>, opts: { key: string }): Resource<Page<T>> & { more: More } {
+export function usePages<T extends { id: string }>(
+  read: (page: { cursor?: string; limit: number }, signal?: AbortSignal) => Promise<Page<T>>,
+  opts: { key: string },
+): Resource<Page<T>> & { more: More } {
   const key = opts.key;
   // biome-ignore lint/correctness/useExhaustiveDependencies: the key names what read asks for; read is a new closure every render.
-  const first = useResource(() => read({ limit: Math.max(PAGE_SIZE, cached<Page<T>>(key)?.items.length ?? 0) }), [key], { key });
+  const first = useResource((signal) => read({ limit: Math.max(PAGE_SIZE, cached<Page<T>>(key)?.items.length ?? 0) }, signal), [key], { key });
   const [more, setMore] = useState<{ key: string; status: "loading" | "failed" }>();
   const asked = useRef<string>(undefined);
   const cursor = first.status === "ready" ? first.data.next : undefined;

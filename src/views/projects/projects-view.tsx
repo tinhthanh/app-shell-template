@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
+import { useSettled } from "@/hooks/use-settled";
 import { client, listQuery } from "@/lib/api";
 import { ago, number } from "@/lib/format";
 import { type Key, t } from "@/lib/i18n";
@@ -117,9 +118,12 @@ function ProjectList() {
   const view = useStore((s) => s.view) as ProjectsView;
   // What isn't the person's to do isn't offered (lib/permissions.ts); the server still decides.
   const canCreate = useCan("project.create");
-  const lk = listKey(view);
-  const projects = usePages((page) => client.projects({ ...listOf(view), ...page }), { key: lk });
-  const tagsInUse = useResource(() => client.projectTags(), [], { key: "project-tags" });
+  // The search is asked of the server once the typing settles; the field and
+  // the address follow every letter (hooks/use-settled.ts).
+  const asked = { ...view, q: useSettled(view.q) };
+  const lk = listKey(asked);
+  const projects = usePages((page, signal) => client.projects({ ...listOf(asked), ...page }, { signal }), { key: lk });
+  const tagsInUse = useResource((signal) => client.projectTags({ signal }), [], { key: "project-tags" });
   // The filters are the view's; typing replaces the address rather than
   // adding a history entry per letter.
   const set = (patch: Partial<ProjectsView>) => useStore.getState().setView({ ...view, ...patch }, { replace: true });
@@ -219,7 +223,7 @@ function ProjectDetail({ id }: { id: string }) {
   const view = useStore((s) => s.view) as ProjectsView;
   const canEdit = useCan("project.edit");
   const canDelete = useCan("project.delete");
-  const project = useResource(() => client.project(id), [id], { key: key(id) });
+  const project = useResource((signal) => client.project(id, { signal }), [id], { key: key(id) });
   const p = project.status === "ready" ? project.data : undefined;
   useTitle(p?.name);
   // Back to the list, with the filters it had; the row gets the keyboard.

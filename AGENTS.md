@@ -156,7 +156,12 @@ configs or these rules without the `guardrail-change` label.
 - **Reads go through `useResource`** and are drawn by `<ResourceView>`
   (components/resource-view.tsx), which draws loading, failed and empty for
   you; a failed write is `toastError`. Nothing calls `fetch` outside
-  `src/lib/api.ts`.
+  `src/lib/api.ts`. A read passes on the signal it is given
+  (`(signal) => client.project(id, { signal })`), so a read nobody wants
+  any more stops; the client tries a dropped or turned-away read twice
+  more by itself (`RETRY_DELAYS_MS`, a server's `Retry-After`), never a
+  write. A list's typed search reads once the typing settles
+  (`useSettled`, hooks/use-settled.ts).
 - **Rows go in `<DataTable>`** (components/data-table.tsx): a sortable
   header (the sort on the `View`, as `sort=name:asc`), the arrows, PageUp/Down,
   Home and End between rows, Enter to open, and only the rows on screen in

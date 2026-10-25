@@ -7,7 +7,7 @@ file headers say what each module is for; this says how they connect.
 ## A read, end to end
 
 ```
-view            useResource(() => client.project(id), [id])   src/lib/resource.ts
+view            useResource((signal) => client.project(id, { signal }), [id])   src/lib/resource.ts
                 usePages((page) => client.projects({…filters, …page}), { key })   a list, a page at a time
   └─ client     mockClient() | httpClient(VITE_API_URL)       src/lib/api.ts, src/lib/mock.ts
        └─ answers with data, or throws ApiError(message, status, code)   src/lib/errors.ts
