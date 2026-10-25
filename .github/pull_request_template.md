@@ -41,4 +41,4 @@
 
 ## Guardrail changes
 
-<!-- Only if you changed biome.json, the plugins, scripts/check-*, the Playwright config, the workflows, AGENTS.md or CLAUDE.md: say why, and add the "guardrail-change" label. -->
+<!-- Only if you changed a guarded path (GUARDRAILS in scripts/check-guardrails.mjs): biome.json, biome-plugins/, scripts/check-*.mjs, playwright.config.ts, anything under .github/, AGENTS.md, CLAUDE.md, anything under .claude/ (the settings and the skills), .githooks/, tsconfig*.json, e2e/fixtures.ts, vite.config.ts, package.json, index.html or deploy/. Say why, and add the "guardrail-change" label. -->
