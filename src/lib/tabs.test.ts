@@ -87,3 +87,28 @@ test("a theme another tab picked is the theme here, and isn't saved back", () =>
   storageHeard({ key: "app.ui", newValue: null });
   assert.equal(useStore.getState().themeId, "nord");
 });
+
+test("a longer session another tab took is this tab's too, so none signs out at the old end", () => {
+  signedIn({ ...alex, sessionEndsAt: "2026-10-26T10:03:00.000Z" });
+  hear({ data: { type: "refreshed", user: { ...alex, sessionEndsAt: "2026-10-26T10:30:00.000Z" } } });
+  assert.equal(useSession.getState().user?.sessionEndsAt, "2026-10-26T10:30:00.000Z");
+  // A malformed one, or one while signed out, changes nothing.
+  hear({ data: { type: "refreshed", user: null } });
+  signedOut({ fromOtherTab: true });
+  hear({ data: { type: "refreshed", user: alex } });
+  assert.equal(useSession.getState().status, "signed-out");
+});
+
+test("taking a longer session here tells the other tabs", async () => {
+  const { refreshed } = await import("./session.ts");
+  posted.length = 0;
+  refreshed({ ...alex, sessionEndsAt: "2026-10-26T11:00:00.000Z" });
+  assert.deepEqual(posted, [{ type: "refreshed", user: { ...alex, sessionEndsAt: "2026-10-26T11:00:00.000Z" } }]);
+});
+
+test("another tab's workspace stays its own: this tab keeps the one it shows", () => {
+  usePrefs.setState({ workspace: "w-acme" });
+  storageHeard({ key: "app.prefs", newValue: JSON.stringify({ workspace: "w-globex", density: "comfortable", version: 1 }) });
+  assert.equal(usePrefs.getState().workspace, "w-acme");
+  assert.equal(usePrefs.getState().density, "comfortable");
+});

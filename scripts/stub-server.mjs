@@ -50,6 +50,10 @@ export async function startStub(port = 8787, mockOptions = {}) {
   const client = mockClient({ latency: 0, ...mockOptions });
   const ops = operations(loadSpec());
   const server = createServer(async (req, res) => {
+    // Each answer closes its connection: a socket kept alive and then closed
+    // by the server as idle races a client reusing it (ECONNRESET), and a
+    // stub on this machine has no need to save the handshake.
+    res.setHeader("Connection", "close");
     const origin = allowedOrigin(req.headers.origin);
     const headers = origin
       ? {

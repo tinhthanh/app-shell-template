@@ -150,17 +150,19 @@ function WorkspaceTasks() {
   const canCreate = useCan("task.create");
   // Read again in another workspace (the key names it).
   useWorkspaceId();
-  const asked = { ...view, q: useSettled(view.q) };
+  // Hide done tasks (Settings › General) is this list's default: written into
+  // the address when it names neither done nor a status (lib/default-filter.ts),
+  // and read with from the first render, so the done ones never flash by.
+  const hideDone = usePrefs((p) => p.hideDoneTasks);
+  const defaulted = withDefault(view, "done", hideDone ? "hide" : undefined, ["status"]);
+  useEffect(() => {
+    if (defaulted) useStore.getState().setView(defaulted, { replace: true });
+  }, [defaulted]);
+  const shown = defaulted ?? view;
+  const asked = { ...shown, q: useSettled(view.q) };
   const lk = listKey(asked);
   const tasks = usePages((page, signal) => client.tasks({ ...listOf(asked), ...page }, { signal }), { key: lk });
-  const set = (patch: Partial<TasksView>) => useStore.getState().setView({ ...view, ...patch }, { replace: true });
-  // Hide done tasks (Settings › General) is this list's default: written into
-  // the address when it names neither done nor a status (lib/default-filter.ts).
-  const hideDone = usePrefs((p) => p.hideDoneTasks);
-  useEffect(() => {
-    const next = withDefault(view, "done", hideDone ? "hide" : undefined, ["status"]);
-    if (next) useStore.getState().setView(next, { replace: true });
-  }, [view, hideDone]);
+  const set = (patch: Partial<TasksView>) => useStore.getState().setView({ ...shown, ...patch }, { replace: true });
   const status: StatusFilter = view.status ?? "";
   const filtered = Boolean(view.q?.trim() || status || view.project || view.done === "hide");
   const backTo = useReturnFocus("data-task");
@@ -188,6 +190,7 @@ function WorkspaceTasks() {
         <RecordFilter
           label={t("tasks.column.project")}
           testid="tasks-project-filter"
+          scope={usePrefs.getState().workspace ?? undefined}
           value={view.project ? { id: view.project, name: projectName ?? view.project } : null}
           empty={t("tasks.field.project.none")}
           find={async (q, signal) =>
@@ -383,6 +386,9 @@ export function TaskForm({ task, listKey, onSaved, trigger, label }: { task?: Ta
       initial={{ title: task?.title ?? "", project: task?.project?.id ?? "", due: task?.due ?? "", attachment: "" }}
       submit={task ? t("common.save") : t("common.create")}
       failTitle={t("tasks.saveFailed")}
+      onOpen={() => {
+        file.current = { kind: "keep" };
+      }}
       onSubmit={async (v) => {
         const choice = file.current;
         // Too big is said on the field before anything is sent.

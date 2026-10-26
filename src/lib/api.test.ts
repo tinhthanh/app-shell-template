@@ -317,3 +317,15 @@ test("tasks are their own paths, and a file goes as it is with its name in a hea
   assert.equal(calls[2]?.init.body, file);
   assert.deepEqual(calls[2]?.init.headers, { "Content-Type": "application/pdf", "X-File-Name": "a%20b.pdf" });
 });
+
+test("a 401 answered with a longer session gives the person with the new end", async () => {
+  const got: unknown[] = [];
+  const c = httpClient("http://api.test", { retryDelays: [0, 0], onRefreshed: (u) => got.push(u.sessionEndsAt) });
+  queue = [
+    { status: 401, json: { error: "ended" } },
+    { status: 200, json: { id: "u", name: "A", email: "a@acme.test", role: "owner", sessionEndsAt: "2026-10-26T11:00:00.000Z" } },
+  ];
+  answer = { status: 200, json: [] };
+  await c.projects();
+  assert.deepEqual(got, ["2026-10-26T11:00:00.000Z"]);
+});

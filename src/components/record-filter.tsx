@@ -12,6 +12,7 @@ export function RecordFilter({
   empty,
   onChange,
   testid,
+  scope,
 }: {
   label: string;
   value: Picked | null;
@@ -19,11 +20,13 @@ export function RecordFilter({
   empty: string;
   onChange(picked: Picked | null): void;
   testid?: string;
+  // What the records are found in (the workspace on show): another starts the field afresh.
+  scope?: string;
 }) {
   return (
     <div className="w-52">
-      {/* Keyed by the record, so a link or Back that changes it starts the field afresh. */}
-      <RecordPicker key={value?.id ?? ""} label={label} placeholder={label} initial={value} find={find} empty={empty} onPick={onChange} testid={testid} />
+      {/* The record from the address is shown in place (the keyboard stays); another workspace starts afresh. */}
+      <RecordPicker key={scope ?? ""} label={label} placeholder={label} initial={value} find={find} empty={empty} onPick={onChange} testid={testid} />
     </div>
   );
 }

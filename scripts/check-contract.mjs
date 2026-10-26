@@ -11,7 +11,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { ARGS, clientCalls, clientMethods, loadSpec, operations, problems, root, SAMPLES, success } from "./contract.mjs";
+import { ARGS, BODIES, clientCalls, clientMethods, interfaceFields, loadSpec, operations, problems, QUERIES, root, SAMPLES, success } from "./contract.mjs";
 
 const spec = loadSpec();
 const ops = operations(spec);
@@ -30,6 +30,21 @@ for (const m of methods) {
 for (const id of ops.keys()) {
   if (!methods.includes(id)) out.push(`${id}: in the contract but not a method of Client`);
   if (!ARGS[id] || !SAMPLES[id]) out.push(`${id}: no ARGS or SAMPLES in scripts/contract.mjs`);
+}
+
+// What the client sends: each query type's fields are the operation's query
+// parameters, and each body type's fields its request body's properties.
+const types = readFileSync(resolve(root, "src/lib/types.ts"), "utf8");
+const same = (a, b) => [...a].sort().join(",") === [...b].sort().join(",");
+for (const [id, name] of Object.entries(QUERIES)) {
+  const sent = interfaceFields(types, name);
+  const named = (ops.get(id)?.op.parameters ?? []).filter((p) => p.in === "query").map((p) => p.name);
+  if (!same(sent, named)) out.push(`${id}: ${name} sends ${sent.join(", ")}; the contract's query is ${named.join(", ")}`);
+}
+for (const [id, name] of Object.entries(BODIES)) {
+  const sent = interfaceFields(types, name);
+  const named = Object.keys(ops.get(id)?.op.requestBody?.content["application/json"]?.schema.properties ?? {});
+  if (!same(sent, named)) out.push(`${id}: ${name} sends ${sent.join(", ")}; the contract's body is ${named.join(", ")}`);
 }
 
 const { mockClient } = await import("../src/lib/mock.ts");

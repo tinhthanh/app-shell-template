@@ -30,6 +30,9 @@ test("on its HTTP client, the app lists the stub's projects, and a change goes o
     await app.page.reload();
     await expect(detail.getByRole("button", { name: "Paused", exact: true })).toHaveAttribute("aria-pressed", "true");
   } finally {
+    // The page may still be reading (a list read again after the change): it
+    // leaves first, so nothing reaches the stub's port once it is closed.
+    await app.page.goto("about:blank");
     await stub.close();
   }
 });

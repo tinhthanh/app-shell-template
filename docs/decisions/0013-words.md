@@ -42,7 +42,8 @@ voice (`i18n.test.ts` holds the tone marks to it):
 | Free, Team, Enterprise; a product's or a plan's name | Miễn phí, Nhóm, Doanh nghiệp | names stay as the product spells them |
 | đã ngừng sử dụng | đã rời đi | a customer who left |
 | {name} hiện đang tạm dừng / đang làm / đã lên kế hoạch | {name} đã được … | a status toast for a state ("now paused", "under way", "planned"): hiện đang … for what lasts |
-| {name} đã xong / đã phát hành | {name} hiện đang xong | a status toast for a state that is reached ("done", "shipped"): đã … |
+| {name} đã xong / đã phát hành; Đã lưu trữ {name} | {name} hiện đang xong; {name} đã được lưu trữ | a status toast for a state that is reached ("done", "shipped"): đã …, or the action first when the record can't be its subject ("Đã lưu trữ 3 dự án") |
+| one sentence per status in a bulk toast | {n} dự án hiện đang {status} | a state word dropped into a sentence doubles words ("đang đang hoạt động") |
 | công việc, bản phát hành, phiên bản, ngày phát hành, tệp | nhiệm vụ, release, version, file | tasks, releases, a version, a ship date, a file |
 | hạn, trễ hạn | deadline, quá hạn | a due day, and one that has passed |
 

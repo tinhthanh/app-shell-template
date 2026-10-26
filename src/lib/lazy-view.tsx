@@ -21,7 +21,19 @@ export function lazyView<P extends object>(load: () => Promise<ComponentType<P>>
       },
     ));
   loaders.push(get);
-  const Lazy = lazy(() => get().then((c) => ({ default: c })));
+  // React keeps a lazy's failure for good, so a failed one is made afresh:
+  // the next visit (back online) really tries again.
+  const make = (): ComponentType<P> =>
+    lazy(() =>
+      get().then(
+        (c) => ({ default: c }),
+        (err) => {
+          Lazy = make();
+          throw err;
+        },
+      ),
+    );
+  let Lazy = make();
   function View(props: P) {
     // Chosen once per mount: switching from Lazy to the loaded component
     // under a mounted view would remount it.

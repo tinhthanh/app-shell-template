@@ -18,7 +18,7 @@ export type SessionStatus = "unknown" | "signed-in" | "signed-out";
 export const useSession = create<{ status: SessionStatus; user?: User; why?: "ended" }>()(() => ({ status: "unknown" }));
 
 // The other tabs (lib/tabs.ts sets this): told when this one signs in or out.
-let tellTabs: (m: { type: "signed-out" } | { type: "signed-in" }) => void = () => {};
+let tellTabs: (m: { type: "signed-out" } | { type: "signed-in" } | { type: "refreshed"; user: User }) => void = () => {};
 export function setTabsTeller(tell: typeof tellTabs) {
   tellTabs = tell;
 }
@@ -28,6 +28,14 @@ export function setTabsTeller(tell: typeof tellTabs) {
 export function signedIn(user?: User, o: { tell?: boolean } = {}) {
   useSession.setState({ status: "signed-in", user });
   if (o.tell) tellTabs({ type: "signed-in" });
+}
+
+// refreshed takes a longer session (Stay signed in, or a 401 the client
+// answered with a refresh, lib/api.ts) and tells the other tabs, so none of
+// them ends it at the old time and signs every tab out.
+export function refreshed(user: User) {
+  signedIn(user);
+  tellTabs({ type: "refreshed", user });
 }
 
 // useCan says whether the person signed in may take an action

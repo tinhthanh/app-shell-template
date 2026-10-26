@@ -1,5 +1,6 @@
 import { ChevronDownIcon, LogOutIcon, MenuIcon, PanelLeftCloseIcon, SearchIcon } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { toastError } from "@/components/error-note";
 import { ink, inkScale } from "@/components/ink";
 import { NotificationBell } from "@/components/notices";
@@ -16,6 +17,7 @@ import { client } from "@/lib/api";
 import { APP_NAME } from "@/lib/app";
 import { usePlaceBadges } from "@/lib/badges";
 import { t } from "@/lib/i18n";
+import { lazyView } from "@/lib/lazy-view";
 import { isActive, type Place, places, RECORD_KINDS } from "@/lib/nav";
 import { roleWords } from "@/lib/permissions";
 import { IS_MAC } from "@/lib/platform";
@@ -24,7 +26,7 @@ import { signedOut, useSession } from "@/lib/session";
 import { SIDEBAR_DEFAULT, SIDEBAR_MAX, SIDEBAR_MIN } from "@/lib/sidebar-width";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
+import { switchWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 
 // The sidebar is always open on a desktop window; coss ui's menu pieces only
 // need to know that.
@@ -105,7 +107,8 @@ function TopStrip() {
 // SidebarSheet is beside the rail, on its own raised card: the workspace on show,
 // search, and the open place's own list (Projects' by status; elsewhere
 // the records opened last). Its top and start border carry on the strip's.
-const ProjectsColumn = lazy(() => import("@/views/projects/projects-column"));
+// Lazy as the views are, so it is fetched while the app is idle (lib/lazy-view.tsx).
+const ProjectsColumn = lazyView(() => import("@/views/projects/projects-column").then((m) => m.default));
 
 function SidebarSheet() {
   const kind = useStore((s) => s.view.kind);
@@ -124,7 +127,10 @@ function SidebarSheet() {
           <Kbd className="h-4.5 text-tag">⌘K</Kbd>
         </button>
       </div>
-      <Suspense>{kind === "projects" ? <ProjectsColumn /> : <Recent />}</Suspense>
+      {/* A column that can't load (offline before it was fetched) leaves Recent in its place, not a broken app. */}
+      <ErrorBoundary key={kind} scope={t("shell.sidebar")} fallback={<Recent />}>
+        <Suspense>{kind === "projects" ? <ProjectsColumn /> : <Recent />}</Suspense>
+      </ErrorBoundary>
       <div className="mt-auto px-edge pb-2">
         <Account />
       </div>
@@ -373,8 +379,7 @@ function PhoneWorkspaces({ onGo }: { onGo(): void }) {
               aria-current={w.id === current ? "true" : undefined}
               data-testid="phone-workspace"
               onClick={() => {
-                if (useStore.getState().view.kind === "projects") useStore.getState().setView({ kind: "projects" });
-                pickWorkspace(w.id);
+                switchWorkspace(w.id);
                 onGo();
               }}
               className={cn("h-side-row gap-2.5 text-desc", ink.row)}

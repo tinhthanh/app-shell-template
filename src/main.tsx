@@ -21,7 +21,9 @@ import "@/index.css";
 // deployment, where errors go and where usage goes.
 const config = runtime();
 setFlags(flagsFrom(config, location.search, knobsOn()));
-const beacon = (url: string, body: string) => navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+// text/plain, so a collector on another origin gets it as a simple request,
+// with no CORS preflight to answer; the body is JSON all the same (docs/deploy.md).
+const beacon = (url: string, body: string) => navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=UTF-8" }));
 if (config.reportUrl) {
   const toConsole = (error: unknown, context?: Record<string, string>) => console.error(error, context ?? "");
   setReporter(

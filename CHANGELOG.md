@@ -5,6 +5,15 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Stay signed in, in one tab, keeps every tab signed in; a session the server renewed on its own is followed too, and one ending months away is no longer cut short.
+- A task form closed untouched closes without asking, and a file picked in a form you discarded isn't sent with the next one.
+- The Tasks project filter names the project, and leaves the keyboard where it was.
+- Signing out forgets the yes to sharing usage, so the next person is asked for their own.
+- Going offline before Projects was first opened no longer takes the whole app down, and a page that failed to load tries again on the next visit.
+- Picking another workspace leaves an open task (or a list narrowed to a project) for that workspace's list; each tab keeps its own workspace.
+- With Hide done tasks on, done tasks no longer flash by before the list hides them.
+- Vietnamese status toasts for several projects read as sentences.
+
 - Settings › General › Hide done tasks: Tasks opens without the done ones, and the address says so, so a link reads the same to whoever opens it; the list's "Hide done" chip changes it there and then.
 - Tasks can be narrowed to a project from the toolbar, found as you type.
 

@@ -63,7 +63,12 @@ const written = (v: string | number) => (typeof v === "number" ? new Intl.Number
 // count given its form; a blank that isn't given stays as it is, so it shows.
 export function t(key: Key, params?: Record<string, string | number>): string {
   const s = LANGUAGES[current].words[key] ?? en[key];
-  if (!params) return s;
+  return params ? fill(s, params) : s;
+}
+
+// fill is t's work on a word already looked up: its counts given their
+// forms, then its blanks filled.
+export function fill(s: string, params: Record<string, string | number>): string {
   return s
     .replace(PLURAL, (m, k: string, forms: string) => (typeof params[k] === "number" ? plural(params[k], forms) : m))
     .replace(/\{(\w+)\}/g, (m, k: string) => (k in params ? written(params[k] as string | number) : m));

@@ -90,3 +90,11 @@ test("the picks are let go when the filters change", async ({ app }) => {
   await expect(app.page.getByTestId("project-row")).toHaveCount(8);
   await expect(app.page.getByTestId("bulk-bar")).toHaveCount(0);
 });
+
+test("letting the picks go leaves the keyboard on the list, not on the page", async ({ app }) => {
+  await app.open({ hash: "/projects" });
+  await row(app, "p-shop").getByTestId("select-row").click();
+  await app.page.getByTestId("bulk-bar").getByRole("button", { name: "Clear the selection" }).click();
+  await expect(app.page.getByTestId("bulk-bar")).toHaveCount(0);
+  await expect(app.page.locator("[data-testid=project-row]:focus")).toHaveCount(1);
+});

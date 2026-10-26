@@ -64,6 +64,18 @@ export function clientCalls(source) {
   return out;
 }
 
+// interfaceFields is the fields of an interface in types.ts, by name.
+export function interfaceFields(source, name) {
+  const body = new RegExp(`export interface ${name} \\{([\\s\\S]*?)\\n\\}`).exec(source)?.[1] ?? "";
+  return [...body.matchAll(/^\s+(\w+)\??:/gm)].map((m) => m[1]);
+}
+
+// The query and body types the client sends, each held to its operation's
+// parameters or request body, so renaming a field on one side fails the
+// check instead of quietly sending what the server doesn't read.
+export const QUERIES = { projects: "ProjectQuery", tasks: "TaskQuery" };
+export const BODIES = { createTask: "TaskInput", updateTask: "TaskInput" };
+
 // clientMethods is the methods of the Client interface in api.ts.
 export function clientMethods(source) {
   const body = /export interface Client \{([\s\S]*?)\n\}/.exec(source)?.[1] ?? "";

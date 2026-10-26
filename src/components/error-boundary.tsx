@@ -12,6 +12,8 @@ type Props = {
   // Shown as a way out, such as back home.
   onLeave?: () => void;
   leaveLabel?: string;
+  // What stands in for a small part that broke (the sheet's list), instead of the full message.
+  fallback?: ReactNode;
 };
 type State = { error?: Error; stack?: string; details: boolean };
 
@@ -36,6 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
   override render() {
     const { error, stack, details } = this.state;
     if (!error) return this.props.children;
+    if (this.props.fallback !== undefined) return this.props.fallback;
     const { scope, onLeave, leaveLabel } = this.props;
     const detail = [error.stack || `${error.name}: ${error.message}`, stack && `Component stack:${stack}`].filter(Boolean).join("\n\n");
     return (

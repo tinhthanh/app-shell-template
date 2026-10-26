@@ -9,6 +9,7 @@ import { create } from "zustand";
 
 import { setPrefs, usePrefs } from "./prefs.ts";
 import { onSignedOut } from "./session.ts";
+import { useStore } from "./store.ts";
 import type { Workspace } from "./types.ts";
 
 // The person's workspaces, read once after signing in (App.tsx): a list
@@ -33,12 +34,13 @@ export async function loadWorkspaces(read: () => Promise<Workspace[]>) {
   }
 }
 
-// Signed out, the workspaces, the one on show and the records opened last
-// go with the person: the next one on a shared machine sees none of them.
+// Signed out, the workspaces, the one on show, the records opened last and
+// the person's yes to sharing usage go with them: the next one on a shared
+// machine sees none of it, and is asked for their own yes (lib/analytics.ts).
 onSignedOut(() => {
   loads++;
   useWorkspaces.setState({ status: "loading", list: [] });
-  setPrefs({ workspace: null, recent: [] });
+  setPrefs({ workspace: null, recent: [], shareUsage: false });
 });
 
 // addWorkspace puts a new one on the rail, and shows it.
@@ -52,6 +54,21 @@ export function addWorkspace(w: Workspace) {
 export function settleWorkspace(kept: string | null, list: readonly Workspace[]): string | null {
   if (kept && list.some((w) => w.id === kept)) return kept;
   return list[0]?.id ?? null;
+}
+
+// leaveRecords goes from a record, or a list narrowed to one, back to the
+// list, before another workspace shows: the record would bring its own
+// workspace straight back (views/projects, views/tasks), and a project
+// filter names a project of the old one.
+export function leaveRecords() {
+  const { view, setView } = useStore.getState();
+  if ((view.kind === "projects" || view.kind === "tasks") && (view.id || ("project" in view && view.project))) setView({ kind: view.kind });
+}
+
+// switchWorkspace is the rail's pick: the records left, the workspace shown.
+export function switchWorkspace(id: string) {
+  leaveRecords();
+  pickWorkspace(id);
 }
 
 // pickWorkspace shows a workspace.
