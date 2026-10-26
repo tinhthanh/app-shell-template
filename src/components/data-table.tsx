@@ -3,9 +3,11 @@ import { ArrowDownIcon, ArrowUpIcon, Loader2Icon } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { t } from "@/lib/i18n";
 import { moveIndex, type SortDir, toggleSort } from "@/lib/list-keys";
 import type { More } from "@/lib/resource";
+import { flipAll, header, ranged, type Selection, toggled } from "@/lib/selection";
 import { cn } from "@/lib/utils";
 
 // DataTable is the list every resource's rows go in: columns with a header
@@ -24,6 +26,12 @@ import { cn } from "@/lib/utils";
 //
 //   <DataTable rows={projects} rowKey={(p) => p.id} columns={[{ id: "name", label: "Name", sort: byName, cell: (p) => … }]}
 //     sort={sort} onSort={setSort} onOpen={open} label="Projects" rowProps={(p) => ({ "data-project": p.id })} />
+//
+// With selection, a box starts each row and one heads the column (every row
+// shown, some, none): Space picks the row the keyboard is on (Enter still
+// opens it), Shift with a click or Space picks the range from the last one
+// picked, ⌘A picks every row shown, Esc lets go of them all (lib/selection.ts).
+// The set is the caller's, and the caller acts on it (components/bulk-bar.tsx).
 
 export interface Column<T> {
   id: string;
@@ -58,6 +66,7 @@ export function DataTable<T>({
   more,
   focusRow,
   className,
+  selection,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -76,6 +85,8 @@ export function DataTable<T>({
   // scrolled into the DOM, however far down, and given the focus.
   focusRow?: string;
   className?: string;
+  // The rows picked, and how to say a row's name ("Select Shop").
+  selection?: { selected: Selection; onChange(next: Set<string>): void; rowName(row: T): string };
 }) {
   const sorted = (() => {
     const col = sort && columns.find((c) => c.id === sort.by);
@@ -107,7 +118,34 @@ export function DataTable<T>({
       setWanted(undefined);
     }
   });
+  // The row a range starts from: the last one picked on its own.
+  const anchor = useRef<string>(undefined);
+  const ids = selection ? sorted.map(rowKey) : [];
+  const pick = (row: T, range: boolean) => {
+    if (!selection) return;
+    const id = rowKey(row);
+    selection.onChange(range ? ranged(selection.selected, ids, anchor.current, id) : toggled(selection.selected, id));
+    if (!range) anchor.current = id;
+  };
   const onKey = (e: KeyboardEvent, index: number, row: T) => {
+    if (selection) {
+      if (e.key === " ") {
+        e.preventDefault();
+        pick(row, e.shiftKey);
+        return;
+      }
+      if (e.key.toLowerCase() === "a" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        selection.onChange(new Set(ids));
+        return;
+      }
+      if (e.key === "Escape" && selection.selected.size) {
+        e.preventDefault();
+        e.stopPropagation();
+        selection.onChange(new Set());
+        return;
+      }
+    }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onOpen?.(row);
@@ -139,6 +177,17 @@ export function DataTable<T>({
       <table className="w-full border-separate border-spacing-0 text-body" aria-label={label} aria-rowcount={total ?? sorted.length}>
         <thead className="sticky top-0 z-10 bg-background">
           <tr>
+            {selection && (
+              <th scope="col" className="w-10 border-b ps-3 pe-0 py-1.5 text-start">
+                <Checkbox
+                  aria-label={t("common.select.all")}
+                  data-testid="select-all"
+                  checked={header(selection.selected, ids) === "all"}
+                  indeterminate={header(selection.selected, ids) === "some"}
+                  onCheckedChange={() => selection.onChange(flipAll(selection.selected, ids))}
+                />
+              </th>
+            )}
             {columns.map((c) => {
               const active = sort?.by === c.id;
               const ariaSort = active ? (sort.dir === "asc" ? "ascending" : "descending") : c.sort ? "none" : undefined;
@@ -169,7 +218,7 @@ export function DataTable<T>({
         <tbody>
           {top > 0 && (
             <tr aria-hidden>
-              <td style={{ height: top }} colSpan={columns.length} />
+              <td style={{ height: top }} colSpan={columns.length + (selection ? 1 : 0)} />
             </tr>
           )}
           {items.map((item) => {
@@ -186,8 +235,25 @@ export function DataTable<T>({
                 onFocus={() => setCurrent(item.index)}
                 onKeyDown={(e) => onKey(e, item.index, row)}
                 onClick={() => onOpen?.(row)}
-                className={cn("h-row outline-none", onOpen && "cursor-default hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset")}
+                data-selected={selection?.selected.has(rowKey(row)) || undefined}
+                className={cn(
+                  "h-row outline-none data-selected:bg-accent/40",
+                  onOpen && "cursor-default hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                )}
               >
+                {selection && (
+                  // The box picks; the row around it still opens. Its own Tab stop is the row's (Space).
+                  // biome-ignore lint/a11y/useKeyWithClickEvents: the row's Space is the keyboard's way to pick; this only keeps a click on the box from opening the row.
+                  <td className="w-10 border-b ps-3 pe-0 align-middle" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      tabIndex={-1}
+                      aria-label={t("common.select.row", { name: selection.rowName(row) })}
+                      data-testid="select-row"
+                      checked={selection.selected.has(rowKey(row))}
+                      onCheckedChange={(_, d) => pick(row, (d.event as MouseEvent | undefined)?.shiftKey === true)}
+                    />
+                  </td>
+                )}
                 {columns.map((c) => (
                   <td key={c.id} className={cn("border-b px-3 py-row-pad align-middle", c.align === "end" && "text-end", visible(c), c.className)}>
                     {c.cell(row)}
@@ -198,7 +264,7 @@ export function DataTable<T>({
           })}
           {bottom > 0 && (
             <tr aria-hidden>
-              <td style={{ height: bottom }} colSpan={columns.length} />
+              <td style={{ height: bottom }} colSpan={columns.length + (selection ? 1 : 0)} />
             </tr>
           )}
         </tbody>

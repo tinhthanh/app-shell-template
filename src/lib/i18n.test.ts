@@ -42,6 +42,9 @@ test("a count takes the form its number wants, written as the language writes nu
   setLanguage("vi");
   assert.equal(t("projects.countAll", { n: 5000 }), "5.000 dự án");
   setLanguage("en");
+  // A form may hold a blank of its own.
+  assert.equal(t("projects.bulk.statusDone", { n: 3, status: "Paused" }), "3 projects are now Paused");
+  assert.equal(t("projects.bulk.statusDone", { n: 1, status: "Paused" }), "1 project is now Paused");
   // A count not given stays to be seen, as a blank does.
   assert.equal(t("projects.countAll", {}), en["projects.countAll"]);
 });
@@ -51,7 +54,8 @@ test("every count in every language has its other form, and only forms the langu
     const known = new Set([...new Intl.PluralRules(id).resolvedOptions().pluralCategories, "other"]);
     for (const [k, w] of Object.entries(l.words))
       for (const m of w.matchAll(/\{\w+, plural,(.*)\}/g)) {
-        const forms = [...(m[1] ?? "").matchAll(/(=\d+|\w+)\s*\{/g)].map((f) => f[1] ?? "");
+        // A form's own blanks ({status}) aren't forms.
+        const forms = [...(m[1] ?? "").replace(/\{\w+\}/g, "").matchAll(/(=\d+|\w+)\s*\{/g)].map((f) => f[1] ?? "");
         assert.ok(forms.includes("other"), `${id} ${k}: no other`);
         for (const f of forms) assert.ok(f.startsWith("=") || known.has(f as Intl.LDMLPluralRule), `${id} ${k}: ${f} isn't a form ${id} has`);
       }
@@ -60,7 +64,8 @@ test("every count in every language has its other form, and only forms the langu
 
 test("a word in another language keeps every blank the English one has", () => {
   // A count's name is a blank too, whether or not the language gives it forms.
-  const blanks = (s: string) => [...s.matchAll(/\{(\w+)(?:\}|, plural,)/g)].map((m) => m[1]).sort();
+  // Each once: English may name one in every form, a language with one form once.
+  const blanks = (s: string) => [...new Set([...s.matchAll(/\{(\w+)(?:\}|, plural,)/g)].map((m) => m[1]))].sort();
   for (const [id, l] of Object.entries(LANGUAGES)) for (const k of Object.keys(en) as (keyof typeof en)[]) assert.deepEqual(blanks(l.words[k]), blanks(en[k]), `${id} ${k}`);
 });
 

@@ -1,6 +1,8 @@
-import { PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useEffect } from "react";
+import { ChevronDownIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
+import { type ReactNode, useEffect, useState } from "react";
 
+import { BulkBar } from "@/components/bulk-bar";
+import { confirm } from "@/components/confirm";
 import { type Column, DataTable } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
 import { ErrorNote, toastError } from "@/components/error-note";
@@ -9,7 +11,7 @@ import { FormDialog } from "@/components/form-dialog";
 import { ListToolbar, NothingMatches } from "@/components/list-page";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
-import { removeRecord } from "@/components/remove-record";
+import { dropRows, removeRecord } from "@/components/remove-record";
 import { ResourceView } from "@/components/resource-view";
 import { SearchField } from "@/components/search-field";
 import { StatusBadge, type StatusTone, Tag } from "@/components/status-badge";
@@ -17,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
@@ -32,11 +35,12 @@ import { editRows } from "@/lib/pages";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { withRecent } from "@/lib/recent";
 import { usePages, useResource } from "@/lib/resource";
-import { invalidate, mutate, optimistic } from "@/lib/resource-cache";
+import { forget, invalidate, mutate, optimistic } from "@/lib/resource-cache";
+import { kept } from "@/lib/selection";
 import { useCan } from "@/lib/session";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
-import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
+import { type Page, PROJECT_STATUSES, type Project, type ProjectQuery, type ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { loadWorkspaces, pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 import { ViewHeader } from "@/views/view-header";
@@ -180,6 +184,75 @@ function WorkspaceProjects() {
 
   const open = (p: Project) => useStore.getState().setView({ ...view, id: p.id });
 
+  // The rows picked for an action on them all (DataTable's selection): this
+  // list's own, let go when the filters change, and only what is still listed.
+  const canEdit = useCan("project.edit");
+  const canDelete = useCan("project.delete");
+  // Kept with the list's key: under another filter they are let go.
+  const [picks, setPicks] = useState<{ list: string; ids: Set<string> }>(() => ({ list: lk, ids: new Set() }));
+  const picked = picks.list === lk ? picks.ids : new Set<string>();
+  const setPicked = (ids: Set<string>) => setPicks({ list: lk, ids });
+  const rows = projects.status === "ready" ? projects.data.items : [];
+  const selected = kept(
+    picked,
+    rows.map((p) => p.id),
+  );
+
+  // setStatuses puts each project in its status at once (optimistic), the
+  // list read again once they are all in; what the server refused goes back
+  // with a toast, and what it took is said with Undo, which puts each back.
+  const setStatuses = async (to: Map<string, ProjectStatus>, o: { undoing?: boolean } = {}) => {
+    const was = new Map(rows.filter((p) => to.has(p.id)).map((p) => [p.id, p.status]));
+    const results = await Promise.allSettled(
+      [...to].map(([id, status]) => optimistic<Project>({ key: key(id), listKey: lk, id, patch: { status }, write: () => client.updateProject(id, { status }), invalidate: false })),
+    );
+    invalidate(lk);
+    const failed = results.flatMap((r) => (r.status === "rejected" ? [r.reason] : []));
+    if (failed.length) toastError(failed[0], t("projects.bulk.statusFailed", { n: failed.length }));
+    const took = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.id] : []));
+    if (!took.length) return;
+    if (o.undoing) {
+      toastManager.add({ type: "success", title: t("projects.bulk.undone") });
+      return;
+    }
+    const status = [...to.values()][0] as ProjectStatus;
+    track("record.status", { kind: "project", status });
+    toastManager.add({
+      type: "success",
+      title: t("projects.bulk.statusDone", { n: took.length, status: t(STATE[status].word) }),
+      actionProps: { children: t("common.undo"), onClick: () => void setStatuses(new Map(took.flatMap((id) => (was.has(id) ? [[id, was.get(id) as ProjectStatus]] : []))), { undoing: true }) },
+    });
+  };
+  const setPickedStatus = (status: ProjectStatus) => {
+    const ids = [...selected];
+    setPicked(new Set());
+    void setStatuses(new Map(ids.map((id) => [id, status])));
+  };
+  // deletePicked asks first (it can't be undone), then deletes each; what went
+  // leaves every list and Recent, what the server kept is said.
+  const deletePicked = () => {
+    const ids = [...selected];
+    confirm({
+      title: t("projects.bulk.delete.title", { n: ids.length }),
+      description: t("projects.bulk.delete.description"),
+      confirm: t("common.delete"),
+      destructive: true,
+      run: async () => {
+        const results = await Promise.allSettled(ids.map((id) => client.deleteProject(id)));
+        const gone = ids.filter((_, i) => results[i]?.status === "fulfilled");
+        const failed = results.flatMap((r) => (r.status === "rejected" ? [r.reason] : []));
+        // Nothing went: the confirm explains it, as a single delete's does.
+        if (!gone.length) throw failed[0];
+        for (const id of gone) forget(key(id));
+        dropRows(lk, gone);
+        setPrefs({ recent: usePrefs.getState().recent.filter((r) => !gone.includes(r.id)) });
+        setPicked(new Set());
+        toastManager.add({ type: "success", title: t("projects.bulk.deleted", { n: gone.length }) });
+        if (failed.length) toastError(failed[0], t("projects.bulk.deleteFailed", { n: failed.length }));
+      },
+    });
+  };
+
   return (
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
@@ -195,24 +268,50 @@ function WorkspaceProjects() {
           </>
         }
       />
-      <ListToolbar>
-        <SearchField className="w-56" value={query} onChange={(v) => set({ q: v || undefined })} placeholder={t("projects.find")} />
-        <PickOne<StatusFilter> label={t("projects.status")} value={status} options={statuses()} onChange={(v) => set({ status: v || undefined })} />
-        {allTags.map((tag) => (
-          <FilterChip
-            key={tag}
-            pressed={tags.has(tag)}
-            onPressedChange={(on) => {
-              const n = new Set(tags);
-              if (on) n.add(tag);
-              else n.delete(tag);
-              set({ tags: n.size ? [...n] : undefined });
-            }}
-          >
-            {tag}
-          </FilterChip>
-        ))}
-      </ListToolbar>
+      {selected.size > 0 ? (
+        <BulkBar count={selected.size} onClear={() => setPicked(new Set())}>
+          {canEdit && (
+            <Menu>
+              <MenuTrigger render={<Button size="sm" variant="outline" data-testid="bulk-status" />}>
+                {t("projects.bulk.setStatus")}
+                <ChevronDownIcon />
+              </MenuTrigger>
+              <MenuPopup align="start">
+                {PROJECT_STATUSES.map((status) => (
+                  <MenuItem key={status} onClick={() => setPickedStatus(status)}>
+                    {t(STATE[status].word)}
+                  </MenuItem>
+                ))}
+              </MenuPopup>
+            </Menu>
+          )}
+          {canDelete && (
+            <Button size="sm" variant="destructive-outline" onClick={deletePicked}>
+              <Trash2Icon />
+              {t("common.delete")}
+            </Button>
+          )}
+        </BulkBar>
+      ) : (
+        <ListToolbar>
+          <SearchField className="w-56" value={query} onChange={(v) => set({ q: v || undefined })} placeholder={t("projects.find")} />
+          <PickOne<StatusFilter> label={t("projects.status")} value={status} options={statuses()} onChange={(v) => set({ status: v || undefined })} />
+          {allTags.map((tag) => (
+            <FilterChip
+              key={tag}
+              pressed={tags.has(tag)}
+              onPressedChange={(on) => {
+                const n = new Set(tags);
+                if (on) n.add(tag);
+                else n.delete(tag);
+                set({ tags: n.size ? [...n] : undefined });
+              }}
+            >
+              {tag}
+            </FilterChip>
+          ))}
+        </ListToolbar>
+      )}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <ResourceView
           resource={projects}
@@ -250,6 +349,7 @@ function WorkspaceProjects() {
                 label={t("projects.title")}
                 rowTestId="project-row"
                 rowProps={(p) => ({ "data-project": p.id })}
+                selection={canEdit || canDelete ? { selected, onChange: setPicked, rowName: (p) => p.name } : undefined}
               />
             )
           }
@@ -298,7 +398,7 @@ function ProjectDetail({ id }: { id: string }) {
   };
   const remove = () =>
     p &&
-    removeRecord<Project>({
+    removeRecord({
       name: p.name,
       description: t("projects.deleteDescription"),
       key: key(id),
