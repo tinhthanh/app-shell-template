@@ -658,6 +658,15 @@
             }
           },
           {
+            "name": "hideDone",
+            "in": "query",
+            "required": false,
+            "description": "true leaves out the done tasks",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "sort",
             "in": "query",
             "required": false,

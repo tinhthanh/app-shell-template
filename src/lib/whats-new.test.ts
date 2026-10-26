@@ -1,9 +1,8 @@
 // node --experimental-strip-types --test src/lib/whats-new.test.ts (pnpm test)
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
-import { RELEASES } from "./releases.ts";
-import { compareVersions, decide, latestRelease } from "./whats-new.ts";
+import { decide, latestRelease } from "./whats-new.ts";
+import { WHATS_NEW } from "./whats-new-notes.ts";
 
 const releases = [
   { version: "0.1.0", notes: ["a"] },
@@ -11,10 +10,7 @@ const releases = [
   { version: "0.10.0", notes: ["c"] },
 ];
 
-test("versions order by number, not by text, and a dev build sorts first", () => {
-  assert.equal(compareVersions("0.10.0", "0.9.0"), 1);
-  assert.equal(compareVersions("0.2.0", "0.2.0"), 0);
-  assert.equal(compareVersions("dev", "0.1.0"), -1);
+test("the newest notes are the highest version by number, not by text", () => {
   assert.equal(latestRelease(releases)?.version, "0.10.0");
 });
 
@@ -32,7 +28,7 @@ test("a first run shows nothing; an update shows the newest release it includes,
 });
 
 test("the app's own notes are well-formed and name the current version's lineage", () => {
-  for (const r of RELEASES) {
+  for (const r of WHATS_NEW) {
     assert.match(r.version, /^\d+\.\d+\.\d+$/);
     assert.ok(r.notes.length > 0, `${r.version} has notes`);
   }

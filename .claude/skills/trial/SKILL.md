@@ -43,7 +43,9 @@ Start it on the worktree, with the repo as its only source. The prompt:
 >
 > Rules: use `npx pnpm@11` if pnpm is not on PATH; use `E2E_PORT=<port>`
 > for browser tests; never use ports 1420 or 1377–1379; kill only
-> processes you started. Do not push and do not open a pull request:
+> processes you started. Do not push and do not open a pull request (so
+> the visual baselines can't be taken: do what AGENTS.md › Checks says
+> when there is no Docker and no push):
 > commit on the branch, and write the PR's title and body (as the
 > template asks) into `PR.md` at the root, committed too. Do everything
 > the repo says "done" requires and run every check it names.

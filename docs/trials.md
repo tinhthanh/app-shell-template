@@ -15,7 +15,11 @@ a template bug first. The scores:
 
 | 2026-10-24 | A Customers area (thousands, paged; search, plan and status filters, three sorts; add and edit with a plan choice, instant status, owners alone delete; sidebar and palette; English and Vietnamese) and a Settings › Billing section choosing the currency | 8 | check-views read viewTitles off one line, so a fourth view (wrapped by the formatter) read as unwired; a scene was "ready" while its loader spun; About sat in Settings' list by position; a second `app.open` couldn't seed other prefs; no shared status badge (copied from projects); no Vietnamese glossary; no word on showing money; no way to take baselines without Docker; re-imports for coverage undocumented | this PR |
 
-What is still open after the fifth trial: a sanctioned way to prove "feels instant" other than a 500 ms wait under `?slow=1`.
+| 2026-10-26 | A Releases area (a workspace's releases with a unique version, status, ship date, project and notes file; search, status and project filters, three sorts; create, edit, instant status, mark several shipped, owners alone delete; sidebar and palette) and a Settings switch that hides shipped releases by default | 8.5 | Nothing said how a default-filter setting and "the address wins" meet (the agent wrote the default into the address on open); `RecordPicker` couldn't be required and there was no toolbar filter by another record; the bulk status with Undo had to be copied from Projects; `uploadFile` was guarded by `task.edit`; What's new owned the name `Release`; the scene in `scenes.json` read as optional and Tasks had none; nothing said what to do with baselines without Docker or a push; the template's own Tasks spec bundled behaviours, so the copy did too; the Vietnamese glossary had no rows for states reached ("shipped") | this PR |
+
+What is still open after the sixth trial: a server-side "select every match" for bulk actions, and a download path for attached files.
+
+What was open after the fifth trial (since closed by `?hold=1`): a sanctioned way to prove "feels instant" other than a 500 ms wait under `?slow=1`.
 
 What was open after the fourth trial: a shared tone badge and option lists (views retype `bg-x/16 text-x-foreground` and parallel status arrays); a debounce for a list's search against a real API.
 

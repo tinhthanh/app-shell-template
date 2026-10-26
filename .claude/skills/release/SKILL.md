@@ -8,7 +8,7 @@ description: Cut a release of this app (version bump, changelog, tag, GitHub rel
 The version in `package.json` is what Settings › About shows; the
 changelog's Unreleased section is what the release notes become.
 
-1. Add the version's notes to `src/lib/releases.ts` (a few lines, in the
+1. Add the version's notes to `src/lib/whats-new-notes.ts` (a few lines, in the
    changelog's words): the What's new dialog shows them once after the
    update, and the palette and Settings › About open them.
 2. `node scripts/release.mjs X.Y.Z` on a branch: it sets the version and

@@ -280,6 +280,9 @@ fixtures or with the knobs on.
 | Tasks | The second resource (`views/tasks/`): a day, a project picked, a file; the worked example of every kind of field |
 | RecordPicker, FileField | A field that points at another record, found as the person types, and a form's one file (`components/record-picker.tsx`, `components/file-field.tsx`) |
 | day | A day with no time ("2026-11-02"), read with `day()` in `lib/format.ts`, never moved by a time zone |
+| RecordFilter | A toolbar filter by another record, the RecordPicker's search writing an id to the `View` (`components/record-filter.tsx`) |
+| setStatuses | A bulk status change with Undo that puts each back (`components/bulk-status.ts`) |
+| withDefault | A setting that is a list's default filter, written into the address on open (`lib/default-filter.ts`) |
 | selection, BulkBar | Rows picked in a `DataTable` (`lib/selection.ts`) and the bar that acts on them all (`components/bulk-bar.tsx`); the projects' bulk status has Undo |
 | optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
 | return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |

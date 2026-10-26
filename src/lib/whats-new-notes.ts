@@ -1,9 +1,9 @@
-import type { Release } from "./whats-new.ts";
+import type { ChangelogEntry } from "./whats-new.ts";
 
 // What each version brought, for the What's new dialog: a few lines in
 // plain words, the way CHANGELOG.md says them. A release (the release
 // skill) adds its entry here; the newest shows once after an update.
-export const RELEASES: Release[] = [
+export const WHATS_NEW: ChangelogEntry[] = [
   {
     version: "0.1.0",
     notes: [

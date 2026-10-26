@@ -161,6 +161,8 @@ export interface TaskQuery {
   status?: TaskStatus;
   // A project's tasks, by its id.
   project?: string;
+  // Leave out the done ones.
+  hideDone?: boolean;
   // "title:asc", "due:asc", "updated:desc".
   sort?: string;
   cursor?: string;

@@ -391,18 +391,20 @@ function Overlays() {
   return (
     <>
       <Section title="Form dialog">
-        {/* A FormDialog with a typed field and a choice: a Select takes a
-            name, so its value is in the form, and choosing counts as an edit. */}
+        {/* A FormDialog with a typed field, a choice (a Select takes a name, so
+            its value is in the form, and choosing counts as an edit) and a
+            record it can't do without (a required RecordPicker, said in the
+            app's words by its Field's validate). */}
         <FormDialog
           trigger={<Button variant="outline" />}
           label="Open a form"
           title="New report"
           description="Its title and how often it comes."
-          initial={{ title: "Stock levels", kind: "weekly" }}
+          initial={{ title: "Stock levels", kind: "weekly", owner: "" }}
           submit="Create"
           failTitle="Couldn't save the report"
           onSubmit={async (v) => {
-            toastManager.add({ type: "success", title: `${v.title} comes ${v.kind}` });
+            toastManager.add({ type: "success", title: `${v.title} comes ${v.kind}, to ${KIT_PICKS.find((p) => p.id === v.owner)?.name}` });
           }}
         >
           <Field name="title" validate={(v) => (String(v ?? "").trim() ? null : "A report needs a title.")}>
@@ -424,6 +426,11 @@ function Overlays() {
                 ))}
               </SelectPopup>
             </Select>
+          </Field>
+          <Field name="owner" validate={(v) => (v ? null : "A report needs an owner.")}>
+            <FieldLabel>Owner</FieldLabel>
+            <RecordPicker name="owner" required empty="No one matches." find={async (q) => KIT_PICKS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} />
+            <FieldError />
           </Field>
         </FormDialog>
       </Section>

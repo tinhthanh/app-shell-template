@@ -46,6 +46,12 @@ them for your branch and lists the diffs; look at every one, then
 `--take` copies them over `e2e/snapshots/`, and you commit them. Say in
 the PR that the baselines are CI's and what each diff shows.
 
+With neither (no Docker, and you may not push, as in a trial): make every
+change the pictures need all the same (the `e2e/scenes.json` scene of a new
+view included), and list under Not done each baseline that moves and why
+("a new place on the rail: every desktop picture"). Whoever pushes takes
+them from CI as above; nothing else is left undone for want of them.
+
 While you chase a failure, run only that test: its file and line
 (`e2e/a11y.spec.ts:150`) or `--grep "its title"`, and `--repeat-each` on
 it alone. The whole browser suite, and `A11Y_FULL=1` on all of axe, take
@@ -181,7 +187,8 @@ configs or these rules without the `guardrail-change` label.
   `lib/selection.ts`), kept in the list's state and let go when its key
   changes, with a `BulkBar` (components/bulk-bar.tsx) in the toolbar's
   place: each write through `optimistic({ …, invalidate: false })` and one
-  `invalidate` after, a change said with Undo, a delete asked first.
+  `invalidate` after, a change said with Undo, a delete asked first
+  (`setStatuses`, components/bulk-status.ts, does the status for you).
 - **A list that can grow is read a page at a time** with `usePages`
   (lib/resource.ts): the server filters and sorts and answers a `Page`
   (lib/pages.ts), the key names the query (`projects${listQuery(…)}`),
@@ -243,6 +250,9 @@ configs or these rules without the `guardrail-change` label.
 A test that loads a module afresh (`import("./prefs.ts?case")`, to read
 another saved state) makes coverage count it as a module of its own, with
 its own uncovered functions: keep those to the one or two a case needs.
+The thresholds are for all the node-run modules together, so a new module
+can pass with little of it run: give it its own `*.test.ts`, as the
+recipes say, rather than leaning on the total.
 `src/components` and `src/views` are `.tsx` and never run in node: their
 behaviour is proven in `e2e/`.
 
@@ -254,7 +264,9 @@ behaviour is proven in `e2e/`.
   `App.tsx`; a place in `src/lib/nav.tsx` (a product place goes before
   Kit, which stays last of the top group; ⌘1–9 follow the order); a
   `data-testid` on the view's root; a scene in
-  `e2e/a11y.spec.ts`; a behaviour test.
+  `e2e/a11y.spec.ts`; a scene in `e2e/scenes.json` (`{ id, hash, ready }`:
+  its baseline and its `pnpm shots` picture; required, as the axe scene is);
+  a behaviour test.
 - **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
   nested object is merged in the initialiser, as `systemThemes` is); a
   `SettingsRow` in a section; `applyUiPrefs` if it changes layout. A new
@@ -264,9 +276,12 @@ behaviour is proven in `e2e/`.
   saved value shouldn't override. A pick-one value that isn't one of the
   options falls back to the default in the initialiser, as `sidebarWidth`
   is clamped (test that a malformed save falls back). A setting that is a
-  list's default filter fills in only when the address doesn't name that
-  filter: the address wins, so a link means the same to everyone it is
-  sent to (say in the PR how a link shows it). A new section also needs
+  list's default filter is written into the address when the list opens
+  with no say on it (`withDefault`, `lib/default-filter.ts`, with
+  `setView(…, { replace: true })`), so the address always says what the list
+  shows and a link means the same to everyone it is sent to; the list's own
+  chip writes `show` or `hide`. "Hide done tasks" is the worked example
+  (`views/tasks/`). A new section also needs
   `SettingsSectionId` in `store.ts`, `SECTIONS` in `routes.ts` and in
   `settings-view.tsx`, its line in Find a setting's `INDEX`
   (`views/settings/find.tsx`, with `settings.findWords.<id>` in every

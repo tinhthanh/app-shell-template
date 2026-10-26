@@ -149,3 +149,15 @@ test("a second open in the same test starts from the prefs it gives", async ({ a
   await app.page.reload();
   await expect(app.page.locator("html")).toHaveAttribute("lang", "vi");
 });
+
+test("Hide done tasks is kept, and the Tasks list then opens without them", async ({ app }) => {
+  await app.open();
+  const general = await app.openSettings("general");
+  const hide = general.getByTestId("hide-done-tasks");
+  await expect(hide).not.toBeChecked();
+  await hide.click();
+  await expect(hide).toBeChecked();
+  expect(((await app.stored("app.prefs")) as { hideDoneTasks: boolean }).hideDoneTasks).toBe(true);
+  await app.open({ hash: "/tasks" });
+  await expect(app.page).toHaveURL(/done=hide/);
+});

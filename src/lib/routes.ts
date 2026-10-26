@@ -12,11 +12,12 @@ const STATUSES: readonly ProjectStatus[] = PROJECT_STATUSES;
 const TASK_STATUS: readonly TaskStatus[] = TASK_STATUSES;
 
 // query writes a view's filters after the path, leaving out what is unset.
-function query(v: { q?: string; status?: string; tags?: string[]; project?: string; sort?: string }): string {
+function query(v: { q?: string; status?: string; tags?: string[]; project?: string; done?: string; sort?: string }): string {
   const p = new URLSearchParams();
   if (v.q) p.set("q", v.q);
   if (v.status) p.set("status", v.status);
   if (v.project) p.set("project", v.project);
+  if (v.done) p.set("done", v.done);
   if (v.tags?.length) p.set("tags", v.tags.join(","));
   if (v.sort) p.set("sort", v.sort);
   const s = p.toString();
@@ -78,6 +79,7 @@ export function hashToView(hash: string): View {
         ...(p.get("q") ? { q: p.get("q") as string } : {}),
         ...(status && (TASK_STATUS as string[]).includes(status) ? { status: status as TaskStatus } : {}),
         ...(p.get("project") ? { project: p.get("project") as string } : {}),
+        ...(p.get("done") === "show" || p.get("done") === "hide" ? { done: p.get("done") as "show" | "hide" } : {}),
         ...(p.get("sort") ? { sort: p.get("sort") as string } : {}),
       };
     }

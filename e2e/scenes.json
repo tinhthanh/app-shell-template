@@ -15,6 +15,16 @@
     "ready": "project-detail"
   },
   {
+    "id": "tasks",
+    "hash": "#/tasks",
+    "ready": "task-row"
+  },
+  {
+    "id": "task-detail",
+    "hash": "#/tasks/t-webhooks",
+    "ready": "task-detail"
+  },
+  {
     "id": "settings-appearance",
     "hash": "#/settings/appearance",
     "ready": "settings-appearance"

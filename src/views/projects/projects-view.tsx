@@ -2,6 +2,7 @@ import { ChevronDownIcon, ListTodoIcon, PencilIcon, PlusIcon, RefreshCwIcon, Tra
 import { type ReactNode, useEffect, useState } from "react";
 
 import { BulkBar } from "@/components/bulk-bar";
+import { setStatuses } from "@/components/bulk-status";
 import { confirm } from "@/components/confirm";
 import { type Column, DataTable } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
@@ -198,35 +199,19 @@ function WorkspaceProjects() {
     rows.map((p) => p.id),
   );
 
-  // setStatuses puts each project in its status at once (optimistic), the
-  // list read again once they are all in; what the server refused goes back
-  // with a toast, and what it took is said with Undo, which puts each back.
-  const setStatuses = async (to: Map<string, ProjectStatus>, o: { undoing?: boolean } = {}) => {
-    const was = new Map(rows.filter((p) => to.has(p.id)).map((p) => [p.id, p.status]));
-    const results = await Promise.allSettled(
-      [...to].map(([id, status]) => optimistic<Project>({ key: key(id), listKey: lk, id, patch: { status }, write: () => client.updateProject(id, { status }), invalidate: false })),
-    );
-    invalidate(lk);
-    const failed = results.flatMap((r) => (r.status === "rejected" ? [r.reason] : []));
-    if (failed.length) toastError(failed[0], t("projects.bulk.statusFailed", { n: failed.length }));
-    const took = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.id] : []));
-    if (!took.length) return;
-    if (o.undoing) {
-      toastManager.add({ type: "success", title: t("projects.bulk.undone") });
-      return;
-    }
-    const status = [...to.values()][0] as ProjectStatus;
-    track("record.status", { kind: "project", status });
-    toastManager.add({
-      type: "success",
-      title: t("projects.bulk.statusDone", { n: took.length, status: t(STATE[status].word) }),
-      actionProps: { children: t("common.undo"), onClick: () => void setStatuses(new Map(took.flatMap((id) => (was.has(id) ? [[id, was.get(id) as ProjectStatus]] : []))), { undoing: true }) },
-    });
-  };
   const setPickedStatus = (status: ProjectStatus) => {
     const ids = [...selected];
     setPicked(new Set());
-    void setStatuses(new Map(ids.map((id) => [id, status])));
+    // Each at once, Undo to put each back (components/bulk-status.ts).
+    void setStatuses<Project, ProjectStatus>({
+      to: new Map(ids.map((id) => [id, status])),
+      rows,
+      key,
+      listKey: lk,
+      write: (id, s) => client.updateProject(id, { status: s }),
+      words: { done: (n, s) => t("projects.bulk.statusDone", { n, status: t(STATE[s].word) }), failed: (n) => t("projects.bulk.statusFailed", { n }), undone: t("projects.bulk.undone") },
+      kind: "project",
+    });
   };
   // deletePicked asks first (it can't be undone), then deletes each; what went
   // leaves every list and Recent, what the server kept is said.

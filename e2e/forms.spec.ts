@@ -15,9 +15,24 @@ test("changing only a choice counts as an edit: closing asks first, and saving k
   const confirm = app.page.getByTestId("confirm");
   await expect(confirm).toContainText("Discard your changes?");
   await confirm.getByRole("button", { name: "Cancel" }).click();
+  await dialog.getByTestId("picker-owner").fill("ware");
+  await app.page.getByRole("option", { name: "Warehouse" }).click();
   await dialog.getByRole("button", { name: "Create" }).click();
   await expect(dialog).toHaveCount(0);
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "comes monthly" })).toBeVisible();
+});
+
+test("a record the form can't do without is asked for in the app's words, and once picked it goes", async ({ app }) => {
+  await app.open({ hash: "/kit/overlays" });
+  await app.page.getByRole("button", { name: "Open a form" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "New report" });
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(dialog.getByText("A report needs an owner.")).toBeVisible();
+  await dialog.getByTestId("picker-owner").fill("shop");
+  await app.page.getByRole("option", { name: "Shop" }).click();
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "to Shop" })).toBeVisible();
 });
 
 test("a form opened and closed with nothing changed closes without asking", async ({ app }) => {
