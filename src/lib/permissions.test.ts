@@ -13,7 +13,7 @@ test("an owner may do everything, a member everything but delete, a viewer nothi
   );
   assert.deepEqual(
     all.filter((a) => can({ role: "member" }, a)),
-    ["project.create", "project.edit", "task.create", "task.edit", "workspace.create"],
+    ["project.create", "project.edit", "task.create", "task.edit", "file.upload", "workspace.create"],
   );
   assert.deepEqual(
     all.filter((a) => can({ role: "viewer" }, a)),

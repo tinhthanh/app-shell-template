@@ -7,18 +7,18 @@ import { Dialog, DialogClose, DialogDescription, DialogFooter, DialogHeader, Dia
 import { APP_VERSION } from "@/lib/app";
 import { t } from "@/lib/i18n";
 import { firstRun, setPrefs, usePrefs } from "@/lib/prefs";
-import { RELEASES } from "@/lib/releases";
-import { decide, latestRelease, type Release } from "@/lib/whats-new";
+import { type ChangelogEntry, decide, latestRelease } from "@/lib/whats-new";
+import { WHATS_NEW } from "@/lib/whats-new-notes";
 
 // What's new shows a release's notes: once after an update (lib/whats-new.ts
 // decides, against prefs.whatsNewSeen), and whenever asked from the palette
 // or Settings › About (openWhatsNew). App.tsx mounts it once. The frame is
 // in the language in use; the notes are the changelog's, as written.
 
-const useWhatsNew = create<{ release?: Release }>()(() => ({}));
+const useWhatsNew = create<{ release?: ChangelogEntry }>()(() => ({}));
 
 export function openWhatsNew() {
-  useWhatsNew.setState({ release: latestRelease(RELEASES) });
+  useWhatsNew.setState({ release: latestRelease(WHATS_NEW) });
 }
 
 // useWhatsNewAfterUpdate shows the dialog once after an update, and keeps
@@ -28,7 +28,7 @@ export function useWhatsNewAfterUpdate() {
   // Decided once, as the app starts, not on every change of seen.
   // biome-ignore lint/correctness/useExhaustiveDependencies: decided once as the app starts, not again when seen changes.
   useEffect(() => {
-    const d = decide({ firstRun, seen, current: APP_VERSION, releases: RELEASES });
+    const d = decide({ firstRun, seen, current: APP_VERSION, releases: WHATS_NEW });
     if (d.seen !== seen) setPrefs({ whatsNewSeen: d.seen });
     if (d.show) useWhatsNew.setState({ release: d.show });
   }, []);

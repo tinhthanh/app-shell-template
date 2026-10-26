@@ -16,6 +16,7 @@ test("every view has an address, and the address reads back to the view", () => 
     { kind: "tasks" },
     { kind: "tasks", id: "t-checkout" },
     { kind: "tasks", q: "tax", status: "doing", project: "p-shop", sort: "due:asc" },
+    { kind: "tasks", done: "hide" },
     { kind: "kit" },
     { kind: "kit", section: "buttons" },
     { kind: "settings" },
@@ -27,7 +28,7 @@ test("every view has an address, and the address reads back to the view", () => 
 });
 
 test("a task status the app doesn't know is dropped", () => {
-  assert.deepEqual(hashToView("#/tasks?status=lost&project=p-shop"), { kind: "tasks", project: "p-shop" });
+  assert.deepEqual(hashToView("#/tasks?status=lost&project=p-shop&done=maybe"), { kind: "tasks", project: "p-shop" });
 });
 
 test("a filter the app doesn't know is dropped, and an empty one is not written", () => {

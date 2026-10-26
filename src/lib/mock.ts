@@ -368,6 +368,7 @@ export function mockClient(given: MockOptions = {}): Client {
           (!query.workspace || t.workspace === query.workspace) &&
           (!q || `${t.title} ${t.project?.name ?? ""}`.toLowerCase().includes(q)) &&
           (!query.status || t.status === query.status) &&
+          (!query.hideDone || t.status !== "done") &&
           (!query.project || t.project?.id === query.project),
       );
       return structuredClone(pageOf(sortRows(match, query.sort, TASK_SORTS), query.cursor, query.limit));
@@ -410,7 +411,7 @@ export function mockClient(given: MockOptions = {}): Client {
       tasks = tasks.filter((t) => t.id !== id);
     },
     async uploadFile(file) {
-      await guard(true, "task.edit");
+      await guard(true, "file.upload");
       if (file.size > MAX_FILE) throw new ApiError("Files up to 5 MB, please.", 422, "invalid", "attachment");
       const f: Attachment = { id: `f-${files.size + 1}-${Date.now().toString(36)}`, name: file.name, size: file.size, type: file.type || "application/octet-stream" };
       files.set(f.id, f);

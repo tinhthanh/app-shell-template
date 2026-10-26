@@ -35,6 +35,8 @@ export interface Prefs {
   railPlaces: string[] | null;
   // Home's getting-started list: the steps taken, and whether it was put away (lib/onboarding.ts).
   onboarding: { done: string[]; dismissed: boolean };
+  // The Tasks list leaves out done tasks unless its address asks for them (lib/default-filter.ts).
+  hideDoneTasks: boolean;
   // Usage events may go to the host's analytics (lib/analytics.ts): only when the person says so.
   shareUsage: boolean;
 }
@@ -53,6 +55,7 @@ export const DEFAULTS: Prefs = {
   railPlaces: null,
   onboarding: { done: [], dismissed: false },
   shareUsage: false,
+  hideDoneTasks: false,
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to
@@ -96,6 +99,7 @@ export function fromSaved(saved: Saved): Prefs {
     folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
     // Only a yes the person gave: anything else is no.
     shareUsage: saved.shareUsage === true,
+    hideDoneTasks: saved.hideDoneTasks === true,
     onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
   };
 }

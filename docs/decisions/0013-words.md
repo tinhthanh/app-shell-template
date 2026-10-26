@@ -41,6 +41,13 @@ voice (`i18n.test.ts` holds the tone marks to it):
 | dự án, cài đặt, chủ đề, phím tắt, giao diện | | the places and settings |
 | Free, Team, Enterprise; a product's or a plan's name | Miễn phí, Nhóm, Doanh nghiệp | names stay as the product spells them |
 | đã ngừng sử dụng | đã rời đi | a customer who left |
+| {name} hiện đang tạm dừng / đang làm / đã lên kế hoạch | {name} đã được … | a status toast for a state ("now paused", "under way", "planned"): hiện đang … for what lasts |
+| {name} đã xong / đã phát hành | {name} hiện đang xong | a status toast for a state that is reached ("done", "shipped"): đã … |
+| công việc, bản phát hành, phiên bản, ngày phát hành, tệp | nhiệm vụ, release, version, file | tasks, releases, a version, a ship date, a file |
+| hạn, trễ hạn | deadline, quá hạn | a due day, and one that has passed |
+
+A count is `{n, plural, …}` in English and plain `{n} …` in Vietnamese,
+which has one form (`Đã chọn {n}`, `{n} dự án`).
 
 **Revisit if.** A language needs plural forms or gender (then: ICU
 messages through a library), or the words come from a translation

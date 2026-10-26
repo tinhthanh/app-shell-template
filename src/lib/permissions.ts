@@ -17,6 +17,9 @@ export const ACTIONS = {
   "task.create": ["owner", "member"],
   "task.edit": ["owner", "member"],
   "task.delete": ["owner"],
+  // Sending a file (POST /files) for any record a form attaches it to; the
+  // record's own write then decides whether it may name it.
+  "file.upload": ["owner", "member"],
   "workspace.create": ["owner", "member"],
 } satisfies Record<string, readonly Role[]>;
 

@@ -15,14 +15,34 @@ test("the workspace's tasks list with their project and day, and a late one says
   await expect(row(app, "t-checkout")).not.toHaveAttribute("data-late");
 });
 
-test("a slow server shows the loader, a down one the failure with Try again, an empty one the empty state", async ({ app }) => {
+test("a slow server shows the loader until the tasks come", async ({ app }) => {
   await app.open({ params: { slow: "1" }, hash: "/tasks" });
   await expect(app.page.getByTestId("tasks-loading")).toBeVisible();
   await expect(app.page.getByTestId("task-row").first()).toBeVisible();
+});
+
+test("a server that is down says so, with Try again", async ({ app }) => {
   await app.open({ params: { fail: "1" }, hash: "/tasks" });
   await expect(app.page.getByTestId("tasks-failed").getByRole("button", { name: "Try again" })).toBeVisible();
+});
+
+test("a workspace with no tasks shows the empty state", async ({ app }) => {
   await app.open({ params: { empty: "1" }, hash: "/tasks" });
   await expect(app.page.getByTestId("tasks-empty")).toBeVisible();
+});
+
+test("another workspace on the rail lists its own tasks", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+  await app.page.locator("[data-testid=rail-workspace][data-workspace=w-globex]").click();
+  await expect(app.page.getByTestId("task-row")).toHaveCount(2);
+  await expect(row(app, "t-invoices")).toBeVisible();
+});
+
+test("a task opened from a link in another workspace brings its workspace with it", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-invoices" });
+  await expect(app.page.getByTestId("task-detail").getByRole("heading", { name: "Send the October invoices", exact: true })).toBeVisible();
+  await expect(app.page.getByTestId("workspace-header")).toContainText("Globex");
 });
 
 test("a task is made with every kind of field: a title, a project found as you type, a day and a file", async ({ app }) => {
@@ -86,13 +106,57 @@ test("a task is deleted after a confirm, and Back from a task lands on its row",
   await expect(row(app, "t-labels")).toHaveCount(0);
 });
 
-test("a project's page leads to its tasks, and the filter comes off", async ({ app }) => {
+test("a project's page leads to its tasks, and the filter comes off with its ✕", async ({ app }) => {
   await app.open({ hash: "/projects/p-api" });
   await app.page.getByTestId("project-tasks").click();
   await expect(app.page).toHaveURL(/#\/tasks\?project=p-api$/);
   await expect(app.page.getByTestId("task-row")).toHaveCount(1);
-  await app.page.getByTestId("tasks-project-filter").click();
+  await app.page.getByRole("button", { name: "Clear the choice" }).click();
   await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+  await expect(app.page).toHaveURL(/#\/tasks$/);
+});
+
+test("the toolbar narrows the tasks to a project found as you type, and the address keeps it", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await app.page.getByTestId("tasks-project-filter").fill("ios");
+  await app.page.getByRole("option", { name: "iOS app" }).click();
+  await expect(app.page.getByTestId("task-row")).toHaveCount(1);
+  await expect(app.page).toHaveURL(/project=p-ios/);
+  await app.page.reload();
+  await expect(row(app, "t-icons")).toBeVisible();
+  await expect(app.page.getByTestId("task-row")).toHaveCount(1);
+});
+
+test("with Hide done tasks on, the list opens without them and the address says so", async ({ app }) => {
+  await app.open({ prefs: { hideDoneTasks: true }, hash: "/tasks" });
+  await expect(app.page).toHaveURL(/#\/tasks\?done=hide$/);
+  await expect(app.page.getByTestId("task-row")).toHaveCount(5);
+  await expect(row(app, "t-labels")).toHaveCount(0);
+});
+
+test("a link that says to show done tasks shows them, whatever the setting", async ({ app }) => {
+  await app.open({ prefs: { hideDoneTasks: true }, hash: "/tasks?done=show" });
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+  await expect(app.page).toHaveURL(/done=show/);
+});
+
+test("closing the task form with edits asks first", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-icons" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the task" });
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Newer app icons");
+  await app.page.keyboard.press("Escape");
+  await expect(app.page.getByTestId("confirm")).toContainText("Discard your changes?");
+});
+
+test("a save the server refuses keeps the form open, with a toast", async ({ app }) => {
+  await app.open({ params: { failWrites: "1" }, hash: "/tasks/t-icons" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the task" });
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Newer app icons");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't save the task" })).toBeVisible();
+  await expect(dialog).toBeVisible();
 });
 
 test("a viewer sees the tasks but no way to make, change or delete one", async ({ app }) => {

@@ -85,11 +85,16 @@ names. You write the fields and the save. `ProjectForm` in
      (`src/components/record-picker.tsx`) inside a `Field`, with `name`,
      `initial` and a `find(query, signal)` that asks the server (a page of the
      list with `q`); its value in the form is the record's id, "" for none.
+     One the form can't do without: `required` on the picker and a `validate`
+     on its `Field` in the app's words (`v ? null : t("reports.owner.needed")`),
+     as the Kit's Overlays › Form dialog has it.
    - **A file**: `FileField` (`src/components/file-field.tsx`) gives the
      choice (keep, new, none) through `onChoice`, kept in a ref; on save, a
      new file goes to `client.uploadFile` first and the record names it by
      its id, `null` takes it off. Say a too-big file on the field before it
-     is sent (`MAX_FILE`, `src/lib/upload.ts`), as the server will.
+     is sent (`MAX_FILE`, `src/lib/upload.ts`), as the server will. Sending
+     is its own action, `file.upload` (`lib/permissions.ts`), shared by every
+     resource that takes a file: don't guard it with your resource's edit.
 
 4. **The server's refusal**: the mock throws
    `new ApiError("A report needs a title.", 422, "invalid", "title")`; the

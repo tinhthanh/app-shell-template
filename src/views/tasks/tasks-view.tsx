@@ -1,14 +1,16 @@
-import { FileIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon, XIcon } from "lucide-react";
+import { FileIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import { type Column, DataTable } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
 import { ErrorNote, toastError } from "@/components/error-note";
 import { type FileChoice, FileField } from "@/components/file-field";
+import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
 import { ListToolbar, NothingMatches } from "@/components/list-page";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
+import { RecordFilter } from "@/components/record-filter";
 import { RecordPicker } from "@/components/record-picker";
 import { removeRecord } from "@/components/remove-record";
 import { ResourceView } from "@/components/resource-view";
@@ -23,6 +25,7 @@ import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
 import { useSettled } from "@/hooks/use-settled";
 import { track } from "@/lib/analytics";
 import { ApiError, client, listQuery } from "@/lib/api";
+import { withDefault } from "@/lib/default-filter";
 import { ago, day, fileSize, today } from "@/lib/format";
 import { type Key, t } from "@/lib/i18n";
 import { parseSort, sortToString } from "@/lib/list-keys";
@@ -114,6 +117,8 @@ export const listOf = (v: TasksView): TaskQuery => ({
   q: v.q?.trim() || undefined,
   status: v.status,
   project: v.project,
+  // A status asked for wins over hiding the done ones.
+  hideDone: v.done === "hide" && !v.status ? true : undefined,
   sort: parseSort(v.sort, SORTABLE) && v.sort,
 });
 export const listKey = (v: TasksView) => `tasks${listQuery(listOf(v))}`;
@@ -149,8 +154,15 @@ function WorkspaceTasks() {
   const lk = listKey(asked);
   const tasks = usePages((page, signal) => client.tasks({ ...listOf(asked), ...page }, { signal }), { key: lk });
   const set = (patch: Partial<TasksView>) => useStore.getState().setView({ ...view, ...patch }, { replace: true });
+  // Hide done tasks (Settings › General) is this list's default: written into
+  // the address when it names neither done nor a status (lib/default-filter.ts).
+  const hideDone = usePrefs((p) => p.hideDoneTasks);
+  useEffect(() => {
+    const next = withDefault(view, "done", hideDone ? "hide" : undefined, ["status"]);
+    if (next) useStore.getState().setView(next, { replace: true });
+  }, [view, hideDone]);
   const status: StatusFilter = view.status ?? "";
-  const filtered = Boolean(view.q?.trim() || status || view.project);
+  const filtered = Boolean(view.q?.trim() || status || view.project || view.done === "hide");
   const backTo = useReturnFocus("data-task");
   const open = (task: Task) => useStore.getState().setView({ ...view, id: task.id });
   // The project filter's name: the first task names it, or its id until one does.
@@ -173,11 +185,20 @@ function WorkspaceTasks() {
       <ListToolbar>
         <SearchField className="w-56" value={view.q ?? ""} onChange={(v) => set({ q: v || undefined })} placeholder={t("tasks.find")} />
         <PickOne<StatusFilter> label={t("tasks.status")} value={status} options={statuses()} onChange={(v) => set({ status: v || undefined })} />
-        {view.project && (
-          <Button size="sm" variant="outline" data-testid="tasks-project-filter" onClick={() => set({ project: undefined })} aria-label={t("tasks.forProject.clear")}>
-            {t("tasks.forProject", { name: projectName ?? "" })}
-            <XIcon />
-          </Button>
+        <RecordFilter
+          label={t("tasks.column.project")}
+          testid="tasks-project-filter"
+          value={view.project ? { id: view.project, name: projectName ?? view.project } : null}
+          empty={t("tasks.field.project.none")}
+          find={async (q, signal) =>
+            (await client.projects({ workspace: usePrefs.getState().workspace ?? undefined, q: q || undefined, limit: 20 }, { signal })).items.map((p) => ({ id: p.id, name: p.name }))
+          }
+          onChange={(p) => set({ project: p?.id })}
+        />
+        {!status && (
+          <FilterChip pressed={view.done === "hide"} onPressedChange={(on) => set({ done: on ? "hide" : "show" })}>
+            {t("tasks.hideDone")}
+          </FilterChip>
         )}
       </ListToolbar>
       <div className="min-h-0 flex-1 overflow-y-auto">

@@ -5,6 +5,9 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Settings › General › Hide done tasks: Tasks opens without the done ones, and the address says so, so a link reads the same to whoever opens it; the list's "Hide done" chip changes it there and then.
+- Tasks can be narrowed to a project from the toolbar, found as you type.
+
 - Tasks: a second place, after Projects, for what needs doing in a workspace. Each task has a status, a due day (late ones say so), the project it is for (found as you type), and a file. A project's page links to its tasks, and ⌘K finds them. Kit moves to ⌘4.
 
 - The API the app needs is written down as a contract (api/openapi.json) to hand whoever builds the server; the client and the fixtures are checked against it, and `pnpm stub` serves it so the app can run on its real HTTP client before there is a backend.

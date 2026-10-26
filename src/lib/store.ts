@@ -16,7 +16,8 @@ import type { ProjectStatus, TaskStatus } from "./types.ts";
 export type View =
   | { kind: "home" }
   | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[]; sort?: string }
-  | { kind: "tasks"; id?: string; q?: string; status?: TaskStatus; project?: string; sort?: string }
+  // done: "hide" leaves done tasks out, "show" keeps them whatever the setting says.
+  | { kind: "tasks"; id?: string; q?: string; status?: TaskStatus; project?: string; done?: "show" | "hide"; sort?: string }
   | { kind: "kit"; section?: string }
   | { kind: "settings"; section?: SettingsSectionId }
   // An address the app doesn't know (a stale link, a typo): said so, not Home.

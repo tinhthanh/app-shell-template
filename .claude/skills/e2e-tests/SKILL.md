@@ -59,7 +59,7 @@ the baselines in `e2e/snapshots/` (Linux renderings, so CI's match). It
 runs with the suite on Linux; on a Mac, `pnpm test:visual` runs it in the
 Playwright Linux image (Docker). When a change means to alter the look,
 `pnpm test:visual --update` writes the new baselines: commit them, and
-the PR's review sees the pictures. Add a scene to `e2e/scenes.json` for a new view.
+the PR's review sees the pictures. Add a scene to `e2e/scenes.json` for a new view (required: AGENTS.md › A view).
 
 `pnpm shots` writes every desktop scene of `e2e/scenes.json` in Default
 Dark and Default Light to `shots/` (gitignored), for a PR's "Proof"

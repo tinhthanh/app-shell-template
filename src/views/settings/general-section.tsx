@@ -16,6 +16,7 @@ export function GeneralSection() {
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
   const language = usePrefs((p) => p.language);
   const shareUsage = usePrefs((p) => p.shareUsage);
+  const hideDoneTasks = usePrefs((p) => p.hideDoneTasks);
   // Asked only where the host collects usage (config.js's analyticsUrl, lib/analytics.ts).
   const collects = Boolean(runtime().analyticsUrl);
 
@@ -42,6 +43,12 @@ export function GeneralSection() {
             ]}
             onChange={(v) => setPrefs({ sidebarCollapsed: v === "rail" })}
           />
+        </SettingsRow>
+      </SettingsGroup>
+
+      <SettingsGroup title={t("settings.general.listsGroup")}>
+        <SettingsRow label={t("settings.general.hideDoneTasks")} description={t("settings.general.hideDoneTasksDescription")}>
+          <Switch data-testid="hide-done-tasks" aria-label={t("settings.general.hideDoneTasks")} checked={hideDoneTasks} onCheckedChange={(on) => setPrefs({ hideDoneTasks: on })} />
         </SettingsRow>
       </SettingsGroup>
 

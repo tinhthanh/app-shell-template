@@ -62,3 +62,9 @@ test("usage is shared only after a yes: off by default, off for an old save, and
   assert.equal(usePrefs.getState().shareUsage, false);
   assert.equal((await fresh({ shareUsage: "yes", version: 1 }, "share-odd")).shareUsage, false);
 });
+
+test("Hide done tasks is off by default, off for an old save, and only true is on", async () => {
+  assert.equal(DEFAULTS.hideDoneTasks, false);
+  assert.equal(usePrefs.getState().hideDoneTasks, false);
+  assert.equal((await fresh({ hideDoneTasks: "yes", version: 1 }, "hide-odd")).hideDoneTasks, false);
+});

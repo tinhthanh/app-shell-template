@@ -9,6 +9,10 @@ import { t } from "@/lib/i18n";
 // (find, called off when the typing moves on), pick one. Its value in the
 // form is the record's id (name), the empty string for none. Put it in a
 // Field with a FieldLabel, as any control; components/ui/combobox.tsx draws it.
+// A record the form can't do without: required here, and the Field's
+// validate says so in the app's words (validate={(v) => (v ? null : t(…))}),
+// as a text field's does. RecordFilter (record-filter.tsx) is the same
+// search in a list's toolbar.
 export interface Picked {
   id: string;
   name: string;
@@ -21,8 +25,16 @@ export function RecordPicker({
   placeholder,
   empty,
   onPick,
+  required,
+  label,
+  testid,
 }: {
-  name: string;
+  // The form's field; none for a picker that only reports (a filter).
+  name?: string;
+  required?: boolean;
+  // Its name for a screen reader when no FieldLabel gives one (a toolbar).
+  label?: string;
+  testid?: string;
   initial?: Picked | null;
   find(query: string, signal: AbortSignal): Promise<Picked[]>;
   placeholder?: string;
@@ -52,6 +64,7 @@ export function RecordPicker({
   return (
     <Combobox<Picked>
       name={name}
+      required={required}
       items={items}
       value={value}
       onValueChange={(v) => {
@@ -65,7 +78,14 @@ export function RecordPicker({
       itemToStringValue={(p) => p.id}
       isItemEqualToValue={(a, b) => a.id === b.id}
     >
-      <ComboboxInput placeholder={placeholder} showClear clearProps={{ "aria-label": t("common.picker.clear") }} data-testid={`picker-${name}`} />
+      <ComboboxInput
+        placeholder={placeholder}
+        aria-label={label}
+        showClear
+        clearProps={{ "aria-label": t("common.picker.clear") }}
+        triggerProps={{ "aria-label": t("common.picker.open") }}
+        data-testid={testid ?? `picker-${name}`}
+      />
       <ComboboxPopup>
         <ComboboxStatus className="sr-only">{failed ? t("common.picker.failed") : null}</ComboboxStatus>
         <ComboboxEmpty>{failed ? t("common.picker.failed") : empty}</ComboboxEmpty>

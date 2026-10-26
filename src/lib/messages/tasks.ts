@@ -45,13 +45,12 @@ export const en = {
   "tasks.noDue": "No due day",
   "tasks.noProject": "No project",
   "tasks.noFile": "No file",
-  "tasks.forProject": "Project: {name}",
-  "tasks.forProject.clear": "Show every project's tasks",
   "tasks.empty.title": "No tasks yet",
   "tasks.empty.canCreate": "Make the first, and pick its project, its day and a file.",
   "tasks.empty.cannotCreate": "Someone in the workspace adds the first.",
   "tasks.delete.description": "The task and its file go for good.",
   "tasks.ofProject": "Tasks",
+  "tasks.hideDone": "Hide done",
 } as const;
 
 export const vi: Record<keyof typeof en, string> = {
@@ -69,8 +68,8 @@ export const vi: Record<keyof typeof en, string> = {
   "tasks.state.todo": "cần làm",
   "tasks.state.doing": "đang làm",
   "tasks.state.done": "xong",
-  "tasks.nowTodo": "{name} trở lại cần làm",
-  "tasks.nowDoing": "{name} đang được làm",
+  "tasks.nowTodo": "{name} hiện đang cần làm",
+  "tasks.nowDoing": "{name} hiện đang làm",
   "tasks.nowDone": "{name} đã xong",
   "tasks.updateFailed": "Không cập nhật được công việc",
   "tasks.saveFailed": "Không lưu được công việc",
@@ -96,11 +95,10 @@ export const vi: Record<keyof typeof en, string> = {
   "tasks.noDue": "Chưa có hạn",
   "tasks.noProject": "Không thuộc dự án",
   "tasks.noFile": "Không có tệp",
-  "tasks.forProject": "Dự án: {name}",
-  "tasks.forProject.clear": "Hiện công việc của mọi dự án",
   "tasks.empty.title": "Chưa có công việc nào",
   "tasks.empty.canCreate": "Tạo công việc đầu tiên, chọn dự án, ngày hạn và một tệp.",
   "tasks.empty.cannotCreate": "Một thành viên của không gian làm việc sẽ thêm công việc đầu tiên.",
   "tasks.delete.description": "Công việc và tệp của nó sẽ mất vĩnh viễn.",
   "tasks.ofProject": "Công việc",
+  "tasks.hideDone": "Ẩn việc đã xong",
 };
