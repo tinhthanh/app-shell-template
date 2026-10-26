@@ -22,6 +22,11 @@ a write         optimistic({ key, listKey, id, patch, write: () => client.update
                 a 422 with code "invalid" lands on the field   views/projects (the edit form)
 ```
 
+The contract is `api/openapi.json`: every `Client` method is an operation
+(its `operationId`), `pnpm check:contract` holds `httpClient`'s paths and the
+mock's answers to it, and `pnpm stub` serves the mock over HTTP by it, so the
+real client runs end to end before there is a backend (ADR 0016).
+
 `client` is chosen once, at load (the fixtures' code comes as its own
 chunk, at the first call, only in mock mode), by `isMock()` in
 `src/lib/api.ts`: the fixtures when the host's `config.js`

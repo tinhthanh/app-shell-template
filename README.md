@@ -56,6 +56,8 @@ What you get, wired and working:
 ```sh
 pnpm install
 pnpm dev            # http://localhost:1420 on the mock fixtures
+pnpm stub           # the API contract (api/openapi.json) served from the fixtures, on :8787;
+                    #   VITE_API_URL=http://localhost:8787 pnpm dev runs the real HTTP client
 pnpm check          # typecheck, lint, the rule checks, themes, unit tests, build, size
 pnpm format         # Biome, in place
 pnpm test:e2e       # the browser suite (installs Chromium the first time with
@@ -92,7 +94,8 @@ src/              the app: App.tsx (the shell), index.css (tokens, type scale, g
   themes/         the themes, how they are applied, and their contrast check
   views/          one folder per view: home, projects (the example resource), kit, settings, signin
 e2e/              the Playwright suite, its fixture and its screenshot baselines
-scripts/          the checks pnpm check runs, and the release, shots and CI helpers
+scripts/          the checks pnpm check runs, the contract's check and stub, and the release, shots and CI helpers
+api/              openapi.json: the API the client asks of a server, which the mock and the stub keep
 biome-plugins/    the lint rules Biome can't state on its own
 docs/             the map (architecture.md), the decisions, deploying, the trials
 deploy/           the Docker image, nginx and the CSP
@@ -121,7 +124,8 @@ The complete recipes, with every file each one touches, are in
    inline appearance script in `index.html` (its hash in `deploy/csp.txt`
    must be redone: `pnpm check:csp` prints the new one) and
    `e2e/fixtures.ts`.
-2. **Your resource**: replace `Project` in `src/lib/types.ts`, the paths in
+2. **Your resource**: describe it in `api/openapi.json` first (hand it to
+   whoever builds the server), then replace `Project` in `src/lib/types.ts`, the paths in
    `httpClient` (`src/lib/api.ts`) and the fixtures in `src/lib/mock.ts`;
    a list-and-detail view after `views/projects/`, on the shared pieces
    (`ListToolbar`, `DataTable`, `DetailPage`, `FormDialog`, `optimistic()`,

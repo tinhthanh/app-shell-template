@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- The API the app needs is written down as a contract (api/openapi.json) to hand whoever builds the server; the client and the fixtures are checked against it, and `pnpm stub` serves it so the app can run on its real HTTP client before there is a backend.
+
 - Pick several projects (a box per row, Space, Shift for a range, ⌘A for all, Esc to let go) and set their status or delete them at once; a status change says so with Undo, which puts each back as it was.
 
 - Several tabs act as one: signing out in one signs out all, signing in brings back the others, and a setting or theme changed in one is the same in the rest.
