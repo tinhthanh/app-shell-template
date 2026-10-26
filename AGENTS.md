@@ -99,7 +99,7 @@ configs or these rules without the `guardrail-change` label.
 | A view | Its round trip in `src/lib/routes.test.ts`, a scene in `e2e/a11y.spec.ts`, a behaviour test in an e2e spec |
 | A setting | A `prefs.test.ts` case (default, and the migration when `PREFS_VERSION` moves), and `e2e/settings.spec.ts` showing it persists (`app.stored("app.prefs")`) |
 | A shortcut | `src/lib/keys.test.ts` (the press reaches it), and `e2e/shell.spec.ts` pressing it with the `mod` helper |
-| A resource, or a view that reads | `src/lib/mock.test.ts`, and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` (`<ResourceView testid="x">` names them `x-loading`, `x-failed`, `x-empty`) |
+| A resource, or a view that reads | `src/lib/mock.test.ts`, and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` (`<ResourceView testid="x">` names them `x-loading`, `x-failed`, `x-empty`, and `x-missing`, `x-forbidden` for a 404 and a 403) |
 | A UI-kit component | A section on the Kit page (axe checks it in both appearances) |
 | A theme | `pnpm check:themes` |
 | Component behaviour (focus, dialogs, layout) | An e2e spec. There is no DOM test runner here, and we don't add one: Playwright on the real build is the proof |
@@ -155,7 +155,9 @@ configs or these rules without the `guardrail-change` label.
   rewrites them for other platforms.
 - **Reads go through `useResource`** and are drawn by `<ResourceView>`
   (components/resource-view.tsx), which draws loading, failed and empty for
-  you; a failed write is `toastError`. Nothing calls `fetch` outside
+  you, and a 404 or a 403 as NotFound or Forbidden (components/not-here.tsx,
+  no Try again); an address the app doesn't know is the `missing` view, not
+  Home. A failed write is `toastError`. Nothing calls `fetch` outside
   `src/lib/api.ts`. A read passes on the signal it is given
   (`(signal) => client.project(id, { signal })`), so a read nobody wants
   any more stops; the client tries a dropped or turned-away read twice
@@ -179,7 +181,12 @@ configs or these rules without the `guardrail-change` label.
   trigger, the busy Save, the dirty check (closing with edits asks first)
   and puts a server refusal (`ApiError`, code `invalid`) on the field it
   names. A write that should show at once goes through `optimistic()`
-  (lib/resource-cache.ts), which puts things back if the server refuses.
+  (lib/resource-cache.ts), which puts things back if the server refuses;
+  `?hold=1` keeps every write unanswered, so a test sees what shows before
+  the server confirms without racing the latency. Once a write is confirmed,
+  `invalidate(listKey)` has every list of the resource on screen read again
+  (`optimistic()` and `removeRecord()` call it; a form that writes on its
+  own calls it after).
   Coming back to a list, the keyboard lands on the row it left through
   `returnFocusTo`/`useReturnFocus` (hooks/use-return-focus.ts).
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).

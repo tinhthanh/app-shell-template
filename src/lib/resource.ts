@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { appendPage, PAGE_SIZE } from "./pages.ts";
-import { cached, mutate, remember, subscribe, writeCount } from "./resource-cache.ts";
+import { cached, mutate, onStale, remember, subscribe, writeCount } from "./resource-cache.ts";
 import { initial, initialFrom, next, type ResourceState } from "./resource-state.ts";
 import type { Page } from "./types.ts";
 
@@ -62,6 +62,8 @@ export function useResource<T>(read: (signal: AbortSignal) => Promise<T>, deps: 
   }, [key]);
   // What is kept under the key changes (an answer, a mutate): draw it.
   useEffect(() => (key ? subscribe<T>(key, (data) => dispatch({ type: "loaded", data })) : undefined), [key]);
+  // A write elsewhere may have moved what this shows (invalidate): read again.
+  useEffect(() => (key ? onStale(key, bump) : undefined), [key]);
   const reload = useCallback(() => bump(), []);
   return { ...state, reload };
 }

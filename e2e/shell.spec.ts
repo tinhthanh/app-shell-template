@@ -120,7 +120,15 @@ test("the view is in the URL: reload keeps it, the back button goes back, a link
   await expect(app.page.getByTestId("project-detail")).toHaveCount(0);
   await app.open({ hash: "/settings/appearance" });
   await expect(app.page.getByTestId("settings-appearance")).toBeVisible();
-  await app.open({ hash: "/nowhere" });
+});
+
+test("an address the app doesn't know says so, keeps the address, and leads Home", async ({ app }) => {
+  await app.open({ hash: "/nowhere/p-1" });
+  const missing = app.page.getByTestId("missing");
+  await expect(missing.getByRole("heading", { name: "Nothing here" })).toBeVisible();
+  await expect(app.page).toHaveURL(/#\/nowhere\/p-1$/);
+  await expect(app.page).toHaveTitle(`Nothing here — ${APP_NAME}`);
+  await missing.getByRole("button", { name: "Go to Home" }).click();
   await expect(app.page.getByRole("heading", { name: "Home" })).toBeVisible();
 });
 

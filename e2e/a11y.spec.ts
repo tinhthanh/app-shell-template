@@ -35,6 +35,20 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
       await expect(app.page.getByTestId(`kit-${id}`)).toBeVisible();
     },
   })),
+  {
+    id: "missing",
+    run: async (app) => {
+      await app.open({ hash: "/no/such/page" });
+      await expect(app.page.getByTestId("missing")).toBeVisible();
+    },
+  },
+  {
+    id: "project forbidden",
+    run: async (app) => {
+      await app.open({ hash: "/projects/p-vault" });
+      await expect(app.page.getByTestId("project-forbidden")).toBeVisible();
+    },
+  },
   { id: "settings appearance", run: async (app) => void (await app.openSettings("appearance")) },
   { id: "settings general", run: async (app) => void (await app.openSettings("general")) },
   {

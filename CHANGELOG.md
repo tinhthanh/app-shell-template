@@ -5,6 +5,10 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- An address the app doesn't know says "Nothing here" with a way Home, instead of quietly showing Home; a project that is gone says so without a pointless Try again, and one in a workspace you aren't in says it isn't yours to see.
+- A change saved on a project's page reaches the lists beside it at once: renamed, re-sorted, counted again, without leaving the page.
+- The app starts lighter (200 KB instead of 219 KB): the command palette, the sign-in page and the new-workspace form load once they are needed, or when the app is idle.
+
 - Settings › General describes the sidebar as it is now: folded, the rail of places and workspaces is left.
 
 - After a sign-out, whoever signs in next starts clean: no notices, counts, Recent or workspace left from the last person, and a toast is shown once, not again.

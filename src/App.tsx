@@ -1,10 +1,10 @@
-import { Fragment, Suspense, useEffect } from "react";
+import { Fragment, Suspense, useEffect, useState } from "react";
 
 import { Announcer } from "@/components/announcer";
 import { AppSidebar, PhoneBar, usePhone } from "@/components/app-sidebar";
-import { CommandPalette } from "@/components/command-palette";
 import { ConfirmHost } from "@/components/confirm";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { NotFound } from "@/components/not-here";
 import { NoticeToasts } from "@/components/notices";
 import { ShortcutsSheet } from "@/components/shortcuts-sheet";
 import { StatusBar } from "@/components/status-bar";
@@ -26,18 +26,22 @@ import { watchStillness } from "@/lib/still";
 import { assertNever, useStore, type View, type ViewKind } from "@/lib/store";
 import { loadWorkspaces } from "@/lib/workspace";
 import { HomeView } from "@/views/home/home-view";
-import { SignInView } from "@/views/signin/signin-view";
 
 // Home loads with the app; the other views load on first use (lib/lazy-view.tsx)
 // and are fetched once the app is idle, so a first visit draws at once.
 const ProjectsView = lazyView(() => import("@/views/projects/projects-view").then((m) => m.ProjectsView));
+// Code the app doesn't start with: the palette until it is first opened,
+// the sign-in page until someone is signed out.
+const CommandPalette = lazyView(() => import("@/components/command-palette").then((m) => m.CommandPalette));
+const SignInView = lazyView(() => import("@/views/signin/signin-view").then((m) => m.SignInView));
 const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
 const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 
 // What the window is called on each view, and what an error names. Every
 // kind but home must be here: tsc says so.
 // In the language in use, so read at render.
-const viewTitles = () => ({ projects: t("shell.place.projects"), kit: t("shell.place.kit"), settings: t("shell.place.settings") }) satisfies Record<Exclude<ViewKind, "home">, string>;
+const viewTitles = () =>
+  ({ projects: t("shell.place.projects"), kit: t("shell.place.kit"), settings: t("shell.place.settings"), missing: t("common.notFound.title") }) satisfies Record<Exclude<ViewKind, "home">, string>;
 
 // ?crash=<kind> makes that view throw, so the error boundary around it can
 // be seen and tested (e2e/shell.spec.ts). Only on the fixtures or with the
@@ -56,6 +60,8 @@ function ViewFor({ view }: { view: View }) {
       return <KitView />;
     case "settings":
       return <SettingsView />;
+    case "missing":
+      return <NotFound testid="missing" home />;
     default:
       return assertNever(view);
   }
@@ -90,6 +96,10 @@ export default function App() {
   // A new language redraws the frame and the dialogs in it (lib/i18n.ts);
   // the view, what was read and the session are kept outside, so they stay.
   const language = usePrefs((p) => p.language);
+  // The palette is drawn from its first opening on, so it can close with its animation.
+  const paletteOpen = useStore((s) => s.paletteOpen);
+  const [paletteWanted, setPaletteWanted] = useState(false);
+  if (paletteOpen && !paletteWanted) setPaletteWanted(true);
   // Away from a developer's machine, fixtures mean the API was never configured.
   const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
 
@@ -98,7 +108,9 @@ export default function App() {
       <TooltipProvider delay={300}>
         <ToastProvider position="bottom-right">
           <Fragment key={language}>
-            <SignInView />
+            <Suspense>
+              <SignInView />
+            </Suspense>
           </Fragment>
           <Announcer />
         </ToastProvider>
@@ -141,7 +153,11 @@ export default function App() {
             {!(view.kind === "settings" && !phone) && <StatusBar />}
           </div>
           <ErrorBoundary scope={t("shell.aDialog")}>
-            <CommandPalette />
+            {paletteWanted && (
+              <Suspense>
+                <CommandPalette />
+              </Suspense>
+            )}
             <ShortcutsSheet />
             <ConfirmHost />
             <WhatsNewDialog />

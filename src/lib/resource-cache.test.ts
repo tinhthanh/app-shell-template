@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { cached, clearCache, forget, listsOf, MAX_KEPT, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
+import { cached, clearCache, forget, invalidate, listsOf, MAX_KEPT, mutate, onStale, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
 import type { Page } from "./types.ts";
 
 test.beforeEach(clearCache);
@@ -119,4 +119,24 @@ test("a write reaches every kept list of the resource, and a refusal puts each b
   assert.equal(cached<Page<Row>>("rows2")?.items[0]?.status, "paused");
   await assert.rejects(optimistic<Row>({ key: "row2:a", listKey: "rows2?status=active", id: "a", patch: { status: "archived" }, write: () => Promise.reject(new Error("no")) }), /no/);
   assert.equal(cached<Page<Row>>("rows2")?.items[0]?.status, "paused");
+});
+
+test("a confirmed write has every list of its resource on screen read again, and no other resource's", async () => {
+  const read: string[] = [];
+  const stops = ["projects?workspace=w-acme", "projects?workspace=w-acme&status=active", "project-tags:w-acme", "project:p-shop"].map((k) => onStale(k, () => read.push(k)));
+  remember("project:p-shop", { id: "p-shop", status: "active" });
+  await optimistic({ key: "project:p-shop", listKey: "projects?workspace=w-acme&status=active", id: "p-shop", patch: { status: "paused" }, write: async () => ({ id: "p-shop", status: "paused" }) });
+  assert.deepEqual(read.sort(), ["projects?workspace=w-acme", "projects?workspace=w-acme&status=active"]);
+  // Off screen, a list isn't read; it reads again when it comes back.
+  for (const stop of stops) stop();
+  invalidate("projects");
+  assert.equal(read.length, 2);
+});
+
+test("a refused write reads nothing again: the lists are put back as they were", async () => {
+  const read: string[] = [];
+  const stop = onStale("projects", () => read.push("projects"));
+  await assert.rejects(optimistic({ key: "project:p", listKey: "projects", id: "p", patch: {}, write: async () => Promise.reject(new Error("no")) }));
+  assert.deepEqual(read, []);
+  stop();
 });

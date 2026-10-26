@@ -17,6 +17,7 @@ test("every view has an address, and the address reads back to the view", () => 
     { kind: "kit", section: "buttons" },
     { kind: "settings" },
     { kind: "settings", section: "appearance" },
+    { kind: "missing", path: "reports/r-1" },
   ] satisfies View[]) {
     assert.deepEqual(hashToView(viewToHash(v)), v);
   }
@@ -33,8 +34,9 @@ test("an id with odd characters survives the round trip", () => {
   assert.deepEqual(hashToView(viewToHash(v)), v);
 });
 
-test("an address the app doesn't know is Home; an unknown settings section is Settings", () => {
-  assert.deepEqual(hashToView("#/nowhere"), { kind: "home" });
+test("an address the app doesn't know says so, kept as it was asked; none is Home; an unknown settings section is Settings", () => {
+  assert.deepEqual(hashToView("#/nowhere"), { kind: "missing", path: "nowhere" });
+  assert.deepEqual(hashToView("#/old/p-1?x=1"), { kind: "missing", path: "old/p-1?x=1" });
   assert.deepEqual(hashToView("#/settings/nope"), { kind: "settings" });
   assert.deepEqual(hashToView(""), { kind: "home" });
   assert.deepEqual(hashToView("#/"), { kind: "home" });

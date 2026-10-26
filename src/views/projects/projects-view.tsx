@@ -31,7 +31,7 @@ import { editRows } from "@/lib/pages";
 import { setPrefs, usePrefs } from "@/lib/prefs";
 import { withRecent } from "@/lib/recent";
 import { usePages, useResource } from "@/lib/resource";
-import { mutate, optimistic } from "@/lib/resource-cache";
+import { invalidate, mutate, optimistic } from "@/lib/resource-cache";
 import { useCan } from "@/lib/session";
 import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
@@ -388,6 +388,8 @@ export function ProjectForm({ project, listKey, onSaved, trigger, label }: { pro
         const input = { name: v.name ?? "", description: v.description ?? "" };
         const saved = project ? await client.updateProject(project.id, input) : await client.createProject({ ...input, workspace: usePrefs.getState().workspace ?? undefined });
         if (!project && listKey) mutate<Page<Project>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Project> | undefined);
+        // Where it falls under each filter and sort is the server's to say.
+        invalidate(listKey ?? "projects");
         onSaved(saved);
         toastManager.add({ type: "success", title: project ? t("projects.saved") : t("projects.created", { name: saved.name }) });
       }}

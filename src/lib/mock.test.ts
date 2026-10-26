@@ -179,6 +179,20 @@ test("a new workspace's id is its own, even from a name with no letters to give,
   await assert.rejects(mockClient({ latency: 0, role: "viewer" }).createWorkspace({ name: "Nope" }), (e: unknown) => e instanceof ApiError && e.status === 403);
 });
 
+test("with hold, a write never answers while reads still do", async () => {
+  const c = mockClient({ latency: 0, hold: true });
+  const settled = await Promise.race([c.updateProject("p-shop", { status: "paused" }).then(() => "answered"), new Promise((r) => setTimeout(() => r("waiting"), 30))]);
+  assert.equal(settled, "waiting");
+  assert.equal((await c.project("p-shop")).status, "active");
+});
+
+test("a project in a workspace the person isn't in is refused with a 403, and a missing one is a 404", async () => {
+  const c = mockClient({ latency: 0 });
+  await assert.rejects(c.project("p-vault"), (e: unknown) => e instanceof ApiError && e.status === 403);
+  await assert.rejects(c.project("p-nope"), (e: unknown) => e instanceof ApiError && e.status === 404);
+  assert.ok(!(await c.projects()).items.some((p) => p.id === "p-vault"));
+});
+
 test("the workspaces read doesn't count as failOnce's first call, but fails with the server", async () => {
   assert.equal((await mockClient({ latency: 0, failOnce: true }).workspaces()).length, 2);
   await assert.rejects(mockClient({ latency: 0, fail: true }).workspaces(), (e: unknown) => e instanceof ApiError && e.status === 503);

@@ -118,12 +118,18 @@ test("a failed save is a toast in plain words, and the project is left as it was
   await expect(detail.getByText("Active", { exact: true })).toBeVisible();
 });
 
-test("a project that doesn't exist says so, with a way back", async ({ app }) => {
+test("a project that doesn't exist says so, with no Try again, and a way back", async ({ app }) => {
   await app.open({ hash: "/projects/nope" });
-  const note = app.page.getByTestId("error-note");
-  await expect(note).toContainText("It's gone");
+  const missing = app.page.getByTestId("project-missing");
+  await expect(missing.getByRole("heading", { name: "Nothing here" })).toBeVisible();
+  await expect(missing.getByRole("button", { name: "Try again" })).toHaveCount(0);
   await app.page.getByRole("button", { name: "Back to projects" }).click();
   await expect(app.page.getByTestId("projects")).toBeVisible();
+});
+
+test("a project in a workspace you aren't in says it isn't yours to see", async ({ app }) => {
+  await app.open({ hash: "/projects/p-vault" });
+  await expect(app.page.getByTestId("project-forbidden").getByRole("heading", { name: "Not yours to see" })).toBeVisible();
 });
 
 test("switching projects quickly shows the last one asked for, never an earlier answer", async ({ app }) => {
@@ -181,16 +187,37 @@ test("coming back to the list draws it at once from what was kept, and reads aga
   expect(await app.page.getByTestId("projects-loading").count()).toBe(0);
 });
 
-test("a status change shows at once, and goes back with a toast when the server refuses", async ({ app }) => {
-  await app.open({ params: { failWrites: "1", slow: "1" }, hash: "/projects/p-shop" });
+test("a status change shows at once, before the server has answered, in the record and the sheet", async ({ app }) => {
+  // ?hold=1: the write never answers, so what shows can only be the app's own.
+  await app.open({ params: { hold: "1" }, hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
   await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
-  // Before the server answers: already paused on screen.
-  await expect(detail.getByText("Paused", { exact: true }).first()).toBeVisible({ timeout: 500 });
+  await expect(detail.getByRole("button", { name: "Paused", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(app.page.getByTestId("projects-column").getByRole("region", { name: "Paused" }).locator("[data-project=p-shop]")).toBeVisible();
+  await expect(app.page.locator("[data-slot=toast-title]")).toHaveCount(0);
+});
+
+test("a status change the server refuses goes back, with a toast", async ({ app }) => {
+  await app.open({ params: { failWrites: "1" }, hash: "/projects/p-shop" });
+  const detail = app.page.getByTestId("project-detail");
+  await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+  await detail.getByRole("button", { name: "Paused", exact: true }).click();
   // The server refuses: back to Active, with the toast.
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
   await expect(detail.getByText("Active", { exact: true }).first()).toBeVisible();
+});
+
+test("a project renamed on its page is renamed in the sheet beside it, without leaving", async ({ app }) => {
+  await app.open({ hash: "/projects/p-shop" });
+  const row = app.page.locator("[data-testid=column-project][data-project=p-shop]");
+  await expect(row).toContainText("Shop");
+  await app.page.getByTestId("project-detail").getByRole("button", { name: "Edit the project" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
+  await dialog.getByRole("textbox", { name: "Name" }).fill("Storefront");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(row).toContainText("Storefront");
 });
 
 test("the first project is created from the empty state, and a project is deleted after a confirm", async ({ app }) => {
