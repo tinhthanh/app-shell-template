@@ -24,6 +24,8 @@ import { rankEach } from "./search-rank.ts";
 //                         that goes down while you work: a reload keeps what was read)
 //   ?mock=1&role=viewer   signed in as a viewer (or member): the writes
 //                         their role can't take are refused with a 403
+//   ?mock=1&sessionMinutes=3  the session ends three minutes after signing in
+//                         (or after Stay signed in); the warning comes before
 //   ?mock=1&failMore=1    the list's second page fails once, then comes (Try again)
 //   ?mock=1&hold=1        writes never answer: what shows at once, before the server
 //                         confirms, stays on screen to be looked at (optimistic)
@@ -129,6 +131,8 @@ export interface MockOptions {
   // Writes never answer, so what a view shows before the server confirms
   // can be looked at and tested without a race against the latency.
   hold?: boolean;
+  // The session ends this many minutes after it starts or is made longer.
+  sessionMinutes?: number;
   // Called on a 401, as the HTTP client does (lib/session.ts signedOut).
   onUnauthorized?: () => void;
 }
@@ -148,6 +152,7 @@ const fromUrl = (): MockOptions => {
     signedOut: q.has("signedOut"),
     many: q.has("many"),
     failMore: q.has("failMore"),
+    sessionMinutes: q.has("sessionMinutes") ? Number(q.get("sessionMinutes")) : undefined,
     hold: q.has("hold"),
     role: (["owner", "member", "viewer"] as const).find((r) => r === q.get("role")),
   };
@@ -162,7 +167,10 @@ export function mockClient(given: MockOptions = {}): Client {
   let workspaces: Workspace[] = structuredClone(WORKSPACES);
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
   const me = { ...ALEX, role: opts.role ?? ALEX.role };
-  let user: User | null = opts.signedOut ? null : me;
+  // A session that ends, when sessionMinutes says so: who is signed in, until when.
+  const lasting = (u: Omit<User, "sessionEndsAt">): User => (opts.sessionMinutes ? { ...u, sessionEndsAt: new Date(Date.now() + opts.sessionMinutes * 60_000).toISOString() } : { ...u });
+  let user: User | null = opts.signedOut ? null : lasting(me);
+  const ended = () => Boolean(user?.sessionEndsAt && Date.parse(user.sessionEndsAt) <= Date.now());
   let calls = 0;
   let laterPages = 0;
   const down = () => new ApiError("The server is not answering right now.", 503, "unavailable");
@@ -176,7 +184,7 @@ export function mockClient(given: MockOptions = {}): Client {
     await wait();
     calls++;
     if (opts.fail || (opts.failOnce && calls === 1) || (opts.failAfter !== undefined && calls > opts.failAfter) || (write && opts.failWrites)) throw down();
-    if (!user) throw unauthorized();
+    if (!user || ended()) throw unauthorized();
     if (action && !can(user, action)) throw new ApiError("Your role doesn't allow that.", 403, "forbidden");
     if (write && opts.hold) await new Promise<never>(() => {});
   };
@@ -288,13 +296,13 @@ export function mockClient(given: MockOptions = {}): Client {
       // is for the read the person is looking at.
       await wait();
       if (opts.fail) throw down();
-      if (!user) throw unauthorized();
+      if (!user || ended()) throw unauthorized();
       return structuredClone(user);
     },
     async signIn(email, password) {
       await wait();
       if (!email.trim() || !password) throw new ApiError("That email and password don't match.", 401, "unauthorized");
-      user = { ...me, email: email.trim() };
+      user = lasting({ ...me, email: email.trim() });
       return structuredClone(user);
     },
     async signOut() {
@@ -303,6 +311,13 @@ export function mockClient(given: MockOptions = {}): Client {
       await wait();
       if (opts.fail || opts.failWrites) throw down();
       user = null;
+    },
+    async refreshSession() {
+      await wait();
+      if (opts.fail) throw down();
+      if (!user || ended()) throw unauthorized();
+      user = lasting(user);
+      return structuredClone(user);
     },
   };
 }

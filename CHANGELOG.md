@@ -5,6 +5,9 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Several tabs act as one: signing out in one signs out all, signing in brings back the others, and a setting or theme changed in one is the same in the rest.
+- A session the server ends warns you two minutes before, with Stay signed in; when it ends, the sign-in page says why. A call that finds the session ended asks once for a longer one before signing you out.
+
 - An address the app doesn't know says "Nothing here" with a way Home, instead of quietly showing Home; a project that is gone says so without a pointless Try again, and one in a workspace you aren't in says it isn't yours to see.
 - A change saved on a project's page reaches the lists beside it at once: renamed, re-sorted, counted again, without leaving the page.
 - The app starts lighter (200 KB instead of 219 KB): the command palette, the sign-in page and the new-workspace form load once they are needed, or when the app is idle.

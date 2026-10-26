@@ -20,6 +20,16 @@ user and a sign-in that refuses an empty password.
 set the cookie with `SameSite` and CORS `credentials` right. There is no
 "remember me" beyond what the cookie's lifetime gives.
 
-**Revisit if.** The app needs sessions across tabs without a cookie
-(then: a refresh token in memory with a BroadcastChannel, still not
-storage).
+**Since (2026-10-26).** A 401 first asks `POST /session/refresh` once (the
+server's refresh cookie, httpOnly; `ClientOptions.refreshPath`, null to
+turn it off) and tries the call again; only a refused ask signs out. A
+server that ends sessions says when (`User.sessionEndsAt`): two minutes
+before, a toast offers Stay signed in (`client.refreshSession()`), and at
+the end the person is signed out, the sign-in page saying why
+(`hooks/use-session-end.ts`). Tabs agree through a BroadcastChannel
+(`lib/tabs.ts`): a sign-out in one signs out every one, a sign-in has a
+tab on the sign-in page ask `me()` again. Still nothing in storage.
+
+**Revisit if.** The app needs sessions without a cookie at all (then: a
+refresh token in memory, handed between tabs over the same channel, still
+not storage).

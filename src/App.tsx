@@ -12,6 +12,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useWhatsNewAfterUpdate, WhatsNewDialog } from "@/components/whats-new/whats-new-dialog";
 import { useOnlineStatus } from "@/hooks/use-online";
+import { useSessionEnd } from "@/hooks/use-session-end";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
@@ -81,6 +82,8 @@ export default function App() {
   useOnlineStatus();
   // Once after an update: the release's notes (lib/whats-new.ts).
   useWhatsNewAfterUpdate();
+  // A session the server ends: warned before, signed out at the end (hooks/use-session-end.ts).
+  useSessionEnd();
   // Who is signed in: a 401 means nobody (the sign-in view); any other
   // failure lets the app open, and its reads say what is wrong.
   useEffect(() => {

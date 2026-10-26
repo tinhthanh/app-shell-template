@@ -79,9 +79,27 @@ let paletteOpener: HTMLElement | null = null;
 // paletteOpenedFrom is the element that had the keyboard when the palette opened.
 export const paletteOpenedFrom = (): HTMLElement | null => paletteOpener;
 
+let fromOtherTab = false;
 useStore.subscribe((s, prev) => {
-  if (s.themeId !== prev.themeId) save("app.ui", { themeId: s.themeId });
+  if (s.themeId !== prev.themeId && !fromOtherTab) save("app.ui", { themeId: s.themeId });
 });
+
+// takeOtherTabsUi applies the theme another tab picked (lib/tabs.ts).
+export function takeOtherTabsUi(raw: string) {
+  let themeId: unknown;
+  try {
+    themeId = (JSON.parse(raw) as { themeId?: unknown }).themeId;
+  } catch {
+    return;
+  }
+  if (typeof themeId !== "string") return;
+  fromOtherTab = true;
+  try {
+    useStore.setState({ themeId });
+  } finally {
+    fromOtherTab = false;
+  }
+}
 
 // The back button, or an edited address, changes the view (setView does
 // the reverse).

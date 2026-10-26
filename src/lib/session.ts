@@ -13,10 +13,21 @@ import type { User } from "./types.ts";
 
 export type SessionStatus = "unknown" | "signed-in" | "signed-out";
 
-export const useSession = create<{ status: SessionStatus; user?: User }>()(() => ({ status: "unknown" }));
+// why says what ended the last session when the person didn't: "ended" is the
+// server's time running out, which the sign-in page says.
+export const useSession = create<{ status: SessionStatus; user?: User; why?: "ended" }>()(() => ({ status: "unknown" }));
 
-export function signedIn(user?: User) {
+// The other tabs (lib/tabs.ts sets this): told when this one signs in or out.
+let tellTabs: (m: { type: "signed-out" } | { type: "signed-in" }) => void = () => {};
+export function setTabsTeller(tell: typeof tellTabs) {
+  tellTabs = tell;
+}
+
+// signedIn says who is signed in; o.tell is for a sign-in the person just
+// made here, which the tabs on the sign-in page should look again at.
+export function signedIn(user?: User, o: { tell?: boolean } = {}) {
   useSession.setState({ status: "signed-in", user });
+  if (o.tell) tellTabs({ type: "signed-in" });
 }
 
 // useCan says whether the person signed in may take an action
@@ -31,9 +42,15 @@ export function onSignedOut(forget: () => void) {
   forgetters.add(forget);
 }
 
-// signedOut forgets everything read for the person who left.
-export function signedOut() {
+// signedOut forgets everything read for the person who left, here and, unless
+// another tab is what said so, in every other tab.
+export function signedOut(o: { fromOtherTab?: boolean; why?: "ended" } = {}) {
+  const { status: was, user, why: before } = useSession.getState();
+  // A 401 past the session's end is that end, whichever call met it first;
+  // a late 401 after the sign-out keeps the reason it had.
+  const why = o.why ?? (user?.sessionEndsAt && Date.parse(user.sessionEndsAt) <= Date.now() ? "ended" : was === "signed-out" ? before : undefined);
   clearCache();
   for (const forget of forgetters) forget();
-  useSession.setState({ status: "signed-out", user: undefined });
+  useSession.setState({ status: "signed-out", user: undefined, why });
+  if (!o.fromOtherTab && was === "signed-in") tellTabs({ type: "signed-out" });
 }

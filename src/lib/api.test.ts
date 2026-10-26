@@ -269,3 +269,36 @@ test("a read tried again under one long-lived signal leaves no listener behind o
   assert.ok(added > 0);
   assert.equal(removed, added);
 });
+
+test("a 401 asks once for a longer session and tries again; the person stays signed in", async () => {
+  const out: number[] = [];
+  const c = httpClient("http://api.test", { retryDelays: [0, 0], onUnauthorized: () => out.push(1) });
+  queue = [
+    { status: 401, json: { error: "ended" } },
+    { status: 200, json: { id: "u" } },
+  ];
+  answer = { status: 200, json: [{ id: "p" }] };
+  assert.deepEqual(await c.projects(), [{ id: "p" }]);
+  assert.deepEqual(
+    calls.map((x) => `${x.init.method} ${x.url}`),
+    ["GET http://api.test/projects", "POST http://api.test/session/refresh", "GET http://api.test/projects"],
+  );
+  assert.deepEqual(out, []);
+});
+
+test("calls that end their session together ask for a longer one once; a refused ask signs out", async () => {
+  const out: number[] = [];
+  const c = httpClient("http://api.test", { retryDelays: [0, 0], onUnauthorized: () => out.push(1) });
+  answer = { status: 401, json: { error: "ended" } };
+  await Promise.allSettled([c.projects(), c.workspaces()]);
+  assert.equal(calls.filter((x) => x.url.endsWith("/session/refresh")).length, 1);
+  assert.deepEqual(out, [1, 1]);
+});
+
+test("a wrong password, a sign-out and a server with no refresh never ask for a longer session", async () => {
+  answer = { status: 401, json: { error: "no" } };
+  await assert.rejects(client.signIn("a", "b"));
+  await assert.rejects(client.signOut());
+  await assert.rejects(httpClient("http://api.test", { refreshPath: null }).projects());
+  assert.equal(calls.filter((x) => x.url.endsWith("/session/refresh")).length, 0);
+});

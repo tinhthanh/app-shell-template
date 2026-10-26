@@ -134,6 +134,9 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  // When the server ends this session (ISO), if it says: the app warns a
+  // little before and offers to stay (hooks/use-session-end.ts).
+  sessionEndsAt?: string;
 }
 
 // ---- Search (the palette's record search) ---------------------------------

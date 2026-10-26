@@ -73,24 +73,50 @@ const stored = load<Saved>("app.prefs", {});
 // Nothing saved before: a first run (What's new shows nothing then).
 export const firstRun = !Object.keys(stored).length;
 const saved = migratePrefs(stored);
-const { version: _version, ...savedPrefs } = saved;
 
-export const usePrefs = create<Prefs>()(() => ({
-  ...DEFAULTS,
-  ...savedPrefs,
-  systemThemes: { ...DEFAULTS.systemThemes, ...saved.systemThemes },
-  sidebarWidth: clampWidth(saved.sidebarWidth ?? SIDEBAR_DEFAULT),
-  // A language this build has no words for (or no longer has) is the system's.
-  language: saved.language === "system" || LANGUAGE_IDS.includes(saved.language as never) ? (saved.language as LanguageChoice) : "system",
-  // A save from before these, or one that isn't their shape, starts them afresh.
-  recent: Array.isArray(saved.recent) ? saved.recent.filter(isRecentItem).slice(0, MAX_RECENT) : [],
-  workspace: typeof saved.workspace === "string" ? saved.workspace : null,
-  railPlaces: Array.isArray(saved.railPlaces) ? saved.railPlaces.filter((p): p is string => typeof p === "string") : null,
-  folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
-  onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
-}));
+// fromSaved is the prefs a save comes to: the defaults, what was saved over
+// them, and each field held to its shape (a save from an older build, or
+// another tab's, is never trusted as it is).
+export function fromSaved(saved: Saved): Prefs {
+  const { version: _version, ...savedPrefs } = saved;
+  return {
+    ...DEFAULTS,
+    ...savedPrefs,
+    systemThemes: { ...DEFAULTS.systemThemes, ...saved.systemThemes },
+    sidebarWidth: clampWidth(saved.sidebarWidth ?? SIDEBAR_DEFAULT),
+    // A language this build has no words for (or no longer has) is the system's.
+    language: saved.language === "system" || LANGUAGE_IDS.includes(saved.language as never) ? (saved.language as LanguageChoice) : "system",
+    // A save from before these, or one that isn't their shape, starts them afresh.
+    recent: Array.isArray(saved.recent) ? saved.recent.filter(isRecentItem).slice(0, MAX_RECENT) : [],
+    workspace: typeof saved.workspace === "string" ? saved.workspace : null,
+    railPlaces: Array.isArray(saved.railPlaces) ? saved.railPlaces.filter((p): p is string => typeof p === "string") : null,
+    folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
+    onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
+  };
+}
 
-usePrefs.subscribe((p) => save("app.prefs", { ...p, version: PREFS_VERSION }));
+export const usePrefs = create<Prefs>()(() => fromSaved(saved));
+
+// Another tab's change is taken as it is, not saved back (which would echo).
+let fromOtherTab = false;
+usePrefs.subscribe((p) => fromOtherTab || save("app.prefs", { ...p, version: PREFS_VERSION }));
+
+// takeOtherTabsPrefs applies what another tab saved (lib/tabs.ts hears it
+// as a storage event), so a setting changed there is the setting here.
+export function takeOtherTabsPrefs(raw: string) {
+  let next: Prefs;
+  try {
+    next = fromSaved(migratePrefs(JSON.parse(raw) as Saved));
+  } catch {
+    return;
+  }
+  fromOtherTab = true;
+  try {
+    usePrefs.setState(next, true);
+  } finally {
+    fromOtherTab = false;
+  }
+}
 // The migration is kept at once, not only on the next change.
 save("app.prefs", { ...usePrefs.getState(), version: PREFS_VERSION });
 

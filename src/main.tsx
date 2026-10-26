@@ -4,9 +4,25 @@ import ReactDOM from "react-dom/client";
 
 import App from "@/App";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { client } from "@/lib/api";
 import { report } from "@/lib/report";
+import { signedIn, signedOut, useSession } from "@/lib/session";
 import { once } from "@/lib/storage";
+import { startTabs } from "@/lib/tabs";
 import "@/index.css";
+
+// The other tabs (lib/tabs.ts): signing out in one signs out every one; a
+// sign-in in one has a tab on the sign-in page look again; settings follow.
+startTabs(typeof BroadcastChannel === "undefined" ? undefined : new BroadcastChannel("app"), window, {
+  signedOut: () => signedOut({ fromOtherTab: true }),
+  signedIn: () => {
+    if (useSession.getState().status === "signed-out")
+      client.me().then(
+        (user) => signedIn(user),
+        () => {},
+      );
+  },
+});
 
 // Errors nothing caught still get reported (lib/report.ts).
 window.addEventListener("error", (e) => report(e.error ?? e.message, { where: "window" }));

@@ -98,6 +98,27 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    // The server ended the session: the sign-in page says so.
+    id: "sign in after the session ended",
+    run: async (app) => {
+      await app.page.clock.install();
+      await app.open({ params: { sessionMinutes: "3" } });
+      await expect(app.page.getByTestId("workspace-header")).toBeVisible();
+      await app.page.clock.fastForward("03:01");
+      await expect(app.page.getByTestId("signin-ended")).toBeVisible();
+    },
+  },
+  {
+    id: "session ending warning",
+    run: async (app) => {
+      await app.page.clock.install();
+      await app.open({ params: { sessionMinutes: "3" } });
+      await expect(app.page.getByTestId("workspace-header")).toBeVisible();
+      await app.page.clock.fastForward("01:01");
+      await expect(app.page.getByRole("button", { name: "Stay signed in" })).toBeVisible();
+    },
+  },
+  {
     id: "what's new",
     run: async (app) => {
       await app.openSettings("about");
