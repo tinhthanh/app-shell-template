@@ -279,7 +279,8 @@ test("⌘K finds a project by a few letters and opens it", async ({ app }) => {
   await app.page.keyboard.press(`${mod()}+k`);
   const palette = app.page.getByTestId("command-palette");
   await palette.getByRole("combobox").fill("ware");
-  await palette.getByRole("option", { name: /Warehouse/ }).click();
+  // The project, not its task (a task also matches by its project's name).
+  await palette.getByRole("option", { name: /^Warehouse/ }).click();
   await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Warehouse", exact: true })).toBeVisible();
   await expect(app.page).toHaveTitle(`Warehouse — Projects — ${APP_NAME}`);
   // The breadcrumb goes back to the list.

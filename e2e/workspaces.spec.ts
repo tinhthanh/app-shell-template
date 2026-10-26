@@ -75,7 +75,7 @@ test("the rail's … unpins a place, which is still there under it", async ({ ap
   await app.page.getByTestId("more-places").click();
   await app.page.getByTestId("more-kit").click();
   await expect(app.page.getByTestId("kit")).toBeVisible();
-  expect(((await app.stored("app.prefs")) as { railPlaces: string[] }).railPlaces).toEqual(["home", "projects"]);
+  expect(((await app.stored("app.prefs")) as { railPlaces: string[] }).railPlaces).toEqual(["home", "projects", "tasks"]);
 });
 
 test("folded away (⌘\\), the rail alone is left, with search, the bell and a way back", async ({ app }) => {

@@ -5,11 +5,13 @@ import { BulkBar } from "@/components/bulk-bar";
 import { confirm } from "@/components/confirm";
 import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
+import { FileField } from "@/components/file-field";
 import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
 import { GettingStarted } from "@/components/getting-started";
 import { PickOne } from "@/components/pick-one";
 import { PixelLoader } from "@/components/pixel-loader";
+import { RecordPicker } from "@/components/record-picker";
 import { SimpleSelect } from "@/components/simple-select";
 import { StatusBadge, Tag } from "@/components/status-badge";
 import { Tip } from "@/components/tip";
@@ -166,6 +168,8 @@ function Buttons() {
   );
 }
 
+const KIT_PICKS = ["Shop", "Public API", "iOS app", "Android app", "Warehouse"].map((name, i) => ({ id: `p-${i}`, name }));
+
 function Inputs() {
   const [value, setValue] = useState("");
   return (
@@ -188,6 +192,27 @@ function Inputs() {
           <FieldControl render={<Input type="email" placeholder="you@example.com" value={value} onChange={(e) => setValue(e.currentTarget.value)} />} />
           <FieldDescription>Where receipts go.</FieldDescription>
         </Field>
+      </Section>
+      <Section
+        title="Fields beyond words"
+        description="A day (a native date field: its value is 2026-11-02, the browser draws it in the person's language), a record (RecordPicker: the server finds them as you type) and a file (FileField: the one kept, or a new one), as the task form has them (views/tasks/)."
+      >
+        <Field className="w-48">
+          <FieldLabel>Due</FieldLabel>
+          <FieldControl render={<Input type="date" defaultValue="2026-11-02" />} />
+        </Field>
+        <Field className="w-64">
+          <FieldLabel>Project</FieldLabel>
+          <RecordPicker
+            name="kit-project"
+            initial={{ id: "p-shop", name: "Shop" }}
+            empty="No project matches."
+            find={async (q) => KIT_PICKS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))}
+          />
+        </Field>
+        <div className="w-72">
+          <FileField name="kit-file" label="File" hint="One file, up to 5 MB." kept={{ id: "f-1", name: "retry-policy.pdf", size: 182_400, type: "application/pdf" }} onChoice={() => {}} />
+        </div>
       </Section>
       <Section title="Select">
         <SimpleSelect

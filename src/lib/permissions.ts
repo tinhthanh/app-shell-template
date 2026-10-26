@@ -14,6 +14,9 @@ export const ACTIONS = {
   "project.create": ["owner", "member"],
   "project.edit": ["owner", "member"],
   "project.delete": ["owner"],
+  "task.create": ["owner", "member"],
+  "task.edit": ["owner", "member"],
+  "task.delete": ["owner"],
   "workspace.create": ["owner", "member"],
 } satisfies Record<string, readonly Role[]>;
 

@@ -25,17 +25,21 @@ export function allowedOrigin(origin) {
   }
 }
 
+// read takes a request's body: JSON as a value, anything else (a file sent
+// as it is, POST /files) as a File named by X-File-Name.
 const read = (req) =>
   new Promise((done) => {
-    let text = "";
-    req.on("data", (c) => {
-      text += c;
-    });
+    const parts = [];
+    req.on("data", (c) => parts.push(c));
     req.on("end", () => {
+      const raw = Buffer.concat(parts);
+      const type = req.headers["content-type"] ?? "";
+      if (!type.includes("json"))
+        return done({ file: raw.length || req.headers["x-file-name"] ? new File([raw], decodeURIComponent(String(req.headers["x-file-name"] ?? "file")), { type }) : undefined });
       try {
-        done(text ? JSON.parse(text) : undefined);
+        done({ body: raw.length ? JSON.parse(raw.toString("utf8")) : undefined });
       } catch {
-        done(undefined);
+        done({});
       }
     });
   });
@@ -51,7 +55,7 @@ export async function startStub(port = 8787, mockOptions = {}) {
       ? {
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-File-Name",
           "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
           Vary: "Origin",
         }
@@ -68,7 +72,7 @@ export async function startStub(port = 8787, mockOptions = {}) {
     };
     if (!found) return send(404, { error: `No ${req.method} ${url.pathname} in the contract.`, code: "not_found" });
     try {
-      const answer = await client[found.id](...ARGS[found.id]({ params: found.params, query: Object.fromEntries(url.searchParams), body: await read(req) }));
+      const answer = await client[found.id](...ARGS[found.id]({ params: found.params, query: Object.fromEntries(url.searchParams), ...(await read(req)) }));
       const { status } = success(found.op);
       send(status, status === 204 ? undefined : answer);
     } catch (err) {

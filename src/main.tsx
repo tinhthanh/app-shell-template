@@ -11,7 +11,7 @@ import { runtime } from "@/lib/config";
 import { flagsFrom, setFlags } from "@/lib/flags";
 import { language } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
-import { beaconReporter, both, report, setReporter, viewPath } from "@/lib/report";
+import { beaconReporter, benign, both, report, setReporter, viewPath } from "@/lib/report";
 import { signedIn, signedOut, useSession } from "@/lib/session";
 import { once } from "@/lib/storage";
 import { startTabs } from "@/lib/tabs";
@@ -53,7 +53,9 @@ startTabs(typeof BroadcastChannel === "undefined" ? undefined : new BroadcastCha
 });
 
 // Errors nothing caught still get reported (lib/report.ts).
-window.addEventListener("error", (e) => report(e.error ?? e.message, { where: "window" }));
+window.addEventListener("error", (e) => {
+  if (!benign(e.message)) report(e.error ?? e.message, { where: "window" });
+});
 window.addEventListener("unhandledrejection", (e) => report(e.reason, { where: "promise" }));
 
 // A deploy replaces the hashed files: a tab left open then fails its next

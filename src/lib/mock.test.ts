@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { ApiError } from "./errors.ts";
-import { FIXTURES, mockClient } from "./mock.ts";
+import { FIXTURES, mockClient, TASKS } from "./mock.ts";
+import { MAX_FILE } from "./upload.ts";
 
 test("the fixtures list, read one, and keep an update", async () => {
   const c = mockClient({ latency: 0 });
@@ -69,11 +70,11 @@ test("signed out, every call is a 401 that says so, until a sign-in with a passw
 test("search finds projects by a few letters, best first", async () => {
   const c = mockClient({ latency: 0 });
   assert.deepEqual(
-    (await c.search("ware")).map((h) => h.name),
+    (await c.search("ware")).filter((h) => h.kind === "project").map((h) => h.name),
     ["Warehouse"],
   );
   assert.deepEqual(
-    (await c.search("app")).map((h) => h.name),
+    (await c.search("app")).filter((h) => h.kind === "project").map((h) => h.name),
     ["Android app", "iOS app"],
   );
   assert.deepEqual(await c.search(""), []);
@@ -208,4 +209,80 @@ test("a session with an end says when, ends then, and Stay signed in makes it la
 test("the workspaces read doesn't count as failOnce's first call, but fails with the server", async () => {
   assert.equal((await mockClient({ latency: 0, failOnce: true }).workspaces()).length, 2);
   await assert.rejects(mockClient({ latency: 0, fail: true }).workspaces(), (e: unknown) => e instanceof ApiError && e.status === 503);
+});
+
+test("a workspace's tasks come a page at a time, filtered by status, project and words, and sorted by their day", async () => {
+  const c = mockClient({ latency: 0 });
+  const acme = TASKS.filter((t) => t.workspace === "w-acme");
+  assert.equal((await c.tasks({ workspace: "w-acme" })).total, acme.length);
+  assert.deepEqual(
+    (await c.tasks({ workspace: "w-acme", status: "todo" })).items.map((t) => t.id).sort(),
+    acme
+      .filter((t) => t.status === "todo")
+      .map((t) => t.id)
+      .sort(),
+  );
+  assert.deepEqual(
+    (await c.tasks({ project: "p-api" })).items.map((t) => t.id),
+    ["t-webhooks"],
+  );
+  assert.deepEqual(
+    (await c.tasks({ q: "public api" })).items.map((t) => t.id),
+    ["t-webhooks"],
+  );
+  const byDay = (await c.tasks({ workspace: "w-acme", sort: "due:asc" })).items;
+  // The latest day first after sorting down; no day sorts last going up.
+  assert.equal(byDay.at(-1)?.due, undefined);
+  const first = await c.tasks({ workspace: "w-acme", limit: 2 });
+  const next = await c.tasks({ workspace: "w-acme", limit: 2, cursor: first.next });
+  assert.equal(first.items.length + next.items.length, 4);
+  assert.notEqual(first.items[0]?.id, next.items[0]?.id);
+});
+
+test("a task is made with a project of its workspace, a day and a file sent first; an edit takes them off with null", async () => {
+  const c = mockClient({ latency: 0 });
+  const file = await c.uploadFile(new File(["hello"], "brief.txt", { type: "text/plain" }));
+  assert.deepEqual({ name: file.name, size: file.size, type: file.type }, { name: "brief.txt", size: 5, type: "text/plain" });
+  const made = await c.createTask({ title: "Write the brief", project: "p-shop", due: "2026-11-02", attachment: file.id, workspace: "w-acme" });
+  assert.deepEqual(made.project, { id: "p-shop", name: "Shop" });
+  assert.equal(made.due, "2026-11-02");
+  assert.equal(made.attachment?.name, "brief.txt");
+  assert.equal(made.status, "todo");
+  const cleared = await c.updateTask(made.id, { project: null, due: null, attachment: null });
+  assert.deepEqual([cleared.project, cleared.due, cleared.attachment], [undefined, undefined, undefined]);
+  assert.equal((await c.task(made.id)).title, "Write the brief");
+});
+
+test("a task is refused without a title, with a day that isn't one, a project of another workspace, a file that never came or one too big", async () => {
+  const c = mockClient({ latency: 0 });
+  const field = (f: string) => (e: unknown) => e instanceof ApiError && e.status === 422 && e.field === f;
+  await assert.rejects(c.createTask({ title: " ", workspace: "w-acme" }), field("title"));
+  await assert.rejects(c.createTask({ title: "x", due: "next week", workspace: "w-acme" }), field("due"));
+  await assert.rejects(c.createTask({ title: "x", project: "p-billing", workspace: "w-acme" }), field("project"));
+  await assert.rejects(c.updateTask("t-icons", { attachment: "f-never" }), field("attachment"));
+  await assert.rejects(c.uploadFile(new File([new Uint8Array(MAX_FILE + 1)], "huge.bin")), field("attachment"));
+  await assert.rejects(c.task("t-none"), (e: unknown) => e instanceof ApiError && e.status === 404);
+});
+
+test("a viewer reads tasks but may not make, change or delete one; a member may not delete", async () => {
+  const viewer = mockClient({ latency: 0, role: "viewer" });
+  assert.ok((await viewer.tasks()).total > 0);
+  const forbidden = (e: unknown) => e instanceof ApiError && e.status === 403;
+  await assert.rejects(viewer.createTask({ title: "x" }), forbidden);
+  await assert.rejects(viewer.updateTask("t-icons", { status: "done" }), forbidden);
+  await assert.rejects(viewer.uploadFile(new File(["x"], "x.txt")), forbidden);
+  await assert.rejects(mockClient({ latency: 0, role: "member" }).deleteTask("t-icons"), forbidden);
+});
+
+test("search finds projects and tasks, each in its own group, a task by its project's name too", async () => {
+  const hits = await mockClient({ latency: 0 }).search("webhook");
+  assert.deepEqual(
+    hits.map((h) => `${h.kind}:${h.id}`),
+    ["project:p-api", "task:t-webhooks"],
+  );
+  const ware = await mockClient({ latency: 0 }).search("ware");
+  assert.deepEqual(
+    ware.filter((h) => h.kind === "task").map((h) => h.name),
+    ["Print labels in bulk"],
+  );
 });

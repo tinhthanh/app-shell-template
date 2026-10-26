@@ -302,3 +302,18 @@ test("a wrong password, a sign-out and a server with no refresh never ask for a 
   await assert.rejects(httpClient("http://api.test", { refreshPath: null }).projects());
   assert.equal(calls.filter((x) => x.url.endsWith("/session/refresh")).length, 0);
 });
+
+test("tasks are their own paths, and a file goes as it is with its name in a header", async () => {
+  await client.tasks({ workspace: "w-acme", project: "p-shop", sort: "due:asc" });
+  await client.updateTask("t 1", { due: null });
+  answer = { status: 200, json: { id: "f-1", name: "a b.pdf", size: 3, type: "application/pdf" } };
+  const file = new File(["abc"], "a b.pdf", { type: "application/pdf" });
+  await client.uploadFile(file);
+  assert.equal(calls[0]?.url, "http://api.test/tasks?workspace=w-acme&project=p-shop&sort=due%3Aasc");
+  assert.equal(calls[1]?.url, "http://api.test/tasks/t%201");
+  assert.equal(calls[1]?.init.body, JSON.stringify({ due: null }));
+  assert.equal(calls[2]?.url, "http://api.test/files");
+  assert.equal(calls[2]?.init.method, "POST");
+  assert.equal(calls[2]?.init.body, file);
+  assert.deepEqual(calls[2]?.init.headers, { "Content-Type": "application/pdf", "X-File-Name": "a%20b.pdf" });
+});

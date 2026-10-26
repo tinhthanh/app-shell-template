@@ -13,6 +13,11 @@ export function setReporter(r: Reporter) {
   reporter = r;
 }
 
+// benign says an error event is the browser's own noise, not the app's: a
+// ResizeObserver whose notices spill into the next frame (a popup sizing
+// itself in a dialog) is harmless, and the spec says so. It isn't reported.
+export const benign = (message: unknown): boolean => typeof message === "string" && message.startsWith("ResizeObserver loop");
+
 export function report(error: unknown, context?: Record<string, string>) {
   try {
     reporter(error, context);

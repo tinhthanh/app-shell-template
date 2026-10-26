@@ -277,6 +277,9 @@ fixtures or with the knobs on.
 | confirm | `confirm()` from anywhere; `ConfirmHost` draws it |
 | ListToolbar, NothingMatches, DetailPage, removeRecord | The shape of a list view and a record's page, shared (`components/list-page.tsx`, `detail-page.tsx`, `remove-record.ts`) |
 | FormDialog | A form in a dialog with the dirty check, busy state and field errors done (`components/form-dialog.tsx`) |
+| Tasks | The second resource (`views/tasks/`): a day, a project picked, a file; the worked example of every kind of field |
+| RecordPicker, FileField | A field that points at another record, found as the person types, and a form's one file (`components/record-picker.tsx`, `components/file-field.tsx`) |
+| day | A day with no time ("2026-11-02"), read with `day()` in `lib/format.ts`, never moved by a time zone |
 | selection, BulkBar | Rows picked in a `DataTable` (`lib/selection.ts`) and the bar that acts on them all (`components/bulk-bar.tsx`); the projects' bulk status has Undo |
 | optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
 | return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |
