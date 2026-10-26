@@ -43,9 +43,10 @@ export function resolveLanguage(choice: LanguageChoice, system: readonly string[
 // form Intl.PluralRules picks for n in the language in use (zero, one, two,
 // few, many, other, or an exact =0), # being n as that language writes
 // numbers. other is always there; a language with one form (Vietnamese)
-// writes {n} and no plural at all.
-const PLURAL = /\{(\w+), plural,((?:\s*(?:=\d+|zero|one|two|few|many|other)\s*\{[^{}]*\})+)\s*\}/g;
-const FORM = /(=\d+|zero|one|two|few|many|other)\s*\{([^{}]*)\}/g;
+// writes {n} and no plural at all. A form may hold blanks of its own
+// ({# projects are now {status}}), filled after.
+const PLURAL = /\{(\w+), plural,((?:\s*(?:=\d+|zero|one|two|few|many|other)\s*\{(?:[^{}]|\{\w+\})*\})+)\s*\}/g;
+const FORM = /(=\d+|zero|one|two|few|many|other)\s*\{((?:[^{}]|\{\w+\})*)\}/g;
 
 // plural picks a count's form: an exact =n first, then the language's category, then other.
 function plural(n: number, forms: string): string {

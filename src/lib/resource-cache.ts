@@ -119,7 +119,9 @@ function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: st
 // never read) and the error is thrown on, for the caller to explain
 // (toastError). A newer write to the same record owns the screen: an older
 // one's answer, or its refusal, changes nothing.
-export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T> }): Promise<T> {
+// Many at once (a bulk action) pass invalidate: false and call invalidate
+// once when they are all in.
+export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T>; invalidate?: boolean }): Promise<T> {
   const before = cached<T>(o.key);
   // Every kept list of the resource, with the row as each had it.
   const lists = o.listKey ? [...new Set([o.listKey, ...listsOf(o.listKey)])] : [];
@@ -138,7 +140,7 @@ export async function optimistic<T extends { id: string }>(o: { key: string; lis
     if (newest()) {
       remember(o.key, saved);
       inList(() => saved);
-      if (o.listKey) invalidate(o.listKey);
+      if (o.listKey && o.invalidate !== false) invalidate(o.listKey);
     }
     return saved;
   } catch (err) {

@@ -9,7 +9,16 @@ import type { Page } from "@/lib/types";
 // names it, the call, the record forgotten and its row taken out of the
 // list, a toast, then whatever comes next (back to the list). The confirm
 // explains a failure itself (the call throws through it).
-export function removeRecord<T extends { id: string }>(o: {
+// dropRows takes deleted records out of every kept list of the resource, not
+// only the one they were deleted from, and has the lists on screen read
+// again (the totals and the next page's cursor are the server's to say).
+export function dropRows(listKey: string, ids: readonly string[]) {
+  const gone = new Set(ids);
+  for (const k of new Set([listKey, ...listsOf(listKey)])) mutate<{ id: string }[] | Page<{ id: string }>>(k, (l) => editRows(l, (rows) => rows.filter((x) => !gone.has(x.id))));
+  invalidate(listKey);
+}
+
+export function removeRecord(o: {
   // What the confirm and the toast call it: the record's name.
   name: string;
   // What goes with it: "The project and its history go for good."
@@ -29,10 +38,7 @@ export function removeRecord<T extends { id: string }>(o: {
     run: async () => {
       await o.remove();
       forget(o.key);
-      // Out of every kept list of the resource, not only the one it was opened from.
-      for (const k of new Set([o.listKey, ...listsOf(o.listKey)])) mutate<T[] | Page<T>>(k, (l) => editRows(l, (rows) => rows.filter((x) => x.id !== o.id)));
-      // The totals and the next page's cursor are the server's to say.
-      invalidate(o.listKey);
+      dropRows(o.listKey, [o.id]);
       toastManager.add({ type: "success", title: t("common.remove.done", { name: o.name }) });
       o.after?.();
     },

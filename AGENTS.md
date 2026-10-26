@@ -176,7 +176,12 @@ configs or these rules without the `guardrail-change` label.
 - **Rows go in `<DataTable>`** (components/data-table.tsx): a sortable
   header (the sort on the `View`, as `sort=name:asc`), the arrows, PageUp/Down,
   Home and End between rows, Enter to open, and only the rows on screen in
-  the DOM, so thousands stay quick (`?many=1` on the mock).
+  the DOM, so thousands stay quick (`?many=1` on the mock). Rows that can be
+  acted on together take `selection` (a box per row; Space, Shift, ⌘A, Esc;
+  `lib/selection.ts`), kept in the list's state and let go when its key
+  changes, with a `BulkBar` (components/bulk-bar.tsx) in the toolbar's
+  place: each write through `optimistic({ …, invalidate: false })` and one
+  `invalidate` after, a change said with Undo, a delete asked first.
 - **A list that can grow is read a page at a time** with `usePages`
   (lib/resource.ts): the server filters and sorts and answers a `Page`
   (lib/pages.ts), the key names the query (`projects${listQuery(…)}`),

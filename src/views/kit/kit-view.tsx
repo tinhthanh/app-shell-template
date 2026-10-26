@@ -1,6 +1,7 @@
 import { CheckIcon, ChevronDownIcon, InfoIcon, MailIcon, PlusIcon, SearchIcon, SettingsIcon, TrashIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { usePhone } from "@/components/app-sidebar";
+import { BulkBar } from "@/components/bulk-bar";
 import { confirm } from "@/components/confirm";
 import { DataTable, type Sort } from "@/components/data-table";
 import { ErrorNote } from "@/components/error-note";
@@ -519,11 +520,25 @@ const KIT_ROWS = Array.from({ length: 60 }, (_, i) => ({
 
 function Data() {
   const [kitSort, setKitSort] = useState<Sort | undefined>({ by: "name", dir: "asc" });
+  // Two picked to start, so the bar and the boxes show (and axe sees them).
+  const [kitPicked, setKitPicked] = useState<Set<string>>(() => new Set(KIT_ROWS.slice(0, 2).map((r) => r.name)));
   return (
     <>
-      <Section title="DataTable" description="Sort by a header; move with the arrows, PageUp/Down, Home and End; thousands of rows stay quick (components/data-table.tsx).">
-        <div className="h-64 w-full rounded-lg border">
+      <Section
+        title="DataTable"
+        description="Sort by a header; move with the arrows, PageUp/Down, Home and End; thousands of rows stay quick (components/data-table.tsx). With selection: Space picks, Shift picks a range, ⌘A all, Esc none, and the BulkBar acts on them (components/bulk-bar.tsx)."
+      >
+        <div className="flex h-72 w-full flex-col overflow-hidden rounded-lg border">
+          {kitPicked.size > 0 && (
+            <BulkBar count={kitPicked.size} onClear={() => setKitPicked(new Set())}>
+              <Button size="sm" variant="outline" onClick={() => toastManager.add({ title: `Archived ${kitPicked.size}` })}>
+                Archive
+              </Button>
+            </BulkBar>
+          )}
           <DataTable
+            className="min-h-0 flex-1"
+            selection={{ selected: kitPicked, onChange: setKitPicked, rowName: (r) => r.name }}
             rows={KIT_ROWS}
             columns={[
               { id: "name", label: "Name", sort: (a, b) => a.name.localeCompare(b.name), cell: (r) => <span className="font-medium">{r.name}</span> },

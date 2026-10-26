@@ -272,6 +272,7 @@ fixtures or with the knobs on.
 | confirm | `confirm()` from anywhere; `ConfirmHost` draws it |
 | ListToolbar, NothingMatches, DetailPage, removeRecord | The shape of a list view and a record's page, shared (`components/list-page.tsx`, `detail-page.tsx`, `remove-record.ts`) |
 | FormDialog | A form in a dialog with the dirty check, busy state and field errors done (`components/form-dialog.tsx`) |
+| selection, BulkBar | Rows picked in a `DataTable` (`lib/selection.ts`) and the bar that acts on them all (`components/bulk-bar.tsx`); the projects' bulk status has Undo |
 | optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
 | return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |
 | focus home | `useRescueRemovedFocus`: the keyboard never falls to `<body>` |

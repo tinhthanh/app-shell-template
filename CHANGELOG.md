@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Pick several projects (a box per row, Space, Shift for a range, ⌘A for all, Esc to let go) and set their status or delete them at once; a status change says so with Undo, which puts each back as it was.
+
 - Several tabs act as one: signing out in one signs out all, signing in brings back the others, and a setting or theme changed in one is the same in the rest.
 - A session the server ends warns you two minutes before, with Stay signed in; when it ends, the sign-in page says why. A call that finds the session ended asks once for a longer one before signing you out.
 - A deployment can turn features on or off, send unexpected errors to its own collector, and collect usage from people who turn on Settings › General › Share usage data (off by default, and never with Global Privacy Control), all from config.js or the container's REPORT_URL and ANALYTICS_URL.
