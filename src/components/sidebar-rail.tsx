@@ -1,17 +1,13 @@
 import { EllipsisIcon, PlusIcon, SearchIcon, SettingsIcon } from "lucide-react";
-import { useMemo } from "react";
-import { FormDialog } from "@/components/form-dialog";
+import { Suspense, useMemo } from "react";
 import { ink } from "@/components/ink";
 import { NotificationBell } from "@/components/notices";
 import { Tip } from "@/components/tip";
-import { Field, FieldControl, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Menu, MenuCheckboxItem, MenuGroup, MenuGroupLabel, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "@/components/ui/menu";
-import { toastManager } from "@/components/ui/toast";
-import { client } from "@/lib/api";
 import { usePlaceBadges } from "@/lib/badges";
 import { t } from "@/lib/i18n";
 import { identicon } from "@/lib/identicon";
+import { lazyView } from "@/lib/lazy-view";
 import { isActive, type Place, places } from "@/lib/nav";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
@@ -19,7 +15,7 @@ import { useCan } from "@/lib/session";
 import { openSettings, useStore } from "@/lib/store";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { addWorkspace, initials, pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
+import { initials, pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 
 // The sidebar's rail, after Shipyard's (github.com/cosscom/shipyard, MIT):
 // the places pinned to it as icons, the rest under its "…" with the way to
@@ -279,42 +275,25 @@ export function WorkspaceAvatar({ name, size = 28 }: { name: string; size?: numb
   );
 }
 
-// NewWorkspace is the rail's last tile: a name, and the workspace is made and shows.
+// NewWorkspace is the rail's last tile. Its form loads after the app has
+// started (new-workspace.tsx); until then the tile is drawn and waits.
+const NewWorkspaceForm = lazyView(() => import("@/components/new-workspace").then((m) => m.NewWorkspace));
+export const newWorkspaceTile = cn(
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-sidebar-border border-dashed outline-none hover:border-solid hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5",
+  ink.glyph,
+);
+
 function NewWorkspace() {
   return (
-    <FormDialog
-      trigger={
-        <button
-          type="button"
-          aria-label={t("shell.newWorkspace")}
-          data-testid="new-workspace"
-          className={cn(
-            "inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-sidebar-border border-dashed outline-none hover:border-solid hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5",
-            ink.glyph,
-          )}
-        />
+    <Suspense
+      fallback={
+        <button type="button" disabled aria-label={t("shell.newWorkspace")} className={newWorkspaceTile}>
+          <PlusIcon strokeWidth={2} />
+        </button>
       }
-      label={<PlusIcon strokeWidth={2} />}
-      title={t("shell.newWorkspace")}
-      description={t("shell.newWorkspaceDescription")}
-      initial={{ name: "" }}
-      submit={t("common.create")}
-      failTitle={t("shell.workspaceFailed")}
-      onSubmit={async (v) => {
-        const made = await client.createWorkspace({ name: v.name ?? "" });
-        if (useStore.getState().view.kind === "projects") useStore.getState().setView({ kind: "projects" });
-        addWorkspace(made);
-        // The keyboard goes to the new tile once it is drawn, not back to "+".
-        requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid=rail-workspace][data-workspace="${CSS.escape(made.id)}"]`)?.focus());
-        toastManager.add({ type: "success", title: t("shell.workspaceMade", { name: made.name }) });
-      }}
     >
-      <Field name="name" validate={(v) => (String(v ?? "").trim() ? null : t("shell.workspaceNameRequired"))}>
-        <FieldLabel>{t("shell.workspaceName")}</FieldLabel>
-        <FieldControl render={<Input defaultValue="" aria-required maxLength={40} autoFocus />} />
-        <FieldError />
-      </Field>
-    </FormDialog>
+      <NewWorkspaceForm />
+    </Suspense>
   );
 }
 

@@ -13,10 +13,12 @@ view            useResource((signal) => client.project(id, { signal }), [id])   
        └─ answers with data, or throws ApiError(message, status, code)   src/lib/errors.ts
 <ResourceView>  loading   → <PixelLoader>                      src/components/resource-view.tsx
                 failed    → <ErrorNote error onRetry>          src/components/error-note.tsx (lib/explain.ts)
+                            a 404 / 403 → <NotFound> / <Forbidden>, no Try again   src/components/not-here.tsx
                 ready     → empty, or the data through children
                 (the status is a union: lib/resource-state.ts has the transitions)
 a write         optimistic({ key, listKey, id, patch, write: () => client.updateProject(id, patch) })   src/lib/resource-cache.ts
-                shown at once, put back and toastError on refusal
+                shown at once, put back and toastError on refusal;
+                confirmed, invalidate(listKey): every list of it on screen reads again
                 a 422 with code "invalid" lands on the field   views/projects (the edit form)
 ```
 
@@ -91,7 +93,8 @@ and Suspense; the other views are `lazyView`s that preload when idle.
 the rail, ⌘1–9 and the palette all read it. TypeScript holds the wiring
 together (`satisfies Record<ViewKind, …>`, an exhaustive switch), and
 `scripts/check-views.mjs` checks the parts it can't (the route, the round
-trip, the axe scene).
+trip, the axe scene). An address the app doesn't know is the `missing`
+view (NotFound, the address kept), which has no place.
 
 ## The frame
 
@@ -220,6 +223,7 @@ fixtures or with the knobs on.
 | URL | `?failMore=1` | The list's second page fails once, then comes (Try again) |
 | URL | `?failAfter=2` | The first calls work, every one after fails: a server that goes down while you work (a reload keeps the rows, with a note) |
 | URL | `?empty=1` | No records (projects, and whatever else the mock holds) |
+| URL | `?hold=1` | Writes never answer: what a view shows before the server confirms stays to be looked at |
 | URL | `?many=1` | 5,000 invented projects, for the list's scrolling and keys |
 | URL | `?role=viewer` / `member` / `owner` | Who is signed in has that role; the writes it can't take are refused with a 403 (`lib/permissions.ts`) |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |

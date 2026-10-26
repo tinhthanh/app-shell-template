@@ -17,7 +17,9 @@ export type View =
   | { kind: "home" }
   | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[]; sort?: string }
   | { kind: "kit"; section?: string }
-  | { kind: "settings"; section?: SettingsSectionId };
+  | { kind: "settings"; section?: SettingsSectionId }
+  // An address the app doesn't know (a stale link, a typo): said so, not Home.
+  | { kind: "missing"; path: string };
 
 export type SettingsSectionId = "general" | "appearance" | "shortcuts" | "about";
 

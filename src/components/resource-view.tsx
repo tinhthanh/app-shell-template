@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { ErrorNote } from "@/components/error-note";
+import { Forbidden, NotFound, notHere } from "@/components/not-here";
 import { PixelLoader } from "@/components/pixel-loader";
 import type { Resource } from "@/lib/resource";
 
@@ -12,8 +13,12 @@ import type { Resource } from "@/lib/resource";
 // keeps it too, under a note that says so, with Try again, so data that
 // may be stale never passes for fresh.
 //
+// A first read the server answered 404 or 403 for is NotFound or Forbidden
+// (not-here.tsx) rather than an error to try again.
+//
 // testid gives the states names a test can find: <testid>-loading,
-// <testid>-failed, <testid>-empty, <testid>-stale.
+// <testid>-failed, <testid>-missing, <testid>-forbidden, <testid>-empty,
+// <testid>-stale.
 export function ResourceView<T>({
   resource,
   label,
@@ -37,6 +42,8 @@ export function ResourceView<T>({
         </div>
       );
     case "failed":
+      if (notHere(resource.error) === "missing") return <NotFound testid={testid && `${testid}-missing`} />;
+      if (notHere(resource.error) === "forbidden") return <Forbidden testid={testid && `${testid}-forbidden`} />;
       return (
         <div className="mx-auto w-full max-w-xl px-8 pt-8" data-testid={testid && `${testid}-failed`}>
           <ErrorNote error={resource.error} onRetry={resource.reload} />

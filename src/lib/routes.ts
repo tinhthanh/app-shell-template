@@ -31,10 +31,12 @@ export function viewToHash(v: View): string {
       return v.section ? `#/kit/${encodeURIComponent(v.section)}` : "#/kit";
     case "settings":
       return v.section ? `#/settings/${v.section}` : "#/settings";
+    case "missing":
+      return `#/${v.path}`;
   }
 }
 
-// hashToView reads an address; anything it doesn't know is Home.
+// hashToView reads an address: none is Home, one it doesn't know is missing.
 export function hashToView(hash: string): View {
   const [path = "", search = ""] = hash.split("?", 2);
   const parts = path
@@ -67,7 +69,9 @@ export function hashToView(hash: string): View {
       return arg ? { kind: "kit", section: arg } : { kind: "kit" };
     case "settings":
       return arg && (SECTIONS as string[]).includes(arg) ? { kind: "settings", section: arg as SettingsSectionId } : { kind: "settings" };
-    default:
+    case undefined:
       return { kind: "home" };
+    default:
+      return { kind: "missing", path: hash.replace(/^#\/?/, "") };
   }
 }

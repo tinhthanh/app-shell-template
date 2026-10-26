@@ -25,6 +25,9 @@ import { rankEach } from "./search-rank.ts";
 //   ?mock=1&role=viewer   signed in as a viewer (or member): the writes
 //                         their role can't take are refused with a 403
 //   ?mock=1&failMore=1    the list's second page fails once, then comes (Try again)
+//   ?mock=1&hold=1        writes never answer: what shows at once, before the server
+//                         confirms, stays on screen to be looked at (optimistic)
+//   #/projects/p-vault    a project in another team's workspace: refused, 403
 
 const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
@@ -69,6 +72,10 @@ export const FIXTURES: Project[] = [
   { id: "p-billing", workspace: "w-globex", name: "Billing", description: "Invoices, plans and the card vault.", status: "active", owner: "jordan", tags: ["payments"], updatedAt: ago(20) },
   { id: "p-portal", workspace: "w-globex", name: "Partner portal", description: "Where resellers place their orders.", status: "paused", owner: "mina", tags: ["web"], updatedAt: ago(60 * 30) },
 ];
+
+// A project in a workspace the person isn't in: a link to it is refused
+// with a 403 (the Forbidden page), as a server would. Never listed.
+const ELSEWHERE: Project = { id: "p-vault", workspace: "w-initrode", name: "Vault", description: "Kept by another team.", status: "active", owner: "kim", tags: [], updatedAt: ago(90) };
 
 // The workspaces the person belongs to: Acme holds the projects above,
 // Globex two more, with one thing waiting (the rail's dot).
@@ -119,6 +126,9 @@ export interface MockOptions {
   // The first read of a list's later page (a cursor is given) fails; the
   // first page and every read after that one work.
   failMore?: boolean;
+  // Writes never answer, so what a view shows before the server confirms
+  // can be looked at and tested without a race against the latency.
+  hold?: boolean;
   // Called on a 401, as the HTTP client does (lib/session.ts signedOut).
   onUnauthorized?: () => void;
 }
@@ -138,6 +148,7 @@ const fromUrl = (): MockOptions => {
     signedOut: q.has("signedOut"),
     many: q.has("many"),
     failMore: q.has("failMore"),
+    hold: q.has("hold"),
     role: (["owner", "member", "viewer"] as const).find((r) => r === q.get("role")),
   };
 };
@@ -167,6 +178,7 @@ export function mockClient(given: MockOptions = {}): Client {
     if (opts.fail || (opts.failOnce && calls === 1) || (opts.failAfter !== undefined && calls > opts.failAfter) || (write && opts.failWrites)) throw down();
     if (!user) throw unauthorized();
     if (action && !can(user, action)) throw new ApiError("Your role doesn't allow that.", 403, "forbidden");
+    if (write && opts.hold) await new Promise<never>(() => {});
   };
   const find = (id: string) => {
     const p = projects.find((x) => x.id === id);
@@ -224,6 +236,7 @@ export function mockClient(given: MockOptions = {}): Client {
     },
     async project(id) {
       await guard();
+      if (id === ELSEWHERE.id) throw new ApiError("That project is in a workspace you aren't in.", 403, "forbidden");
       return structuredClone(find(id));
     },
     async updateProject(id, patch) {

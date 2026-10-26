@@ -81,6 +81,30 @@ export function listsOf(listKey: string): string[] {
   return [...data.keys()].filter((k) => k === base || k.startsWith(`${base}?`));
 }
 
+// Who reads each key on screen, to read it again when the server's answer
+// may have moved (useResource registers through onStale).
+const readers = new Map<string, Set<() => void>>();
+
+export function onStale(key: string, read: () => void): () => void {
+  const set = readers.get(key) ?? new Set();
+  set.add(read);
+  readers.set(key, set);
+  return () => {
+    set.delete(read);
+  };
+}
+
+// invalidate says a write has landed that may change any list of the
+// resource listKey names: a row that left a filter (a project paused, under
+// "active"), a new one that joins another sort, a total. Every one on
+// screen reads again behind what it shows; one that isn't reads again when
+// it comes back, as a kept key always does. Call it once the server has
+// confirmed: optimistic() and removeRecord() do.
+export function invalidate(listKey: string) {
+  const base = listKey.split("?")[0] ?? listKey;
+  for (const [k, set] of readers) if (k === base || k.startsWith(`${base}?`)) for (const read of [...set]) read();
+}
+
 // rowIn finds a row in a kept list, whole or a page at a time.
 function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: string): T | undefined {
   const rows = Array.isArray(list) ? list : list?.items;
@@ -114,6 +138,7 @@ export async function optimistic<T extends { id: string }>(o: { key: string; lis
     if (newest()) {
       remember(o.key, saved);
       inList(() => saved);
+      if (o.listKey) invalidate(o.listKey);
     }
     return saved;
   } catch (err) {

@@ -3,7 +3,7 @@
 // has a place that reloads to Home, a section the URL can't name, or a key
 // that does nothing.
 //
-//   - every View kind (src/lib/store.ts) has a case in hashToView
+//   - every View kind (src/lib/store.ts) is read by hashToView
 //     (src/lib/routes.ts), a round trip in routes.test.ts, an entry in
 //     viewTitles (App.tsx, home excepted), and an axe scene (e2e/a11y.spec.ts);
 //   - every SettingsSectionId is in routes.ts's SECTIONS and settings-view.tsx;
@@ -31,7 +31,8 @@ const a11y = await read("e2e/a11y.spec.ts");
 const settingsView = await read("src/views/settings/settings-view.tsx");
 
 for (const k of kinds) {
-  if (k !== "home" && !new RegExp(`case "${k}":`).test(routes)) problems.push(`view ${k}: no case in hashToView (src/lib/routes.ts)`);
+  const reader = /export function hashToView[\s\S]*?\n}\n/.exec(routes)?.[0] ?? "";
+  if (k !== "home" && !reader.includes(`kind: "${k}"`)) problems.push(`view ${k}: hashToView never reads it (src/lib/routes.ts)`);
   if (!routesTest.includes(`kind: "${k}"`)) problems.push(`view ${k}: no round trip in src/lib/routes.test.ts`);
   if (k !== "home" && !new RegExp(`\\b${k}: (?:"|t\\()`).test(/viewTitles =([\s\S]*?)satisfies/.exec(app)?.[1] ?? "")) problems.push(`view ${k}: no viewTitles entry in src/App.tsx`);
   if (!new RegExp(`id: ["\`]${k}\\b`).test(a11y)) problems.push(`view ${k}: no axe scene in e2e/a11y.spec.ts (a scene whose id starts with "${k}")`);

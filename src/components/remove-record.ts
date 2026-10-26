@@ -2,7 +2,7 @@ import { confirm } from "@/components/confirm";
 import { toastManager } from "@/components/ui/toast";
 import { t } from "@/lib/i18n";
 import { editRows } from "@/lib/pages";
-import { forget, listsOf, mutate } from "@/lib/resource-cache";
+import { forget, invalidate, listsOf, mutate } from "@/lib/resource-cache";
 import type { Page } from "@/lib/types";
 
 // removeRecord deletes a record the way the app does it: a confirm that
@@ -31,6 +31,8 @@ export function removeRecord<T extends { id: string }>(o: {
       forget(o.key);
       // Out of every kept list of the resource, not only the one it was opened from.
       for (const k of new Set([o.listKey, ...listsOf(o.listKey)])) mutate<T[] | Page<T>>(k, (l) => editRows(l, (rows) => rows.filter((x) => x.id !== o.id)));
+      // The totals and the next page's cursor are the server's to say.
+      invalidate(o.listKey);
       toastManager.add({ type: "success", title: t("common.remove.done", { name: o.name }) });
       o.after?.();
     },
