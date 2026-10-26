@@ -288,7 +288,7 @@ test("the arrows move between rows, End reaches the last row read and the next p
   await app.nav("projects").click();
   const rows = app.page.getByTestId("project-row");
   await expect(rows.first()).toBeVisible();
-  await expect(app.page.getByText("5,000 in all")).toBeVisible();
+  await expect(app.page.getByText("5,000 projects")).toBeVisible();
   // A screen reader hears the whole count; only what fits is in the DOM.
   await expect(app.page.getByRole("table", { name: "Projects" })).toHaveAttribute("aria-rowcount", "5000");
   expect(await rows.count()).toBeLessThan(120);
@@ -336,7 +336,7 @@ test("a page that doesn't come says so at the end of the list, and Try again bri
 
 test("a filter is asked of the server, and the count says how many match", async ({ app }) => {
   await app.open({ params: { many: "1" }, hash: "/projects?q=harbour" });
-  await expect(app.page.getByText("500 match")).toBeVisible();
+  await expect(app.page.getByText("500 projects match")).toBeVisible();
   await expect(app.page.getByRole("table", { name: "Projects" })).toHaveAttribute("aria-rowcount", "500");
 });
 

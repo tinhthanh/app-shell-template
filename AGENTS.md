@@ -134,7 +134,9 @@ configs or these rules without the `guardrail-change` label.
 - **Words go through `t()`** (`src/lib/i18n.ts`, `docs/decisions/0013-words.md`):
   a word a person reads is a key in `src/lib/messages/<area>.ts`, in
   English and in every other language there (a missing one fails to
-  compile), read in render, never at module load. `pnpm check:words`
+  compile), read in render, never at module load. A count is
+  `{n, plural, one {# project} other {# projects}}` (the forms are
+  `Intl.PluralRules`'), given the number, never a formatted string. `pnpm check:words`
   refuses English written straight into a view or a component; the Kit
   page is the exception.
 - **Dates, numbers and money go through `src/lib/format.ts`** (`ago`, `date`,
