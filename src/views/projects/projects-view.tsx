@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
 import { useSettled } from "@/hooks/use-settled";
+import { track } from "@/lib/analytics";
 import { client, listQuery } from "@/lib/api";
 import { setPlaceBadge } from "@/lib/badges";
 import { ago } from "@/lib/format";
@@ -290,6 +291,7 @@ function ProjectDetail({ id }: { id: string }) {
       const saved = await optimistic<Project>({ key: key(id), listKey: listKey(view), id, patch: { status }, write: () => client.updateProject(id, { status }) });
       // A notice: a toast now, and a line in the notification centre with a way back (lib/notifications.ts).
       notify({ title: t(NOW[status], { name: saved.name }), tone: "success", action: { label: t("shell.notice.open"), view: { kind: "projects", id } } });
+      track("record.status", { kind: "project", status });
     } catch (err) {
       toastError(err, t("projects.updateFailed"));
     }
@@ -388,6 +390,7 @@ export function ProjectForm({ project, listKey, onSaved, trigger, label }: { pro
         const input = { name: v.name ?? "", description: v.description ?? "" };
         const saved = project ? await client.updateProject(project.id, input) : await client.createProject({ ...input, workspace: usePrefs.getState().workspace ?? undefined });
         if (!project && listKey) mutate<Page<Project>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Project> | undefined);
+        if (!project) track("record.create", { kind: "project" });
         // Where it falls under each filter and sort is the server's to say.
         invalidate(listKey ?? "projects");
         onSaved(saved);
