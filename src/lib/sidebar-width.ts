@@ -15,7 +15,7 @@
 export const SIDEBAR_MIN = 200;
 export const SIDEBAR_DEFAULT = 240;
 export const SIDEBAR_MAX = 420;
-// The folded rail's width (app-sidebar.tsx Rail, w-19).
+// The rail's width: RAIL in components/sidebar-rail.tsx, kept equal.
 export const RAIL_WIDTH = 60;
 // Dragged narrower than FOLD_AT the sidebar folds to the rail, as VS Code's
 // does; dragged out of the rail past UNFOLD_AT it opens again. The gap

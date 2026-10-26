@@ -4,7 +4,7 @@ import { onSignedOut } from "./session.ts";
 
 // A place's count in the sidebar ("Projects 8", "Review 2"): any view or
 // background job sets it by the place's id, and the sidebar draws it beside
-// the place's name (components/app-sidebar.tsx). loud marks a count that
+// the place on the rail (components/sidebar-rail.tsx; a dot, or a number when loud). loud marks a count that
 // wants the person (something waits on them). After Shipyard's sidebar
 // (github.com/cosscom/shipyard, MIT). Pure, so badges.test.ts runs it in node.
 

@@ -15,7 +15,10 @@ is read where it is shown with `useResource` and kept by key in
 that comes back starts on what was kept and reads again behind, and a
 write shows its result at once through `mutate` and goes back if the
 server refuses. Storage keys are identifiers: renaming the app doesn't
-rename them.
+rename them. The frame keeps a few small stores beside these (the
+workspaces, the notices, the place counts, the status items): what the
+sidebar and the status bar draw, not a view's data, each forgotten on
+sign-out (`onSignedOut`).
 
 **Consequences.** A reload rebuilds everything from the URL, storage and
 the API. A setting change is one `setPrefs` call. Two apps from this

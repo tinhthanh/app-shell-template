@@ -47,15 +47,23 @@ a whole one's. Coming back, the first read asks for as many rows as were
 kept, so the row the keyboard left (`focusRow`) is still there. A short,
 bounded list (the tags in use) is read whole with `useResource`.
 
+A list is a workspace's: `listOf` (`views/projects/projects-view.tsx`)
+puts the workspace on show (`prefs.workspace`, `lib/workspace.ts`) in the
+query, so it is in the key too, and another workspace is another list. A
+write reaches every kept list of its resource (`listsOf` in
+`lib/resource-cache.ts`: `projects`, `projects?status=active`…), so a
+filter you come back to doesn't show the old row.
+
 ## Where state lives
 
 | State | Module | Persists as | Notes |
 |---|---|---|---|
 | The view in front, the theme, whether the palette is open | `src/lib/store.ts` (zustand) | `app.ui` (theme only) | The view mirrors the URL's hash |
-| The person's settings: density, text size, sidebar, system themes, language, the last What's new seen (`whatsNewSeen`) | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
+| The person's settings: density, text size, sidebar (folded, width, the places on the rail), system themes, language, the last What's new seen, the workspace on show, Recent, the folded sections, the getting-started steps | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
 | Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
+| The frame's: the workspaces, the notices, the place counts, the status items | `lib/workspace.ts`, `lib/notifications.ts`, `lib/badges.ts`, `lib/status-items.ts` (zustand) | nothing | Small stores the frame draws from (ADR 0009); each forgets itself on sign-out through `onSignedOut` (`lib/session.ts`), as the resource cache does, and the workspace pick and Recent go with them |
 
 `src/lib/storage.ts` wraps `localStorage` in try/catch: storage can be
 missing or throw, and the app must work without it.
@@ -84,6 +92,32 @@ the rail, ⌘1–9 and the palette all read it. TypeScript holds the wiring
 together (`satisfies Record<ViewKind, …>`, an exhaustive switch), and
 `scripts/check-views.mjs` checks the parts it can't (the route, the round
 trip, the axe scene).
+
+## The frame
+
+The sidebar is a rail beside a sheet (`components/sidebar-rail.tsx`,
+`components/app-sidebar.tsx`). The rail has the places pinned to it
+(`prefs.railPlaces`, the rest under its "…"), the person's workspaces as
+tiles and Settings. The sheet has the workspace on show (`WorkspaceHeader`),
+search, and the open place's own list: `SidebarSheet` picks it by the view's
+kind (Projects' is `views/projects/projects-column.tsx`, lazy, keyed as the
+list is so it follows its read rather than making its own), and Recent
+for any other place. ⌘\ folds the sheet away; a narrow window shows only
+the rail. The workspace on show is a preference, not part of the address
+(ADR 0014).
+
+Views tell the frame things; they never draw in it. `notify()`
+(`lib/notifications.ts`) is a toast now and a line in the bell, unread
+until looked at. `setPlaceBadge(placeId, n)` (`lib/badges.ts`) is a count
+on a place, a dot or, when loud, a number, and part of the place's name.
+`useStatusItem({ id, label, tip })` (`hooks/use-status-item.ts`) is a fact
+in the status bar while the component is mounted; an id is one item.
+`withRecent` (`lib/recent.ts`) puts an opened record in Recent, and the
+`after` a view gives `removeRecord` takes a deleted one out (as
+`projects-view.tsx` does). Home's getting-started
+list is `STEPS` in `lib/onboarding.ts`: a step is an id, its words
+(a `shell.onboarding.*` key, in every language) and a `markStep(id)` where
+the person does it.
 
 ## Keys
 
@@ -215,7 +249,6 @@ fixtures or with the knobs on.
 | closeSettings | Leaves Settings for the view it was opened from (`lib/store.ts`) |
 | state colours | success, warning, destructive, info; `--destructive-strong` is the fill white reads on |
 | density | compact or comfortable, as `data-density`; rows read `h-row`, `py-row-pad`, `h-side-row` |
-| rail | The folded sidebar: icons only |
 | Tip, tip layer | The app's tooltip (`tip.tsx`), never `title=`; a layer shares one tooltip over many rows |
 | Notice, notification centre | `notify()` (`lib/notifications.ts`): a toast now and a line in the sidebar's bell, with a way back |
 | Place badge | A count beside a place in the sidebar, `setPlaceBadge()` (`lib/badges.ts`); loud when it wants the person |
