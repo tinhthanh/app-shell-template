@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
-import { ago, date, dateTime, money, number } from "./format.ts";
+import { ago, date, dateTime, day, fileSize, money, number, today } from "./format.ts";
 
 test("ago reads a time in the person's language, at each boundary", () => {
   mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-14T12:00:00Z") });
@@ -40,4 +40,21 @@ test("a time that isn't one reads as nothing, rather than throwing", () => {
   assert.equal(date("not a date", "en-GB"), "");
   assert.equal(dateTime("2026-13-45", "en-GB"), "");
   assert.equal(ago("nope", "en-GB"), "");
+});
+
+test("a due day reads as that day wherever the person is, and one that isn't a day reads as nothing", () => {
+  assert.equal(day("2026-11-02", "en-GB"), "2 Nov 2026");
+  assert.equal(day("2026-11-02", "vi"), "2 thg 11, 2026");
+  assert.equal(day("2026-02-30", "en-GB"), "");
+  assert.equal(day("soon", "en-GB"), "");
+});
+
+test("today is written as a due day is", () => {
+  assert.equal(today(new Date(2026, 0, 5, 23, 59)), "2026-01-05");
+});
+
+test("a file's size reads in the language's units", () => {
+  assert.equal(fileSize(512, "en"), "512 byte");
+  assert.equal(fileSize(182_400, "en"), "182.4 kB");
+  assert.equal(fileSize(1_250_000, "vi"), "1,3 MB");
 });

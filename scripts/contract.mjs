@@ -11,6 +11,7 @@ export const root = resolve(import.meta.dirname, "..");
 export const loadSpec = () => JSON.parse(readFileSync(resolve(root, "api/openapi.json"), "utf8"));
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 // problems lists where value breaks schema ("$.items[0].status: not one of …"),
 // following $ref into spec's components.
@@ -18,10 +19,16 @@ export function problems(schema, value, spec, at = "$") {
   if (schema.$ref) return problems(spec.components.schemas[schema.$ref.split("/").at(-1)], value, spec, at);
   const out = [];
   for (const part of schema.allOf ?? []) out.push(...problems(part, value, spec, at));
+  // One of them fits, or the first one's problems are the answer.
+  if (schema.anyOf) {
+    const each = schema.anyOf.map((s) => problems(s, value, spec, at));
+    return each.some((p) => !p.length) ? out : [...out, ...(each[0] ?? [])];
+  }
   if (schema.enum && !schema.enum.includes(value)) return [...out, `${at}: ${JSON.stringify(value)} is not one of ${schema.enum.join(", ")}`];
   const type = Array.isArray(value) ? "array" : value === null ? "null" : Number.isInteger(value) ? "integer" : typeof value;
   if (schema.type && !(schema.type === type || (schema.type === "number" && type === "integer"))) return [...out, `${at}: a ${type}, not a ${schema.type}`];
   if (schema.format === "date-time" && !ISO.test(value)) out.push(`${at}: ${JSON.stringify(value)} is not a date-time`);
+  if (schema.format === "date" && !DAY.test(value)) out.push(`${at}: ${JSON.stringify(value)} is not a date`);
   if (schema.minimum !== undefined && value < schema.minimum) out.push(`${at}: ${value} is under ${schema.minimum}`);
   if (type === "array" && schema.items) for (const [i, v] of value.entries()) out.push(...problems(schema.items, v, spec, `${at}[${i}]`));
   if (type === "object") {
@@ -72,6 +79,12 @@ export const ARGS = {
   project: (r) => [r.params.id],
   updateProject: (r) => [r.params.id, r.body],
   deleteProject: (r) => [r.params.id],
+  tasks: (r) => [{ ...r.query, limit: r.query.limit ? Number(r.query.limit) : undefined }],
+  task: (r) => [r.params.id],
+  createTask: (r) => [r.body],
+  updateTask: (r) => [r.params.id, r.body],
+  deleteTask: (r) => [r.params.id],
+  uploadFile: (r) => [r.file],
   projectTags: (r) => [{ workspace: r.query.workspace }],
   workspaces: () => [],
   createWorkspace: (r) => [r.body],
@@ -88,6 +101,12 @@ export const SAMPLES = {
   project: { params: { id: "p-shop" } },
   updateProject: { params: { id: "p-shop" }, body: { status: "paused" } },
   deleteProject: { params: { id: "p-docs" } },
+  tasks: { query: { workspace: "w-acme", status: "todo", sort: "due:asc", limit: "2" } },
+  task: { params: { id: "t-webhooks" } },
+  uploadFile: { file: new File(["the notes"], "notes.txt", { type: "text/plain" }) },
+  createTask: { body: { title: "Contract", project: "p-shop", due: "2026-11-02", workspace: "w-acme" } },
+  updateTask: { params: { id: "t-checkout" }, body: { status: "done", due: null, project: null } },
+  deleteTask: { params: { id: "t-labels" } },
   projectTags: { query: { workspace: "w-acme" } },
   workspaces: {},
   createWorkspace: { body: { name: "Contract" } },

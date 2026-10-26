@@ -39,7 +39,8 @@ for (const [id, sample] of Object.entries(SAMPLES)) {
   const o = ops.get(id);
   if (!o) continue;
   const req = { params: {}, query: {}, ...sample };
-  const body = o.op.requestBody?.content["application/json"].schema;
+  // A JSON body is checked; a file is whatever it is.
+  const body = o.op.requestBody?.content["application/json"]?.schema;
   if (body) for (const p of problems(body, req.body, spec, `${id} request`)) out.push(p);
   let answer;
   try {

@@ -2,7 +2,7 @@
 import { type RuntimeConfig, runtime } from "./config.ts";
 import { ApiError } from "./errors.ts";
 import { signedOut } from "./session.ts";
-import type { Page, Project, ProjectQuery, SearchHit, User, Workspace } from "./types.ts";
+import type { Attachment, Page, Project, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, User, Workspace } from "./types.ts";
 
 // What a read can be given: a signal that calls it off when its answer is
 // no longer wanted (another filter, a view that left; lib/resource.ts).
@@ -31,6 +31,15 @@ export interface Client {
   updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
   createProject(input: Pick<Project, "name" | "description"> & { workspace?: string }): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+  // A page of the tasks that match, and one task; making, changing and
+  // deleting one (its project and file by id, null to take them off).
+  tasks(query?: TaskQuery, o?: ReadOptions): Promise<Page<Task>>;
+  task(id: string, o?: ReadOptions): Promise<Task>;
+  createTask(input: TaskInput & { title: string }): Promise<Task>;
+  updateTask(id: string, patch: TaskInput): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
+  // A file, sent as it is; the server keeps it and says its id.
+  uploadFile(file: File): Promise<Attachment>;
   // The records that match a few letters, best first (the palette).
   search(query: string, o?: ReadOptions): Promise<SearchHit[]>;
   // Who is signed in (401 when nobody is), signing in, and out.
@@ -200,6 +209,15 @@ async function tried<T>(base: string, method: string, path: string, body: unknow
   }
 }
 
+// A file goes as it is, its type in Content-Type and its name in a header;
+// anything else is JSON.
+const isFile = (body: unknown): body is File => typeof File !== "undefined" && body instanceof File;
+function bodyOf(body: unknown): { headers: Record<string, string>; body?: BodyInit } {
+  if (body === undefined) return { headers: {} };
+  if (isFile(body)) return { headers: { "Content-Type": body.type || "application/octet-stream", "X-File-Name": encodeURIComponent(body.name) }, body };
+  return { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+}
+
 async function once<T>(base: string, method: string, path: string, body: unknown, o: ClientOptions, signal?: AbortSignal): Promise<T> {
   const ctrl = method === "GET" ? new AbortController() : undefined;
   const timer = ctrl ? setTimeout(() => ctrl.abort(), READ_TIMEOUT_MS) : undefined;
@@ -209,10 +227,11 @@ async function once<T>(base: string, method: string, path: string, body: unknown
   let res: Response;
   try {
     if (signal?.aborted) ctrl?.abort();
+    const sent = bodyOf(body);
     res = await fetch(`${base}${path}`, {
       method,
-      headers: { ...(body === undefined ? {} : { "Content-Type": "application/json" }), ...o.headers?.() },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { ...sent.headers, ...o.headers?.() },
+      body: sent.body,
       credentials: o.credentials ?? "include",
       signal: ctrl?.signal,
     });
@@ -244,7 +263,7 @@ async function once<T>(base: string, method: string, path: string, body: unknown
 
 // listQuery writes a list's query as a URL's search, leaving out what is
 // unset: ?q=shop&status=active&tags=web,ops&sort=name:asc&cursor=50&limit=50.
-export function listQuery(query: ProjectQuery = {}): string {
+export function listQuery(query: ProjectQuery | TaskQuery = {}): string {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(query)) {
     const s = Array.isArray(v) ? v.join(",") : v === undefined ? "" : String(v);
@@ -268,6 +287,12 @@ export function httpClient(base: string, o: ClientOptions = {}): Client {
     updateProject: (id, patch) => c("PATCH", `/projects/${encodeURIComponent(id)}`, patch),
     createProject: (input) => c("POST", "/projects", input),
     deleteProject: (id) => c("DELETE", `/projects/${encodeURIComponent(id)}`),
+    tasks: (query, r) => c("GET", `/tasks${listQuery(query)}`, undefined, r?.signal),
+    task: (id, r) => c("GET", `/tasks/${encodeURIComponent(id)}`, undefined, r?.signal),
+    createTask: (input) => c("POST", "/tasks", input),
+    updateTask: (id, patch) => c("PATCH", `/tasks/${encodeURIComponent(id)}`, patch),
+    deleteTask: (id) => c("DELETE", `/tasks/${encodeURIComponent(id)}`),
+    uploadFile: (file) => c("POST", "/files", file),
     search: (query, r) => c("GET", `/search?q=${encodeURIComponent(query)}`, undefined, r?.signal),
     me: () => c("GET", "/session"),
     signIn: (email, password) => c("POST", "/session", { email, password }),

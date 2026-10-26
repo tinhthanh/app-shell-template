@@ -1,9 +1,10 @@
 import type { Client } from "@/lib/api";
-import type { Project, Role, SearchHit, User, Workspace } from "@/lib/types";
+import type { Attachment, Project, Role, SearchHit, Task, TaskInput, User, Workspace } from "@/lib/types";
 import { ApiError } from "./errors.ts";
 import { pageOf, sortRows } from "./pages.ts";
 import { type Action, can } from "./permissions.ts";
 import { rankEach } from "./search-rank.ts";
+import { MAX_FILE } from "./upload.ts";
 
 // Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
 // fixtures, so it can be worked on and tested without a server. Relative
@@ -81,6 +82,34 @@ const ELSEWHERE: Project = { id: "p-vault", workspace: "w-initrode", name: "Vaul
 
 // The workspaces the person belongs to: Acme holds the projects above,
 // Globex two more, with one thing waiting (the rail's dot).
+// A day this many days from today, as a task's due day: "2026-11-02".
+const inDays = (n: number) => {
+  const d = new Date(now + n * 86_400_000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// The tasks: Acme's point at its projects, one is late, one has a file.
+export const TASKS: Task[] = [
+  { id: "t-checkout", workspace: "w-acme", title: "Fix the checkout's tax line", status: "doing", due: inDays(2), project: { id: "p-shop", name: "Shop" }, updatedAt: ago(30) },
+  {
+    id: "t-webhooks",
+    workspace: "w-acme",
+    title: "Document the webhook retries",
+    status: "todo",
+    due: inDays(-1),
+    project: { id: "p-api", name: "Public API" },
+    attachment: { id: "f-retries", name: "retry-policy.pdf", size: 182_400, type: "application/pdf" },
+    updatedAt: ago(200),
+  },
+  { id: "t-icons", workspace: "w-acme", title: "New app icons", status: "todo", due: inDays(9), project: { id: "p-ios", name: "iOS app" }, updatedAt: ago(60 * 5) },
+  { id: "t-labels", workspace: "w-acme", title: "Print labels in bulk", status: "done", project: { id: "p-warehouse", name: "Warehouse" }, updatedAt: ago(60 * 30) },
+  { id: "t-tokens", workspace: "w-acme", title: "Dark mode tokens", status: "doing", due: inDays(5), project: { id: "p-design", name: "Design system" }, updatedAt: ago(90) },
+  { id: "t-standup", workspace: "w-acme", title: "Plan the next sprint", status: "todo", updatedAt: ago(15) },
+  // Globex's.
+  { id: "t-invoices", workspace: "w-globex", title: "Send the October invoices", status: "todo", due: inDays(3), project: { id: "p-billing", name: "Billing" }, updatedAt: ago(45) },
+  { id: "t-resellers", workspace: "w-globex", title: "Invite the first resellers", status: "doing", project: { id: "p-portal", name: "Partner portal" }, updatedAt: ago(60 * 8) },
+];
+
 export const WORKSPACES: Workspace[] = [
   { id: "w-acme", name: "Acme" },
   { id: "w-globex", name: "Globex", attention: 1 },
@@ -165,6 +194,9 @@ export function mockClient(given: MockOptions = {}): Client {
   const latency = opts.latency ?? 0;
   let projects: Project[] = opts.empty ? [] : structuredClone(opts.projects ?? (opts.many ? many() : FIXTURES));
   let workspaces: Workspace[] = structuredClone(WORKSPACES);
+  let tasks: Task[] = opts.empty ? [] : structuredClone(TASKS);
+  // The files sent, kept by id until a task names one.
+  const files = new Map<string, Attachment>();
   const wait = () => (latency ? new Promise<void>((r) => setTimeout(r, latency)) : Promise.resolve());
   const me = { ...ALEX, role: opts.role ?? ALEX.role };
   // A session that ends, when sessionMinutes says so: who is signed in, until when.
@@ -192,6 +224,49 @@ export function mockClient(given: MockOptions = {}): Client {
     const p = projects.find((x) => x.id === id);
     if (!p) throw new ApiError(`No project is called ${id}.`, 404, "not_found");
     return p;
+  };
+  const findTask = (id: string) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t) throw new ApiError(`No task is called ${id}.`, 404, "not_found");
+    return t;
+  };
+  const TASK_SORTS: Record<string, (a: Task, b: Task) => number> = {
+    title: (a, b) => a.title.localeCompare(b.title),
+    // No due day sorts last.
+    due: (a, b) => (a.due ?? "9999").localeCompare(b.due ?? "9999"),
+    updated: (a, b) => a.updatedAt.localeCompare(b.updatedAt),
+  };
+  // taskFrom applies what a create or an edit sends, refusing what a server
+  // would: no title, a day that isn't one, a project or a file it doesn't know.
+  const taskFrom = (t: Task, input: TaskInput): Task => {
+    const next: Task = { ...t, updatedAt: new Date().toISOString() };
+    if (input.title !== undefined) {
+      if (!input.title.trim()) throw new ApiError("A task needs a title.", 422, "invalid", "title");
+      next.title = input.title.trim();
+    }
+    if (input.status !== undefined) next.status = input.status;
+    if (input.due !== undefined) {
+      if (input.due !== null && !/^\d{4}-\d{2}-\d{2}$/.test(input.due)) throw new ApiError("That isn't a day.", 422, "invalid", "due");
+      if (input.due === null) delete next.due;
+      else next.due = input.due;
+    }
+    if (input.project !== undefined) {
+      if (input.project === null) delete next.project;
+      else {
+        const p = projects.find((x) => x.id === input.project && x.workspace === t.workspace);
+        if (!p) throw new ApiError("Pick a project in this workspace.", 422, "invalid", "project");
+        next.project = { id: p.id, name: p.name };
+      }
+    }
+    if (input.attachment !== undefined) {
+      if (input.attachment === null) delete next.attachment;
+      else {
+        const f = files.get(input.attachment) ?? (t.attachment?.id === input.attachment ? t.attachment : undefined);
+        if (!f) throw new ApiError("That file didn't arrive; add it again.", 422, "invalid", "attachment");
+        next.attachment = f;
+      }
+    }
+    return next;
   };
   // How the server sorts the list: the columns' ids in the address.
   const SORTS: Record<string, (a: Project, b: Project) => number> = {
@@ -284,12 +359,73 @@ export function mockClient(given: MockOptions = {}): Client {
       find(id);
       projects = projects.filter((p) => p.id !== id);
     },
+    async tasks(query = {}) {
+      await guard();
+      if (query.cursor && opts.failMore && ++laterPages === 1) throw down();
+      const q = query.q?.trim().toLowerCase();
+      const match = tasks.filter(
+        (t) =>
+          (!query.workspace || t.workspace === query.workspace) &&
+          (!q || `${t.title} ${t.project?.name ?? ""}`.toLowerCase().includes(q)) &&
+          (!query.status || t.status === query.status) &&
+          (!query.project || t.project?.id === query.project),
+      );
+      return structuredClone(pageOf(sortRows(match, query.sort, TASK_SORTS), query.cursor, query.limit));
+    },
+    async task(id) {
+      await guard();
+      return structuredClone(findTask(id));
+    },
+    async createTask(input) {
+      await guard(true, "task.create");
+      const workspace = input.workspace ?? workspaces[0]?.id ?? "w-acme";
+      const base: Task = { id: "", workspace, title: "", status: "todo", updatedAt: "" };
+      const made = taskFrom(base, { status: "todo", ...input });
+      let id = `t-${
+        made.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") || "task"
+      }`;
+      for (let n = 2; tasks.some((t) => t.id === id); n++)
+        id = `t-${
+          made.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "") || "task"
+        }-${n}`;
+      made.id = id;
+      tasks = [made, ...tasks];
+      return structuredClone(made);
+    },
+    async updateTask(id, patch) {
+      await guard(true, "task.edit");
+      const saved = taskFrom(findTask(id), patch);
+      tasks = tasks.map((t) => (t.id === id ? saved : t));
+      return structuredClone(saved);
+    },
+    async deleteTask(id) {
+      await guard(true, "task.delete");
+      findTask(id);
+      tasks = tasks.filter((t) => t.id !== id);
+    },
+    async uploadFile(file) {
+      await guard(true, "task.edit");
+      if (file.size > MAX_FILE) throw new ApiError("Files up to 5 MB, please.", 422, "invalid", "attachment");
+      const f: Attachment = { id: `f-${files.size + 1}-${Date.now().toString(36)}`, name: file.name, size: file.size, type: file.type || "application/octet-stream" };
+      files.set(f.id, f);
+      return structuredClone(f);
+    },
     async search(query) {
       await guard();
-      // One kind today; a second goes in as another group, ranked on its own.
-      return rankEach([projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, p }))], query).map(
-        ({ p }): SearchHit => ({ kind: "project", id: p.id, name: p.name, detail: `${p.owner} · ${p.status}` }),
-      );
+      // Each kind is ranked on its own, so one can't crowd the other out.
+      return rankEach<{ name: string; text: string; hit: SearchHit }>(
+        [
+          projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, hit: { kind: "project", id: p.id, name: p.name, detail: `${p.owner} · ${p.status}` } })),
+          tasks.map((t) => ({ name: t.title, text: t.project?.name ?? "", hit: { kind: "task", id: t.id, name: t.title, detail: [t.project?.name, t.status].filter(Boolean).join(" · ") } })),
+        ],
+        query,
+      ).map(({ hit }) => hit);
     },
     async me() {
       // Asked once at start: it doesn't count as failOnce's first call, which

@@ -1,4 +1,4 @@
-import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from "lucide-react";
+import { FolderKanbanIcon, HouseIcon, LayoutGridIcon, ListTodoIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { type Key, t } from "@/lib/i18n";
@@ -25,6 +25,7 @@ type PlaceKind = Exclude<ViewKind, "missing">;
 const PLACES = {
   home: { label: "shell.place.home", icon: <HouseIcon />, view: { kind: "home" } },
   projects: { label: "shell.place.projects", icon: <FolderKanbanIcon />, view: { kind: "projects" } },
+  tasks: { label: "shell.place.tasks", icon: <ListTodoIcon />, view: { kind: "tasks" } },
   kit: { label: "shell.place.kit", icon: <LayoutGridIcon />, view: { kind: "kit" } },
   settings: { label: "shell.place.settings", icon: <SettingsIcon />, view: { kind: "settings" }, footer: true },
 } satisfies Record<PlaceKind, Omit<Place, "id" | "label"> & { label: Key }>;
@@ -34,6 +35,7 @@ const PLACES = {
 // kind, so a new kind without one fails to compile.
 export const RECORD_KINDS = {
   project: { group: "shell.records.projects", icon: <FolderKanbanIcon />, view: (id: string): View => ({ kind: "projects", id }) },
+  task: { group: "shell.records.tasks", icon: <ListTodoIcon />, view: (id: string): View => ({ kind: "tasks", id }) },
 } satisfies Record<SearchHit["kind"], { group: Key; icon: ReactNode; view(id: string): View }>;
 
 export function places(): Place[] {

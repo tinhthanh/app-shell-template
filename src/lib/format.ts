@@ -51,3 +51,26 @@ export function number(n: number, locale: string = lang(), options?: Intl.Number
 export function money(amount: number, currency: string, locale: string = lang()): string {
   return number(amount, locale, { style: "currency", currency });
 }
+
+// day is a due day ("2026-11-02") the way the person writes dates. It is a
+// day, not a time: read where they are, never moved by a time zone (new
+// Date("2026-11-02") would be midnight in London, the day before in Hanoi's
+// west). One that isn't a day reads as nothing.
+export function day(s: string, locale: string = lang()): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return "";
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (d.getMonth() !== Number(m[2]) - 1) return "";
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
+}
+
+// today is the day it is where the person is, as a due day is written.
+export function today(now: Date = new Date()): string {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+// fileSize is a file's size in the language's units: "182 kB", "1.2 MB".
+export function fileSize(bytes: number, locale: string = lang()): string {
+  const [n, unit] = bytes < 1000 ? [bytes, "byte"] : bytes < 1_000_000 ? [bytes / 1000, "kilobyte"] : [bytes / 1_000_000, "megabyte"];
+  return new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: 1 }).format(n);
+}

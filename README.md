@@ -92,7 +92,7 @@ src/              the app: App.tsx (the shell), index.css (tokens, type scale, g
   hooks/          React hooks the shell and views share
   lib/            logic, most of it run by the node tests: the API client, the mock, the store, routes, words
   themes/         the themes, how they are applied, and their contrast check
-  views/          one folder per view: home, projects (the example resource), kit, settings, signin
+  views/          one folder per view: home, projects (the example resource), tasks (a second, with a day, a record picked and a file), kit, settings, signin
 e2e/              the Playwright suite, its fixture and its screenshot baselines
 scripts/          the checks pnpm check runs, the contract's check and stub, and the release, shots and CI helpers
 api/              openapi.json: the API the client asks of a server, which the mock and the stub keep

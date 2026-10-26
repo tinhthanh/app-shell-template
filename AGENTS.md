@@ -140,7 +140,7 @@ configs or these rules without the `guardrail-change` label.
   refuses English written straight into a view or a component; the Kit
   page is the exception.
 - **Dates, numbers and money go through `src/lib/format.ts`** (`ago`, `date`,
-  `dateTime`, `number`, `money`): Intl, in the person's language; never a
+  `dateTime`, `day` for a day with no time such as a due day, `fileSize`, `number`, `money`): Intl, in the person's language; never a
   hand-written format. An amount shown in another currency than it is
   kept in is converted before `money()`, and says so wherever it shows
   (a word in the column's header, a `<Tip>`); the PR says where the rate

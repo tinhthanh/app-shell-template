@@ -21,6 +21,29 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
     },
   },
   {
+    id: "tasks",
+    run: async (app) => {
+      await app.open({ hash: "/tasks" });
+      await expect(app.page.getByTestId("task-row").first()).toBeVisible();
+    },
+  },
+  {
+    id: "task detail",
+    run: async (app) => {
+      await app.open({ hash: "/tasks/t-webhooks" });
+      await expect(app.page.getByTestId("task-detail").getByRole("heading", { name: "Document the webhook retries", exact: true })).toBeVisible();
+    },
+  },
+  {
+    // Every kind of field: words, a day, a record picked, a file kept.
+    id: "task form",
+    run: async (app) => {
+      await app.open({ hash: "/tasks/t-webhooks" });
+      await app.page.getByRole("button", { name: "Edit the task" }).click();
+      await expect(app.page.getByRole("dialog", { name: "Edit the task" }).getByTestId("attachment-kept")).toBeVisible();
+    },
+  },
+  {
     id: "project detail",
     run: async (app) => {
       await app.nav("projects").click();

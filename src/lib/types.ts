@@ -113,6 +113,60 @@ export interface ProjectQuery {
   limit?: number;
 }
 
+// ---- The second resource: tasks ---------------------------------------------
+// A task is a workspace's too, and shows the fields beyond words: a due day,
+// a record it points at (its project) and a file (views/tasks/).
+
+export const TASK_STATUSES = ["todo", "doing", "done"] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+// A file the server keeps (POST /files), named by its id on a record.
+export interface Attachment {
+  id: string;
+  name: string;
+  // Bytes.
+  size: number;
+  // Its MIME type: "application/pdf".
+  type: string;
+}
+
+export interface Task {
+  id: string;
+  workspace: string;
+  title: string;
+  status: TaskStatus;
+  // A day, not a time: "2026-11-02", the same wherever the person is.
+  due?: string;
+  // The project it is for, with the name to show (a reference, not the record).
+  project?: { id: string; name: string };
+  attachment?: Attachment;
+  // ISO 8601.
+  updatedAt: string;
+}
+
+// What a create or an edit sends: the project and the file by their ids,
+// null to take one off.
+export interface TaskInput {
+  title?: string;
+  status?: TaskStatus;
+  due?: string | null;
+  project?: string | null;
+  attachment?: string | null;
+  workspace?: string;
+}
+
+export interface TaskQuery {
+  workspace?: string;
+  q?: string;
+  status?: TaskStatus;
+  // A project's tasks, by its id.
+  project?: string;
+  // "title:asc", "due:asc", "updated:desc".
+  sort?: string;
+  cursor?: string;
+  limit?: number;
+}
+
 // ---- A list a page at a time (lib/pages.ts) --------------------------------
 
 export interface Page<T> {
@@ -142,7 +196,7 @@ export interface User {
 // ---- Search (the palette's record search) ---------------------------------
 
 export interface SearchHit {
-  kind: "project";
+  kind: "project" | "task";
   id: string;
   name: string;
   // A line under the name: the owner, the status.

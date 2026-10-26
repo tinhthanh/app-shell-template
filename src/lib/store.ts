@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import { hashToView, viewToHash } from "./routes.ts";
 import { load, save } from "./storage.ts";
-import type { ProjectStatus } from "./types.ts";
+import type { ProjectStatus, TaskStatus } from "./types.ts";
 
 // The app's state that isn't a preference (lib/prefs.ts) and isn't data
 // from the API (lib/api.ts, read where it is shown with lib/resource.ts):
@@ -16,6 +16,7 @@ import type { ProjectStatus } from "./types.ts";
 export type View =
   | { kind: "home" }
   | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[]; sort?: string }
+  | { kind: "tasks"; id?: string; q?: string; status?: TaskStatus; project?: string; sort?: string }
   | { kind: "kit"; section?: string }
   | { kind: "settings"; section?: SettingsSectionId }
   // An address the app doesn't know (a stale link, a typo): said so, not Home.

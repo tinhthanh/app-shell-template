@@ -5,7 +5,8 @@ import * as projects from "./projects.ts";
 import * as settings from "./settings.ts";
 import * as shell from "./shell.ts";
 import * as signin from "./signin.ts";
+import * as tasks from "./tasks.ts";
 
-export const en = { ...shell.en, ...common.en, ...projects.en, ...settings.en, ...signin.en };
+export const en = { ...shell.en, ...common.en, ...projects.en, ...settings.en, ...signin.en, ...tasks.en };
 export type Key = keyof typeof en;
-export const vi: Record<Key, string> = { ...shell.vi, ...common.vi, ...projects.vi, ...settings.vi, ...signin.vi };
+export const vi: Record<Key, string> = { ...shell.vi, ...common.vi, ...projects.vi, ...settings.vi, ...signin.vi, ...tasks.vi };

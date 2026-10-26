@@ -36,6 +36,7 @@ const ProjectsView = lazyView(() => import("@/views/projects/projects-view").the
 // the sign-in page until someone is signed out.
 const CommandPalette = lazyView(() => import("@/components/command-palette").then((m) => m.CommandPalette));
 const SignInView = lazyView(() => import("@/views/signin/signin-view").then((m) => m.SignInView));
+const TasksView = lazyView(() => import("@/views/tasks/tasks-view").then((m) => m.TasksView));
 const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
 const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 
@@ -43,7 +44,10 @@ const SettingsView = lazyView(() => import("@/views/settings/settings-view").the
 // kind but home must be here: tsc says so.
 // In the language in use, so read at render.
 const viewTitles = () =>
-  ({ projects: t("shell.place.projects"), kit: t("shell.place.kit"), settings: t("shell.place.settings"), missing: t("common.notFound.title") }) satisfies Record<Exclude<ViewKind, "home">, string>;
+  ({ projects: t("shell.place.projects"), tasks: t("shell.place.tasks"), kit: t("shell.place.kit"), settings: t("shell.place.settings"), missing: t("common.notFound.title") }) satisfies Record<
+    Exclude<ViewKind, "home">,
+    string
+  >;
 
 // ?crash=<kind> makes that view throw, so the error boundary around it can
 // be seen and tested (e2e/shell.spec.ts). Only on the fixtures or with the
@@ -58,6 +62,8 @@ function ViewFor({ view }: { view: View }) {
       return <HomeView />;
     case "projects":
       return <ProjectsView id={view.id} />;
+    case "tasks":
+      return <TasksView id={view.id} />;
     case "kit":
       return <KitView />;
     case "settings":

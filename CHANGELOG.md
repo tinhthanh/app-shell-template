@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Tasks: a second place, after Projects, for what needs doing in a workspace. Each task has a status, a due day (late ones say so), the project it is for (found as you type), and a file. A project's page links to its tasks, and ⌘K finds them. Kit moves to ⌘4.
+
 - The API the app needs is written down as a contract (api/openapi.json) to hand whoever builds the server; the client and the fixtures are checked against it, and `pnpm stub` serves it so the app can run on its real HTTP client before there is a backend.
 
 - Pick several projects (a box per row, Space, Shift for a range, ⌘A for all, Esc to let go) and set their status or delete them at once; a status change says so with Undo, which puts each back as it was.

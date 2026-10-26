@@ -1,4 +1,4 @@
-import { ChevronDownIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, ListTodoIcon, PencilIcon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { BulkBar } from "@/components/bulk-bar";
@@ -420,12 +420,20 @@ function ProjectDetail({ id }: { id: string }) {
       crumb={{ label: t("projects.title"), view: { ...view, id: undefined } }}
       onBack={back}
       actions={
-        p &&
-        canDelete && (
-          <Button size="sm" variant="destructive-outline" onClick={remove}>
-            <Trash2Icon />
-            {t("common.delete")}
-          </Button>
+        p && (
+          <>
+            {/* Its tasks: the Tasks list, filtered to it (views/tasks/). */}
+            <Button size="sm" variant="outline" data-testid="project-tasks" onClick={() => useStore.getState().setView({ kind: "tasks", project: id })}>
+              <ListTodoIcon />
+              {t("tasks.ofProject")}
+            </Button>
+            {canDelete && (
+              <Button size="sm" variant="destructive-outline" onClick={remove}>
+                <Trash2Icon />
+                {t("common.delete")}
+              </Button>
+            )}
+          </>
         )
       }
     >

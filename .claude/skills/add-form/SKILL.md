@@ -74,6 +74,23 @@ names. You write the fields and the save. `ProjectForm` in
    Put a unit case in `mock.test.ts` that the value arrives, and a browser
    test that the choice is kept.
 
+   **Fields beyond words**, as `TaskForm` (`src/views/tasks/tasks-view.tsx`)
+   has them:
+   - **A day**: `<FieldControl render={<Input type="date" />} />`. Its value
+     is `2026-11-02` (the contract's `format: date`), the browser draws it in
+     the person's language, and the page reads it back with `day()` (never
+     `date()`, which is a time and would move a day across time zones);
+     `today()` says whether it is past. Send `null` to take it off.
+   - **A record** (a task's project): `RecordPicker`
+     (`src/components/record-picker.tsx`) inside a `Field`, with `name`,
+     `initial` and a `find(query, signal)` that asks the server (a page of the
+     list with `q`); its value in the form is the record's id, "" for none.
+   - **A file**: `FileField` (`src/components/file-field.tsx`) gives the
+     choice (keep, new, none) through `onChoice`, kept in a ref; on save, a
+     new file goes to `client.uploadFile` first and the record names it by
+     its id, `null` takes it off. Say a too-big file on the field before it
+     is sent (`MAX_FILE`, `src/lib/upload.ts`), as the server will.
+
 4. **The server's refusal**: the mock throws
    `new ApiError("A report needs a title.", 422, "invalid", "title")`; the
    HTTP client reads `{ error, code, field }` from the body. `FormDialog`

@@ -1,0 +1,116 @@
+import { expect, mod, test } from "./fixtures";
+
+// Tasks, the second resource (views/tasks/): the list and its states, a
+// record, and a form with every kind of field (a day, a project picked as
+// you type, a file).
+
+const row = (app: { page: import("@playwright/test").Page }, id: string) => app.page.locator(`[data-testid=task-row][data-task=${id}]`);
+
+test("the workspace's tasks list with their project and day, and a late one says so", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+  await expect(row(app, "t-checkout")).toContainText("Shop");
+  await expect(row(app, "t-webhooks")).toHaveAttribute("data-late", "true");
+  await expect(row(app, "t-webhooks")).toContainText("Late");
+  await expect(row(app, "t-checkout")).not.toHaveAttribute("data-late");
+});
+
+test("a slow server shows the loader, a down one the failure with Try again, an empty one the empty state", async ({ app }) => {
+  await app.open({ params: { slow: "1" }, hash: "/tasks" });
+  await expect(app.page.getByTestId("tasks-loading")).toBeVisible();
+  await expect(app.page.getByTestId("task-row").first()).toBeVisible();
+  await app.open({ params: { fail: "1" }, hash: "/tasks" });
+  await expect(app.page.getByTestId("tasks-failed").getByRole("button", { name: "Try again" })).toBeVisible();
+  await app.open({ params: { empty: "1" }, hash: "/tasks" });
+  await expect(app.page.getByTestId("tasks-empty")).toBeVisible();
+});
+
+test("a task is made with every kind of field: a title, a project found as you type, a day and a file", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await app.page.getByRole("button", { name: "New task" }).first().click();
+  const dialog = app.page.getByRole("dialog", { name: "New task" });
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Write the launch notes");
+  await dialog.getByTestId("picker-project").fill("ware");
+  await app.page.getByRole("option", { name: "Warehouse" }).click();
+  await dialog.getByLabel("Due").fill("2026-12-01");
+  await dialog.getByLabel("File").setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("The notes.") });
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(dialog).toHaveCount(0);
+  const detail = app.page.getByTestId("task-detail");
+  await expect(detail.getByRole("heading", { name: "Write the launch notes", exact: true })).toBeVisible();
+  await expect(detail).toContainText("Warehouse");
+  await expect(app.page.getByTestId("task-due")).toContainText("2026");
+  await expect(app.page.getByTestId("task-file")).toContainText("notes.txt");
+});
+
+test("the form refuses no title, and a file too big before it is sent", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await app.page.getByRole("button", { name: "New task" }).first().click();
+  const dialog = app.page.getByRole("dialog", { name: "New task" });
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(dialog.getByText("A task needs a title.")).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Title" }).fill("Big file");
+  await dialog.getByLabel("File").setInputFiles({ name: "huge.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(dialog.getByText("Files up to 5 MB, please.")).toBeVisible();
+});
+
+test("an edit takes the file off and the project with it", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-webhooks" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the task" });
+  await dialog.getByRole("button", { name: "Remove retry-policy.pdf" }).click();
+  await dialog.getByTestId("picker-project").clear();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(app.page.getByTestId("task-file")).toContainText("No file");
+  await expect(app.page.getByTestId("task-detail")).toContainText("No project");
+});
+
+test("a status change shows at once, before the server answers", async ({ app }) => {
+  await app.open({ params: { hold: "1" }, hash: "/tasks/t-icons" });
+  const detail = app.page.getByTestId("task-detail");
+  await detail.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(detail.getByRole("button", { name: "Done", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("a task is deleted after a confirm, and Back from a task lands on its row", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await row(app, "t-icons").click();
+  await app.page.getByTestId("task-detail").getByRole("button", { name: "Back" }).first().click();
+  await expect(row(app, "t-icons")).toBeFocused();
+  await row(app, "t-labels").click();
+  await app.page.getByTestId("task-detail").getByRole("button", { name: "Delete" }).click();
+  await app.page.getByTestId("confirm").getByRole("button", { name: "Delete" }).click();
+  await expect(app.page.getByTestId("tasks")).toBeVisible();
+  await expect(row(app, "t-labels")).toHaveCount(0);
+});
+
+test("a project's page leads to its tasks, and the filter comes off", async ({ app }) => {
+  await app.open({ hash: "/projects/p-api" });
+  await app.page.getByTestId("project-tasks").click();
+  await expect(app.page).toHaveURL(/#\/tasks\?project=p-api$/);
+  await expect(app.page.getByTestId("task-row")).toHaveCount(1);
+  await app.page.getByTestId("tasks-project-filter").click();
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+});
+
+test("a viewer sees the tasks but no way to make, change or delete one", async ({ app }) => {
+  await app.open({ params: { role: "viewer" }, hash: "/tasks/t-icons" });
+  const detail = app.page.getByTestId("task-detail");
+  await expect(detail.getByRole("heading", { name: "New app icons", exact: true })).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Edit the task" })).toHaveCount(0);
+  await expect(detail.getByRole("button", { name: "Delete" })).toHaveCount(0);
+  await app.open({ params: { role: "viewer" }, hash: "/tasks" });
+  await expect(app.page.getByTestId("task-row").first()).toBeVisible();
+  await expect(app.page.getByRole("button", { name: "New task" })).toHaveCount(0);
+});
+
+test("⌘K finds a task and opens it", async ({ app }) => {
+  await app.open();
+  await app.page.keyboard.press(`${mod()}+k`);
+  const palette = app.page.getByTestId("command-palette");
+  await palette.getByRole("combobox").fill("webhook retr");
+  await palette.getByRole("option", { name: /Document the webhook retries/ }).click();
+  await expect(app.page.getByTestId("task-detail").getByRole("heading", { name: "Document the webhook retries", exact: true })).toBeVisible();
+});
