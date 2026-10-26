@@ -151,8 +151,10 @@ configs or these rules without the `guardrail-change` label.
   (`lib/analytics.ts`) and a `track()` where it happens, with only kinds and
   states, never a name, an id or what was typed (ADR 0015).
 - **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
-  call signs out (`docs/decisions/0011-sessions.md`); never a token in
-  storage.
+  call asks once for a longer session, then signs out
+  (`docs/decisions/0011-sessions.md`); never a token in storage. Tabs agree
+  (`lib/tabs.ts`): sign-out and settings reach every tab. A test of time
+  passing (a session ending) uses `page.clock`, never a wait.
 - **What a person may do is `can(user, action)`** (`lib/permissions.ts`,
   `docs/decisions/0012-permissions.md`): a view asks `useCan("project.delete")`
   and leaves out what isn't theirs to do, never `user.role === …` in a

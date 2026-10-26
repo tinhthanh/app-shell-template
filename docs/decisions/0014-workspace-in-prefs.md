@@ -18,8 +18,8 @@ out forgets the pick and Recent (`onSignedOut` in `lib/session.ts`), so
 the next person starts in their own first workspace.
 
 **Consequences.** Links stay short and don't break when a workspace is
-renamed. Each tab keeps the pick it loaded with until it reloads (prefs
-aren't synced between tabs), and the last one saved wins. A list's link carries its filters, not its
+renamed. Prefs follow across tabs (`lib/tabs.ts`, since 2026-10-26), so a
+workspace picked in one tab is the one on show in every tab. A list's link carries its filters, not its
 workspace: shared with someone in another workspace, it opens on theirs.
 
 **Revisit if.** Records' ids are only unique within a workspace, or people

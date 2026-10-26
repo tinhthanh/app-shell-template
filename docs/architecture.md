@@ -64,8 +64,12 @@ filter you come back to doesn't show the old row.
 | The person's settings: density, text size, sidebar (folded, width, the places on the rail), system themes, language, the last What's new seen, the workspace on show, Recent, the folded sections, the getting-started steps | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
-| Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → signed out → the sign-in view over the app (ADR 0011); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
+| Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → one ask for a longer session → else signed out → the sign-in view over the app (ADR 0011), in every tab (`lib/tabs.ts`); a session that ends is warned before (`hooks/use-session-end.ts`); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
 | The frame's: the workspaces, the notices, the place counts, the status items | `lib/workspace.ts`, `lib/notifications.ts`, `lib/badges.ts`, `lib/status-items.ts` (zustand) | nothing | Small stores the frame draws from (ADR 0009); each forgets itself on sign-out through `onSignedOut` (`lib/session.ts`), as the resource cache does, and the workspace pick and Recent go with them |
+
+Prefs and the theme follow across tabs: another tab's save arrives as a
+storage event and is taken whole, held to its shape, never saved back
+(`takeOtherTabsPrefs`, `takeOtherTabsUi`, `lib/tabs.ts`).
 
 `src/lib/storage.ts` wraps `localStorage` in try/catch: storage can be
 missing or throw, and the app must work without it.
@@ -229,6 +233,7 @@ fixtures or with the knobs on.
 | URL | `?many=1` | 5,000 invented projects, for the list's scrolling and keys |
 | URL | `?role=viewer` / `member` / `owner` | Who is signed in has that role; the writes it can't take are refused with a 403 (`lib/permissions.ts`) |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
+| URL | `?sessionMinutes=3` | The session ends that many minutes after sign-in or Stay signed in (the warning comes two minutes before) |
 | URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
 | URL | `?dir=rtl` / `ltr` | The page's writing direction (the layout mirrors) |

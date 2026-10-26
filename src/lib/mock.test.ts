@@ -193,6 +193,18 @@ test("a project in a workspace the person isn't in is refused with a 403, and a 
   assert.ok(!(await c.projects()).items.some((p) => p.id === "p-vault"));
 });
 
+test("a session with an end says when, ends then, and Stay signed in makes it later", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-10-26T10:00:00Z") });
+  const c = mockClient({ latency: 0, sessionMinutes: 3 });
+  assert.equal((await c.me()).sessionEndsAt, "2026-10-26T10:03:00.000Z");
+  t.mock.timers.tick(2 * 60_000);
+  assert.equal((await c.refreshSession()).sessionEndsAt, "2026-10-26T10:05:00.000Z");
+  t.mock.timers.tick(5 * 60_000);
+  await assert.rejects(c.me(), (e: unknown) => e instanceof ApiError && e.status === 401);
+  await assert.rejects(c.refreshSession(), (e: unknown) => e instanceof ApiError && e.status === 401);
+  assert.equal((await mockClient({ latency: 0 }).me()).sessionEndsAt, undefined);
+});
+
 test("the workspaces read doesn't count as failOnce's first call, but fails with the server", async () => {
   assert.equal((await mockClient({ latency: 0, failOnce: true }).workspaces()).length, 2);
   await assert.rejects(mockClient({ latency: 0, fail: true }).workspaces(), (e: unknown) => e instanceof ApiError && e.status === 503);

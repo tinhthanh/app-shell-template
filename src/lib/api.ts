@@ -37,6 +37,9 @@ export interface Client {
   me(): Promise<User>;
   signIn(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
+  // A longer session, from the refresh cookie the server keeps (httpOnly):
+  // asked before one ends, and once when a call answers 401.
+  refreshSession(): Promise<User>;
 }
 
 const search = () => (typeof location === "undefined" ? "" : location.search);
@@ -114,6 +117,9 @@ export interface ClientOptions {
   headers?: () => Record<string, string>;
   credentials?: RequestCredentials;
   onUnauthorized?: () => void;
+  // Where a 401 is answered by asking for a longer session, once, before the
+  // call is tried again; null when the server has no such thing.
+  refreshPath?: string | null;
   // How long to wait before each retry of a read (RETRY_DELAYS_MS); the tests
   // give [0, 0].
   retryDelays?: number[];
@@ -142,7 +148,46 @@ const pause = (ms: number, signal?: AbortSignal) =>
     signal?.addEventListener("abort", callOff, { once: true });
   });
 
+// A 401 is a session that ended: before signing the person out, the client
+// asks once for a longer one (refreshPath, on the server's refresh cookie)
+// and tries the call again. Calls that come back 401 together share one
+// ask. Signing in and out, and the ask itself, are never retried.
+const refreshing = new WeakMap<ClientOptions, Promise<boolean>>();
+async function refreshed(base: string, o: ClientOptions): Promise<boolean> {
+  const path = o.refreshPath === undefined ? "/session/refresh" : o.refreshPath;
+  if (!path) return false;
+  let ask = refreshing.get(o);
+  if (!ask) {
+    ask = once(base, "POST", path, undefined, o).then(
+      () => true,
+      () => false,
+    );
+    refreshing.set(o, ask);
+    void ask.finally(() => refreshing.delete(o));
+  }
+  return ask;
+}
+
 async function call<T>(base: string, method: string, path: string, body?: unknown, o: ClientOptions = {}, signal?: AbortSignal): Promise<T> {
+  try {
+    return await tried<T>(base, method, path, body, o, signal);
+  } catch (err) {
+    if (!(err instanceof ApiError && err.status === 401)) throw err;
+    const mayRefresh = !(path === "/session" && method !== "GET") && !path.startsWith("/session/refresh");
+    if (mayRefresh && (await refreshed(base, o))) {
+      try {
+        return await tried<T>(base, method, path, body, o, signal);
+      } catch (again) {
+        if (again instanceof ApiError && again.status === 401) o.onUnauthorized?.();
+        throw again;
+      }
+    }
+    o.onUnauthorized?.();
+    throw err;
+  }
+}
+
+async function tried<T>(base: string, method: string, path: string, body: unknown, o: ClientOptions, signal?: AbortSignal): Promise<T> {
   const delays = method === "GET" ? (o.retryDelays ?? RETRY_DELAYS_MS) : [];
   for (let attempt = 0; ; attempt++) {
     try {
@@ -181,7 +226,6 @@ async function once<T>(base: string, method: string, path: string, body: unknown
   }
   if (!res.ok) {
     const { message, code, field } = errorBody(await res.text(), `${res.status} ${res.statusText}`);
-    if (res.status === 401) o.onUnauthorized?.();
     const err = new ApiError(message, res.status, code, field);
     const after = Number(res.headers?.get?.("Retry-After"));
     if (after > 0) err.retryAfter = Math.min(after, 30) * 1000;
@@ -228,6 +272,7 @@ export function httpClient(base: string, o: ClientOptions = {}): Client {
     me: () => c("GET", "/session"),
     signIn: (email, password) => c("POST", "/session", { email, password }),
     signOut: () => c("DELETE", "/session"),
+    refreshSession: () => c("POST", "/session/refresh"),
   };
 }
 
