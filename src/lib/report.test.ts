@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { beaconReporter, both, MAX_REPORTS, report, setReporter, viewPath } from "./report.ts";
+import { beaconReporter, benign, both, MAX_REPORTS, report, setReporter, viewPath } from "./report.ts";
 
 test("a reporter gets the error and its context, and one that throws is contained", () => {
   const got: unknown[] = [];
@@ -49,4 +49,11 @@ test("both tells each reporter", () => {
     () => got.push("b"),
   )(new Error("x"));
   assert.deepEqual(got, ["a", "b"]);
+});
+
+test("the browser's ResizeObserver noise isn't an error to report; anything else is", () => {
+  assert.equal(benign("ResizeObserver loop completed with undelivered notifications."), true);
+  assert.equal(benign("ResizeObserver loop limit exceeded"), true);
+  assert.equal(benign("Cannot read properties of undefined"), false);
+  assert.equal(benign(undefined), false);
 });
