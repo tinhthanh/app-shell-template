@@ -1,6 +1,8 @@
 import { confirm } from "@/components/confirm";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
+import { runtime } from "@/lib/config";
 import { LANGUAGE_IDS, LANGUAGES, type LanguageChoice, t } from "@/lib/i18n";
 import { resetPrefs, setPrefs, usePrefs } from "@/lib/prefs";
 import { Segmented } from "@/views/settings/controls";
@@ -13,6 +15,9 @@ import { Code, fill, SettingsGroup, SettingsPage, SettingsRow, Value } from "@/v
 export function GeneralSection() {
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
   const language = usePrefs((p) => p.language);
+  const shareUsage = usePrefs((p) => p.shareUsage);
+  // Asked only where the host collects usage (config.js's analyticsUrl, lib/analytics.ts).
+  const collects = Boolean(runtime().analyticsUrl);
 
   return (
     <SettingsPage title={t("settings.section.general")}>
@@ -39,6 +44,14 @@ export function GeneralSection() {
           />
         </SettingsRow>
       </SettingsGroup>
+
+      {collects && (
+        <SettingsGroup title={t("settings.general.usageGroup")}>
+          <SettingsRow label={t("settings.general.shareUsage")} description={t("settings.general.shareUsageDescription")}>
+            <Switch data-testid="share-usage" aria-label={t("settings.general.shareUsage")} checked={shareUsage} onCheckedChange={(on) => setPrefs({ shareUsage: on })} />
+          </SettingsRow>
+        </SettingsGroup>
+      )}
 
       <SettingsGroup title={t("settings.general.storageGroup")} description={t("settings.general.storageDescription")}>
         <SettingsRow

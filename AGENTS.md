@@ -134,7 +134,9 @@ configs or these rules without the `guardrail-change` label.
 - **Words go through `t()`** (`src/lib/i18n.ts`, `docs/decisions/0013-words.md`):
   a word a person reads is a key in `src/lib/messages/<area>.ts`, in
   English and in every other language there (a missing one fails to
-  compile), read in render, never at module load. `pnpm check:words`
+  compile), read in render, never at module load. A count is
+  `{n, plural, one {# project} other {# projects}}` (the forms are
+  `Intl.PluralRules`'), given the number, never a formatted string. `pnpm check:words`
   refuses English written straight into a view or a component; the Kit
   page is the exception.
 - **Dates, numbers and money go through `src/lib/format.ts`** (`ago`, `date`,
@@ -143,6 +145,11 @@ configs or these rules without the `guardrail-change` label.
   kept in is converted before `money()`, and says so wherever it shows
   (a word in the column's header, a `<Tip>`); the PR says where the rate
   comes from.
+- **What a host configures is `lib/config.ts`** (config.js, `docs/deploy.md`):
+  a feature a deployment may turn off is a flag in `FLAGS` (`lib/flags.ts`),
+  read with `flag(id)`; a usage event is a line in `EVENTS`
+  (`lib/analytics.ts`) and a `track()` where it happens, with only kinds and
+  states, never a name, an id or what was typed (ADR 0015).
 - **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
   call asks once for a longer session, then signs out
   (`docs/decisions/0011-sessions.md`); never a token in storage. Tabs agree

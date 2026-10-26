@@ -21,9 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { returnFocusTo, useReturnFocus } from "@/hooks/use-return-focus";
 import { useSettled } from "@/hooks/use-settled";
+import { track } from "@/lib/analytics";
 import { client, listQuery } from "@/lib/api";
 import { setPlaceBadge } from "@/lib/badges";
-import { ago, number } from "@/lib/format";
+import { ago } from "@/lib/format";
 import { type Key, t } from "@/lib/i18n";
 import { parseSort, sortToString } from "@/lib/list-keys";
 import { notify } from "@/lib/notifications";
@@ -183,7 +184,7 @@ function WorkspaceProjects() {
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
         title={t("projects.title")}
-        description={projects.status === "ready" ? t(filtered ? "projects.countMatch" : "projects.countAll", { n: number(projects.data.total) }) : undefined}
+        description={projects.status === "ready" ? t(filtered ? "projects.countMatch" : "projects.countAll", { n: projects.data.total }) : undefined}
         actions={
           <>
             <Button size="sm" variant="outline" onClick={projects.reload} disabled={projects.loading} aria-label={t("common.reload")}>
@@ -290,6 +291,7 @@ function ProjectDetail({ id }: { id: string }) {
       const saved = await optimistic<Project>({ key: key(id), listKey: listKey(view), id, patch: { status }, write: () => client.updateProject(id, { status }) });
       // A notice: a toast now, and a line in the notification centre with a way back (lib/notifications.ts).
       notify({ title: t(NOW[status], { name: saved.name }), tone: "success", action: { label: t("shell.notice.open"), view: { kind: "projects", id } } });
+      track("record.status", { kind: "project", status });
     } catch (err) {
       toastError(err, t("projects.updateFailed"));
     }
@@ -388,6 +390,7 @@ export function ProjectForm({ project, listKey, onSaved, trigger, label }: { pro
         const input = { name: v.name ?? "", description: v.description ?? "" };
         const saved = project ? await client.updateProject(project.id, input) : await client.createProject({ ...input, workspace: usePrefs.getState().workspace ?? undefined });
         if (!project && listKey) mutate<Page<Project>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Project> | undefined);
+        if (!project) track("record.create", { kind: "project" });
         // Where it falls under each filter and sort is the server's to say.
         invalidate(listKey ?? "projects");
         onSaved(saved);

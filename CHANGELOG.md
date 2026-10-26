@@ -7,6 +7,8 @@ about what the person gets. A release renames the heading to its version.
 
 - Several tabs act as one: signing out in one signs out all, signing in brings back the others, and a setting or theme changed in one is the same in the rest.
 - A session the server ends warns you two minutes before, with Stay signed in; when it ends, the sign-in page says why. A call that finds the session ended asks once for a longer one before signing you out.
+- A deployment can turn features on or off, send unexpected errors to its own collector, and collect usage from people who turn on Settings › General › Share usage data (off by default, and never with Global Privacy Control), all from config.js or the container's REPORT_URL and ANALYTICS_URL.
+- Counts read as sentences: "1 project", "5,000 projects", "1 project matches", with numbers written the way the language writes them (5.000 in Vietnamese).
 
 - An address the app doesn't know says "Nothing here" with a way Home, instead of quietly showing Home; a project that is gone says so without a pointless Try again, and one in a workspace you aren't in says it isn't yours to see.
 - A change saved on a project's page reaches the lists beside it at once: renamed, re-sorted, counted again, without leaving the page.

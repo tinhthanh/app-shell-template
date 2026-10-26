@@ -16,6 +16,7 @@ import { useSessionEnd } from "@/hooks/use-session-end";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useApplyTheme } from "@/hooks/use-theme";
 import { useWindowTitle } from "@/hooks/use-window-title";
+import { track } from "@/lib/analytics";
 import { client, isMock, knobsOn } from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import { useRescueRemovedFocus } from "@/lib/focus-home";
@@ -103,6 +104,11 @@ export default function App() {
   const paletteOpen = useStore((s) => s.paletteOpen);
   const [paletteWanted, setPaletteWanted] = useState(false);
   if (paletteOpen && !paletteWanted) setPaletteWanted(true);
+  // Usage, for those who share it (lib/analytics.ts): which kind of view, never its address.
+  useEffect(() => track("view.open", { kind: view.kind }), [view.kind]);
+  useEffect(() => {
+    if (paletteOpen) track("palette.open");
+  }, [paletteOpen]);
   // Away from a developer's machine, fixtures mean the API was never configured.
   const unconfigured = isMock() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !knobsOn();
 

@@ -52,6 +52,16 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
   { id: "settings appearance", run: async (app) => void (await app.openSettings("appearance")) },
   { id: "settings general", run: async (app) => void (await app.openSettings("general")) },
   {
+    // Where the host collects usage (config.js), General asks whether to share it.
+    id: "settings general with usage",
+    run: async (app) => {
+      await app.page.route("**/config.js", (r) => r.fulfill({ contentType: "text/javascript", body: 'window.__APP_CONFIG__ = { analyticsUrl: "/collect/usage" };' }));
+      await app.open();
+      const general = await app.openSettings("general");
+      await expect(general.getByTestId("share-usage")).toBeVisible();
+    },
+  },
+  {
     // The test has opened the app already (seeding its theme), so the language is chosen as a person would.
     id: "settings general in Vietnamese",
     run: async (app) => {

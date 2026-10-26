@@ -56,3 +56,9 @@ test("an old save gets an empty Recent, nothing folded and a fresh getting-start
   assert.deepEqual(p.folded, []);
   assert.deepEqual(p.onboarding, { done: [], dismissed: false });
 });
+
+test("usage is shared only after a yes: off by default, off for an old save, and anything but true is no", async () => {
+  assert.equal(DEFAULTS.shareUsage, false);
+  assert.equal(usePrefs.getState().shareUsage, false);
+  assert.equal((await fresh({ shareUsage: "yes", version: 1 }, "share-odd")).shareUsage, false);
+});

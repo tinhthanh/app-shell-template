@@ -219,7 +219,9 @@ fixtures or with the knobs on.
 | env | `PORT` | The dev server's port (1420) |
 | env | `BASE_PATH` | An absolute base for the built assets (`vite.config.ts`); relative (`./`) by default |
 | env | `SOURCEMAPS=1` | Hidden source maps in the build, for an error reporter (`docs/deploy.md`) |
-| config.js | `apiUrl`, `mock` | Set by the host after the build (`window.__APP_CONFIG__`): the API's base, over `VITE_API_URL`, or `mock: true` for the fixtures |
+| config.js | `apiUrl`, `mock` | Set by the host after the build (`window.__APP_CONFIG__`, read by `lib/config.ts`): the API's base, over `VITE_API_URL`, or `mock: true` for the fixtures |
+| config.js | `flags`, `reportUrl`, `analyticsUrl` | Features on or off (`lib/flags.ts`), where errors go (`lib/report.ts`), where usage goes for those who allow it (`lib/analytics.ts`); `docs/deploy.md` |
+| URL | `?flags=a,-b` | Turns flags on or off for the page (knobs on) |
 | URL | `?mock=1` | The fixtures, whatever the env says (knobs on) |
 | URL | `?api=<url>` | The HTTP client's base, over `config.js` and the env: a path, this origin or localhost only (`urlApi`; knobs on) |
 | URL | `?slow=1` | Every mock call takes 1.5 s |
@@ -277,4 +279,6 @@ fixtures or with the knobs on.
 | evidence | What a PR shows: tests named, checks pasted, screenshots (`AGENTS.md › Done means`) |
 | scenes | `e2e/scenes.json`: the addresses and ready marks that `visual.spec.ts` and `pnpm shots` share |
 | baselines | `e2e/snapshots/`: every view's picture, Linux's, compared by `e2e/visual.spec.ts`; `pnpm test:visual --update` rewrites them |
+| flag | A feature on or off for a deployment: `FLAGS` in `lib/flags.ts`, `flag(id)`, set by config.js's `flags` |
+| track, EVENTS | A usage event, sent only with the person's yes; `EVENTS` in `lib/analytics.ts` says what may leave (ADR 0015) |
 | the trial | A fresh agent on a product task in a worktree, scored against the rules (`.claude/skills/trial`, `docs/trials.md`); a gap found there is a template bug |

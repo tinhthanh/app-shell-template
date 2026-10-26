@@ -35,6 +35,8 @@ export interface Prefs {
   railPlaces: string[] | null;
   // Home's getting-started list: the steps taken, and whether it was put away (lib/onboarding.ts).
   onboarding: { done: string[]; dismissed: boolean };
+  // Usage events may go to the host's analytics (lib/analytics.ts): only when the person says so.
+  shareUsage: boolean;
 }
 
 export const DEFAULTS: Prefs = {
@@ -50,6 +52,7 @@ export const DEFAULTS: Prefs = {
   workspace: null,
   railPlaces: null,
   onboarding: { done: [], dismissed: false },
+  shareUsage: false,
 };
 
 // PREFS_VERSION counts changes of default that saved prefs are moved to
@@ -91,6 +94,8 @@ export function fromSaved(saved: Saved): Prefs {
     workspace: typeof saved.workspace === "string" ? saved.workspace : null,
     railPlaces: Array.isArray(saved.railPlaces) ? saved.railPlaces.filter((p): p is string => typeof p === "string") : null,
     folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
+    // Only a yes the person gave: anything else is no.
+    shareUsage: saved.shareUsage === true,
     onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
   };
 }

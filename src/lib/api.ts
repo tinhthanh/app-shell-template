@@ -1,4 +1,5 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
+import { type RuntimeConfig, runtime } from "./config.ts";
 import { ApiError } from "./errors.ts";
 import { signedOut } from "./session.ts";
 import type { Page, Project, ProjectQuery, SearchHit, User, Workspace } from "./types.ts";
@@ -51,14 +52,8 @@ export interface Env {
   VITE_KNOBS?: string;
 }
 
-// The host's runtime configuration (public/config.js, loaded by index.html
-// before the app): one build, any API. It wins over the build's env.
-export interface RuntimeConfig {
-  apiUrl?: string;
-  // Force the fixtures, for a demo deployment.
-  mock?: boolean;
-}
-const runtime = (): RuntimeConfig => (globalThis as { __APP_CONFIG__?: RuntimeConfig }).__APP_CONFIG__ ?? {};
+// The host's runtime configuration (lib/config.ts) wins over the build's env.
+export type { RuntimeConfig };
 
 // knobsOn says whether the URL may change where the app reads from (?mock,
 // ?api=): in development, or in a build made with VITE_KNOBS=1 (a demo). A
