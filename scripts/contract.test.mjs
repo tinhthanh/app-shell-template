@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { clientCalls, clientMethods, loadSpec, match, operations, problems } from "./contract.mjs";
-import { startStub } from "./stub-server.mjs";
+import { allowedOrigin, startStub } from "./stub-server.mjs";
 
 const spec = loadSpec();
 
@@ -47,6 +47,13 @@ test("a request is matched to its operation and its path's parameters", () => {
   assert.equal(match(ops, "PUT", "/projects"), undefined);
 });
 
+test("only a page on this machine may read the stub's answers with credentials", () => {
+  assert.equal(allowedOrigin("http://localhost:1420"), "http://localhost:1420");
+  assert.equal(allowedOrigin("http://127.0.0.1:5173"), "http://127.0.0.1:5173");
+  assert.equal(allowedOrigin("http://[::1]:1420"), "http://[::1]:1420");
+  for (const o of ["https://evil.test", "http://localhost.evil.test", "null", "file://", undefined]) assert.equal(allowedOrigin(o), undefined, String(o));
+});
+
 test("the stub answers the contract from the mock: a page, a refusal in the Error shape, a 204", async () => {
   const stub = await startStub(0);
   try {
@@ -61,6 +68,9 @@ test("the stub answers the contract from the mock: a page, a refusal in the Erro
     assert.equal((await fetch(`${stub.url}/projects/p-docs`, { method: "DELETE" })).status, 204);
     assert.equal((await fetch(`${stub.url}/nowhere`)).status, 404);
     assert.equal((await fetch(`${stub.url}/projects`, { method: "OPTIONS", headers: { Origin: "http://localhost:1420" } })).headers.get("access-control-allow-origin"), "http://localhost:1420");
+    const foreign = await fetch(`${stub.url}/projects`, { headers: { Origin: "https://evil.test" } });
+    assert.equal(foreign.headers.get("access-control-allow-origin"), null);
+    assert.equal(foreign.headers.get("access-control-allow-credentials"), null);
   } finally {
     await stub.close();
   }

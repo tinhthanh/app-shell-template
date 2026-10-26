@@ -3,13 +3,27 @@
 // to end, before there is a backend, and a model for one. Each request is
 // matched to its operation, called on the mock (ARGS, scripts/contract.mjs),
 // and answered with its status, or the mock's refusal as the Error shape.
-// Any origin may call it with credentials: it is for this machine only.
+// Only a page on this machine (a dev server) may call it with credentials:
+// another site open in the same browser gets no CORS headers, so it can't
+// read what the stub answers.
 //
 //   pnpm stub                                  # http://localhost:8787
 //   VITE_API_URL=http://localhost:8787 pnpm dev
 import { createServer } from "node:http";
 
 import { ARGS, loadSpec, match, operations, success } from "./contract.mjs";
+
+// allowedOrigin is the origin a credentialed answer may name: a page served
+// from this machine, or none.
+export function allowedOrigin(origin) {
+  if (!origin) return undefined;
+  try {
+    const u = new URL(origin);
+    return (u.protocol === "http:" || u.protocol === "https:") && ["localhost", "127.0.0.1", "[::1]"].includes(u.hostname) ? u.origin : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 const read = (req) =>
   new Promise((done) => {
@@ -32,14 +46,16 @@ export async function startStub(port = 8787, mockOptions = {}) {
   const client = mockClient({ latency: 0, ...mockOptions });
   const ops = operations(loadSpec());
   const server = createServer(async (req, res) => {
-    const origin = req.headers.origin;
-    const headers = {
-      "Access-Control-Allow-Origin": origin ?? "*",
-      "Access-Control-Allow-Credentials": "true",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-      Vary: "Origin",
-    };
+    const origin = allowedOrigin(req.headers.origin);
+    const headers = origin
+      ? {
+          "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+          Vary: "Origin",
+        }
+      : { Vary: "Origin" };
     if (req.method === "OPTIONS") {
       res.writeHead(204, headers).end();
       return;
