@@ -20,8 +20,12 @@ in node, and add nothing to the startup budget.
 
 **Consequences.** A word read at module load is frozen in the language
 the app started in: read it in render (a function, not a constant).
-Plurals are written around (`{n} in all`), which suits English and
-Vietnamese; a language with plural forms wants `Intl.PluralRules`. The
+A count takes its form from `Intl.PluralRules` (2026-10-26):
+`{n, plural, one {# project} other {# projects}}` in the word, `#` the
+number as the language writes it; Vietnamese, with one form, writes `{n}`.
+A number given to any blank is written the language's way (`5,000`,
+`5.000`). `i18n.test.ts` checks every count has `other` and only forms its
+language has. The
 Kit page and the release notes stay English: the one is for whoever
 builds the app, the other is a record. `pnpm check:words` refuses a new
 English word written straight into a view or a component.

@@ -24,7 +24,7 @@ import { useSettled } from "@/hooks/use-settled";
 import { track } from "@/lib/analytics";
 import { client, listQuery } from "@/lib/api";
 import { setPlaceBadge } from "@/lib/badges";
-import { ago, number } from "@/lib/format";
+import { ago } from "@/lib/format";
 import { type Key, t } from "@/lib/i18n";
 import { parseSort, sortToString } from "@/lib/list-keys";
 import { notify } from "@/lib/notifications";
@@ -184,7 +184,7 @@ function WorkspaceProjects() {
     <div className="flex h-full flex-col" data-testid="projects">
       <ViewHeader
         title={t("projects.title")}
-        description={projects.status === "ready" ? t(filtered ? "projects.countMatch" : "projects.countAll", { n: number(projects.data.total) }) : undefined}
+        description={projects.status === "ready" ? t(filtered ? "projects.countMatch" : "projects.countAll", { n: projects.data.total }) : undefined}
         actions={
           <>
             <Button size="sm" variant="outline" onClick={projects.reload} disabled={projects.loading} aria-label={t("common.reload")}>
