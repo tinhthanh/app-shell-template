@@ -183,6 +183,15 @@ configs or these rules without the `guardrail-change` label.
   Coming back to a list, the keyboard lands on the row it left through
   `returnFocusTo`/`useReturnFocus` (hooks/use-return-focus.ts).
 - **Anything irreversible asks first** with `confirm()` (components/confirm.tsx).
+- **The sidebar is a rail beside a sheet** (components/sidebar-rail.tsx,
+  components/app-sidebar.tsx): the rail has the places pinned to it (the
+  rest under its "…", `prefs.railPlaces`), the person's workspaces
+  (lib/workspace.ts; every list reads the one on show, `listOf` puts it in
+  the query and the key) and Settings; the sheet shows the workspace, search
+  and the open place's own list (Projects' is `views/projects/projects-column.tsx`,
+  lazy, following the list's read rather than making its own; elsewhere
+  Recent). A record opened from another workspace brings its workspace
+  with it. ⌘\ folds the sheet away and leaves the rail.
 - **The frame takes what views tell it**, never a copy of the sidebar or
   the status bar: something that happened is `notify({ title, tone, action })`
   (lib/notifications.ts: a toast now, a line in the sidebar's bell); a

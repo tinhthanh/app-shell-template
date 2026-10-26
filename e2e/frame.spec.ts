@@ -7,7 +7,8 @@ import { expect, mod, test } from "./fixtures";
 test("a place shows its count once its list has been read", async ({ app }) => {
   await app.open({ hash: "/projects" });
   await expect(app.page.getByTestId("project-row").first()).toBeVisible();
-  await expect(app.page.getByTestId("place-badge-projects")).toHaveText("8");
+  // On the rail a count is a quiet dot (loud ones are numbered); the count rides with it.
+  await expect(app.page.getByTestId("place-badge-projects")).toHaveAttribute("data-count", "8");
 });
 
 test("a status change lands in the notification centre, unread, with a way back to the project", async ({ app }) => {
@@ -27,11 +28,13 @@ test("a status change lands in the notification centre, unread, with a way back 
 test("a project opened goes under Recent, which folds and stays folded after a reload", async ({ app }) => {
   await app.open({ hash: "/projects/p-api" });
   await expect(app.page.getByTestId("project-detail").getByRole("heading", { name: "Public API", exact: true })).toBeVisible();
+  // Away from Projects (whose sheet lists the projects), the sheet shows Recent.
+  await app.nav("home").click();
   const recent = app.page.getByTestId("recent");
   await expect(recent.getByTestId("recent-project-p-api")).toHaveText("Public API");
-  await app.nav("home").click();
   await recent.getByTestId("recent-project-p-api").click();
   await expect(app.page).toHaveURL(/#\/projects\/p-api$/);
+  await app.nav("home").click();
   await app.page.getByTestId("recent-fold").click();
   await expect(recent.getByTestId("recent-project-p-api")).toHaveCount(0);
   await app.page.reload();

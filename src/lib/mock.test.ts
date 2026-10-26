@@ -148,3 +148,28 @@ test("failAfter lets the first calls through and fails every one after", async (
   assert.equal((await c.projects()).total, FIXTURES.length);
   await assert.rejects(c.projects(), (e: unknown) => e instanceof ApiError && e.status === 503);
 });
+
+test("a workspace lists its own projects and tags, and a new one is refused without a name or with a taken one", async () => {
+  const c = mockClient({ latency: 0 });
+  assert.deepEqual(
+    (await c.workspaces()).map((w) => w.id),
+    ["w-acme", "w-globex"],
+  );
+  assert.equal((await c.projects({ workspace: "w-acme" })).total, 8);
+  assert.deepEqual(
+    (await c.projects({ workspace: "w-globex" })).items.map((p) => p.name),
+    ["Billing", "Partner portal"],
+  );
+  assert.deepEqual(await c.projectTags({ workspace: "w-globex" }), ["payments", "web"]);
+  await assert.rejects(c.createWorkspace({ name: " " }), (e: unknown) => e instanceof ApiError && e.field === "name");
+  await assert.rejects(c.createWorkspace({ name: "acme" }), (e: unknown) => e instanceof ApiError && e.status === 422);
+  const made = await c.createWorkspace({ name: "Initech" });
+  assert.equal(made.id, "w-initech");
+  const p = await c.createProject({ name: "Stapler", description: "", workspace: made.id });
+  assert.equal(p.workspace, "w-initech");
+});
+
+test("the workspaces read doesn't count as failOnce's first call, but fails with the server", async () => {
+  assert.equal((await mockClient({ latency: 0, failOnce: true }).workspaces()).length, 2);
+  await assert.rejects(mockClient({ latency: 0, fail: true }).workspaces(), (e: unknown) => e instanceof ApiError && e.status === 503);
+});

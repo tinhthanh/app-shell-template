@@ -31,7 +31,7 @@ test("a member creates and edits, but has no Delete", async ({ app }) => {
   await expect(detail.getByRole("button", { name: "Edit the project" })).toBeVisible();
   await expect(detail.getByRole("button", { name: "Delete" })).toHaveCount(0);
   await detail.getByRole("button", { name: "Back to projects" }).click();
-  await expect(app.page.getByRole("button", { name: "New project" })).toBeVisible();
+  await expect(app.page.getByTestId("projects").getByRole("button", { name: "New project" })).toBeVisible();
 });
 
 test("the account menu says which role you have", async ({ app }) => {

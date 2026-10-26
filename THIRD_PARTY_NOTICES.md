@@ -6,7 +6,9 @@ its UI kit, themes, settings scaffolding, focus handling, sidebar and
 checks, with the product-specific parts removed. Later changes ported
 from it name it where they land: the type scale (`src/index.css`,
 `scripts/check-type.mjs`) the sidebar's ink (`src/components/ink.ts`), the layout grid
-(`src/index.css`, `scripts/check-grid.mjs`), the frame's notices,
+(`src/index.css`, `scripts/check-grid.mjs`), the rail of places and
+workspaces beside its sheet and the identicon (`src/components/sidebar-rail.tsx`,
+`src/lib/identicon.ts`), the frame's notices,
 place counts, status items, Recent and getting-started list
 (`src/lib/notifications.ts` and its neighbours), and Settings as a page of
 its own with Find a setting (`src/views/settings/`). Code derived from other

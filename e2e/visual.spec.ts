@@ -31,8 +31,10 @@ for (const theme of ["default-dark", "default-light"]) {
       await app.page.addInitScript((t) => localStorage.setItem("app.ui", JSON.stringify({ themeId: t })), theme);
       await app.page.goto(`/?mock=1&platform=linux${scene.hash}`);
       await expect(app.page.getByTestId(scene.ready).first()).toBeVisible();
+      // The sidebar's sheet shows its workspace once the workspaces have loaded.
+      if (await app.page.getByTestId("sidebar-sheet").count()) await expect(app.page.getByTestId("workspace-header")).toBeVisible();
       // A page's root can be there before its data: no loader left in the main area.
-      await expect(app.page.locator('main [data-testid$="-loading"]')).toHaveCount(0);
+      await expect(app.page.locator('[data-testid$="-loading"]')).toHaveCount(0);
       // Fonts in, and every animation that ends ended (a spinner never does;
       // toHaveScreenshot freezes it).
       await app.page.evaluate(() =>

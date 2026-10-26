@@ -220,6 +220,8 @@ fixtures or with the knobs on.
 | Notice, notification centre | `notify()` (`lib/notifications.ts`): a toast now and a line in the sidebar's bell, with a way back |
 | Place badge | A count beside a place in the sidebar, `setPlaceBadge()` (`lib/badges.ts`); loud when it wants the person |
 | Status item | A fact a view puts in the status bar, `useStatusItem()` (`lib/status-items.ts`); offline is one |
+| Rail, sheet | The sidebar's two columns: the rail of places and workspaces (`sidebar-rail.tsx`), the sheet of the workspace and the place's own list |
+| Workspace | What the person belongs to; every list reads the one on show (`lib/workspace.ts`), the rail switches it |
 | Recent | The sidebar's section of the records opened last (`lib/recent.ts`, kept in prefs), folded by its heading |
 | Getting started | Home's first steps (`lib/onboarding.ts`), each ticked by doing it, put away for good by its close button |
 | explain, ErrorNote, toastError | An error in plain words, the raw text behind Details |

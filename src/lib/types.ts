@@ -75,8 +75,21 @@ export interface Theme {
 export const PROJECT_STATUSES = ["active", "paused", "archived"] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
+// ---- Workspaces (the sidebar's rail) ---------------------------------------
+// What the person belongs to (a team, a company): every record is in one,
+// and the app shows one at a time (lib/workspace.ts).
+
+export interface Workspace {
+  id: string;
+  name: string;
+  // How many things in it want the person: the rail's dot.
+  attention?: number;
+}
+
 export interface Project {
   id: string;
+  // The workspace it belongs to (Workspace.id).
+  workspace: string;
   name: string;
   description: string;
   status: ProjectStatus;
@@ -89,6 +102,8 @@ export interface Project {
 // What the list asks the server for: the filters and the sort from the
 // address (lib/routes.ts), and where to start.
 export interface ProjectQuery {
+  // The workspace to list, by id; all of them when left out.
+  workspace?: string;
   q?: string;
   status?: ProjectStatus;
   tags?: string[];

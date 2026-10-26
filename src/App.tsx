@@ -24,6 +24,7 @@ import { usePrefs } from "@/lib/prefs";
 import { signedIn, signedOut, useSession } from "@/lib/session";
 import { watchStillness } from "@/lib/still";
 import { assertNever, useStore, type View, type ViewKind } from "@/lib/store";
+import { loadWorkspaces } from "@/lib/workspace";
 import { HomeView } from "@/views/home/home-view";
 import { SignInView } from "@/views/signin/signin-view";
 
@@ -80,6 +81,10 @@ export default function App() {
     client.me().then(signedIn, (err) => (err instanceof ApiError && err.status === 401 ? signedOut() : signedIn()));
   }, []);
   const session = useSession((s) => s.status);
+  // Signed in, the person's workspaces are read and one shows (lib/workspace.ts).
+  useEffect(() => {
+    if (session === "signed-in") void loadWorkspaces(() => client.workspaces());
+  }, [session]);
   const view = useStore((s) => s.view);
   const phone = usePhone();
   // A new language redraws the frame and the dialogs in it (lib/i18n.ts);

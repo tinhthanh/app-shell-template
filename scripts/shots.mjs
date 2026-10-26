@@ -60,7 +60,9 @@ try {
       // A page's root can be there before its data, so the loader has to go too.
       if (ready) await page.getByTestId(ready).first().waitFor();
       else await page.locator("main [data-testid]").first().waitFor();
-      await page.locator('main [data-testid$="-loading"]').first().waitFor({ state: "detached" });
+      await page.locator('[data-testid$="-loading"]').first().waitFor({ state: "detached" });
+      // The sidebar's sheet shows its workspace once the workspaces have loaded.
+      if (await page.getByTestId("sidebar-sheet").count()) await page.getByTestId("workspace-header").waitFor();
       await page.evaluate(() => Promise.all([document.fonts.ready, ...document.getAnimations().map((x) => x.finished.catch(() => {}))]));
       const name = `${a.replace(/^#\//, "").replace(/[/?&=]/g, "-") || "home"}-${theme.replace("default-", "")}.png`;
       await page.screenshot({ path: resolve(out, name) });

@@ -232,3 +232,15 @@ test("a read called off stops, and isn't tried again", async () => {
   await assert.rejects(read, (e: unknown) => e instanceof ApiError && e.code === "aborted");
   assert.equal(calls.length, 1);
 });
+
+test("the workspaces are a GET and a POST, and a workspace's tags and projects ask for it", async () => {
+  answer = { status: 200, json: [] };
+  await client.workspaces();
+  assert.equal(calls[0]?.url, "http://api.test/workspaces");
+  await client.createWorkspace({ name: "Initech" });
+  assert.equal(calls[1]?.init.method, "POST");
+  await client.projectTags({ workspace: "w-acme" });
+  assert.equal(calls[2]?.url, "http://api.test/project-tags?workspace=w-acme");
+  await client.projects({ workspace: "w-acme" });
+  assert.equal(calls[3]?.url, "http://api.test/projects?workspace=w-acme");
+});
