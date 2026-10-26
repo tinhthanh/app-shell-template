@@ -8,9 +8,12 @@ fixtures until you point it at a server.
 
 What you get, wired and working:
 
-- **Shell**: a resizable sidebar that folds to a rail on a narrow window
-  and becomes a top bar with a menu sheet on a phone, a command palette (⌘K), a status bar, a settings view with four
-  sections, keyboard shortcuts from one table, error boundaries per view,
+- **Shell**: a sidebar after Shipyard's, a rail of places and workspaces
+  beside a resizable sheet with the workspace, search and the open place's
+  own list (⌘\ folds the sheet away; a phone gets a top bar with a menu
+  sheet), a notification bell, counts on places, Recent, a status bar
+  views can add to, a getting-started list on Home, a command palette
+  (⌘K), a settings page with four sections and a search, keyboard shortcuts from one table, error boundaries per view,
   lazy-loaded views that preload when idle, and every view at a hash
   address (`#/projects/p-shop`), so reload, the back button and links work.
 - **23 themes**: four of the app's own and ports of popular editor themes,
@@ -123,9 +126,17 @@ The complete recipes, with every file each one touches, are in
    a list-and-detail view after `views/projects/`, on the shared pieces
    (`ListToolbar`, `DataTable`, `DetailPage`, `FormDialog`, `optimistic()`,
    `removeRecord()`): you write the columns, the fields and the words.
+   Projects also reach into the frame: the sheet's column
+   (`views/projects/projects-column.tsx`, its case in `SidebarSheet` in
+   `components/app-sidebar.tsx`), the palette's `RECORD_KINDS` (`src/lib/nav.tsx`),
+   Recent's kind, the "Open a project" step (`src/lib/onboarding.ts`) and
+   their words (`src/lib/messages/projects.ts`). Keep `Workspace` if your
+   records belong to one (the `add-resource` skill has the step); without
+   it, drop the rail's tiles and `workspace` from the query.
 3. **A view**: a `kind` in `View` (`src/lib/store.ts`), its address in
    `src/lib/routes.ts`, a `lazyView` in `App.tsx`, a place in
-   `src/lib/nav.tsx`. The sidebar, ⌘1–9 and the palette follow.
+   `src/lib/nav.tsx`. The rail, ⌘1–9 and the palette follow; the sheet
+   shows Recent for it until you give it a list of its own.
 4. **A setting**: a field in `Prefs` with a default (`src/lib/prefs.ts`),
    a `SettingsRow` in a section. Bump `PREFS_VERSION` and add a step to
    `migratePrefs` when a default changes in a way an old value shouldn't

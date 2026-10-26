@@ -14,7 +14,7 @@ export interface Prefs {
   density: "compact" | "comfortable";
   // The interface's text size in px; everything sized in rem follows.
   uiFontSize: number;
-  // The sidebar folded to a rail of icons (⌘\).
+  // The sheet folded away, leaving the rail (⌘\).
   sidebarCollapsed: boolean;
   // How wide the open sidebar is, dragged by its edge (lib/sidebar-width).
   sidebarWidth: number;
@@ -31,7 +31,7 @@ export interface Prefs {
   folded: string[];
   // The workspace on show (lib/workspace.ts): null until the list says which.
   workspace: string | null;
-  // The places pinned to the rail, in order; the rest are under its "…" (components/app-sidebar.tsx).
+  // The places pinned to the rail, in order; the rest are under its "…" (components/sidebar-rail.tsx); null is every top place.
   railPlaces: string[] | null;
   // Home's getting-started list: the steps taken, and whether it was put away (lib/onboarding.ts).
   onboarding: { done: string[]; dismissed: boolean };

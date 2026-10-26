@@ -38,10 +38,10 @@ const alwaysOpen: SidebarContextProps = {
   toggleSidebar: () => {},
 };
 
-// AppSidebar: the app's name, a search button that opens the palette, the
-// places (lib/nav.tsx), and Settings at the bottom. Folded (⌘\), or in a
-// window narrower than 800px, it is a rail of icons. Its width is dragged
-// by its edge (sidebar-resize-handle.tsx).
+// AppSidebar: the rail (sidebar-rail.tsx: the places, the workspaces,
+// Settings) beside the sheet (the workspace on show, search, and the open
+// place's own list). Folded (⌘\), or in a narrow window, only the rail is
+// left. The sheet's width is dragged by its edge (sidebar-resize-handle.tsx).
 // usePhone says the window is a phone's (under 640px): the sidebar becomes
 // a bar across the top with the places in a sheet (PhoneBar).
 export const usePhone = () => useMediaQuery("max-sm");

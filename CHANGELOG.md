@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Settings › General describes the sidebar as it is now: folded, the rail of places and workspaces is left.
+
 - After a sign-out, whoever signs in next starts clean: no notices, counts, Recent or workspace left from the last person, and a toast is shown once, not again.
 - The sheet's project list stays full while the list beside it is filtered, says so when it can't be read (with Try again), and a change or a delete reaches every list of the projects at once; a deleted project leaves Recent.
 - When the workspaces can't be read, Projects says so with Try again instead of loading for ever; a viewer is offered no new workspace, and a new one takes the keyboard.
