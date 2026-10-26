@@ -42,3 +42,19 @@ test("it refuses to start with no API, or with anything but a plain http(s) URL"
     assert.match(r.stderr, /must be an http\(s\) URL/);
   }
 });
+
+test("the error and usage collectors go in config.js, and their origins, once each, in connect-src", () => {
+  const r = start({ API_URL: "https://api.acme.example/v1", REPORT_URL: "https://errors.acme.example/in", ANALYTICS_URL: "https://api.acme.example/usage" });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.conf(), /connect-src 'self' https:\/\/api\.acme\.example https:\/\/errors\.acme\.example;/);
+  assert.equal(
+    r.config().trim(),
+    'window.__APP_CONFIG__ = { apiUrl: "https://api.acme.example/v1", mock: false, reportUrl: "https://errors.acme.example/in", analyticsUrl: "https://api.acme.example/usage" };',
+  );
+});
+
+test("a collector's URL is held to the same rule as the API's", () => {
+  const r = start({ MOCK: "1", REPORT_URL: 'https://x.test/"};alert(1);//' });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /REPORT_URL must be an http\(s\) URL/);
+});

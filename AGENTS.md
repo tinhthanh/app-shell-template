@@ -143,6 +143,11 @@ configs or these rules without the `guardrail-change` label.
   kept in is converted before `money()`, and says so wherever it shows
   (a word in the column's header, a `<Tip>`); the PR says where the rate
   comes from.
+- **What a host configures is `lib/config.ts`** (config.js, `docs/deploy.md`):
+  a feature a deployment may turn off is a flag in `FLAGS` (`lib/flags.ts`),
+  read with `flag(id)`; a usage event is a line in `EVENTS`
+  (`lib/analytics.ts`) and a `track()` where it happens, with only kinds and
+  states, never a name, an id or what was typed (ADR 0015).
 - **Who is signed in is `lib/session.ts`**, in memory only; a 401 from any
   call signs out (`docs/decisions/0011-sessions.md`); never a token in
   storage.

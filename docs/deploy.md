@@ -15,8 +15,19 @@ template ships `public/config.js` with an empty `apiUrl`):
 window.__APP_CONFIG__ = { apiUrl: "https://api.acme.example" };
 ```
 
-It is loaded before the app, read by `src/lib/api.ts`, and wins over the
-env. Serve it `no-cache`. `mock: true` forces the fixtures, for a demo.
+It is loaded before the app, read by `src/lib/config.ts` (and nowhere
+else), and wins over the env. Serve it `no-cache`. What it may hold:
+
+| Key | What it does |
+|---|---|
+| `apiUrl` | The API's base, over `VITE_API_URL` |
+| `mock` | `true` forces the fixtures, for a demo |
+| `flags` | Features on or off for this deployment, over their defaults: `{ gettingStarted: false }` (`FLAGS` in `src/lib/flags.ts`; a name that isn't there is ignored) |
+| `reportUrl` | Where unexpected errors are POSTed, as JSON, with `sendBeacon` (`ErrorReport` in `src/lib/report.ts`) |
+| `analyticsUrl` | Where usage events are POSTed, as JSON, for people who turned on Settings › General › Share usage data (`EVENTS` in `src/lib/analytics.ts`) |
+
+Each URL's origin must be in the CSP's `connect-src`; the container puts
+it there.
 
 With neither set, the app runs on its fixtures and, away from localhost,
 shows a banner saying so. The URL knobs (`?mock=1`, `?api=`, `?crash=`)
@@ -51,9 +62,22 @@ A host that can't set headers (GitHub Pages) can put the same policy in a
 
 `src/lib/report.ts` is where unexpected errors go: the error boundary,
 `window.onerror`, unhandled rejections and `toastError` (for anything that
-isn't the server's refusal). It logs to the console until `setReporter`
-is called with your client. Build with `SOURCEMAPS=1` for hidden source
-maps to upload alongside; they are not served.
+isn't the server's refusal). It logs to the console and, when `config.js`
+names a `reportUrl`, POSTs each error once (at most ten a page) as JSON:
+the message, the stack, where in the app, the view's path without its
+query, the version, the commit and the language. Any collector that takes
+JSON will do; for a vendor's client, call `setReporter` with it instead.
+Build with `SOURCEMAPS=1` for hidden source maps to upload alongside; they
+are not served.
+
+## Usage data
+
+Nothing is sent unless the host names an `analyticsUrl` **and** the person
+turns on Share usage data (Settings › General, off by default) **and**
+their browser doesn't send Global Privacy Control. What may be sent is the
+one table `EVENTS` in `src/lib/analytics.ts`, each event with the
+properties it names and no others: never a name, an id or what was typed
+(ADR 0015). Add an event there, then `track("…", { … })` where it happens.
 
 ## Hosts
 
@@ -61,7 +85,9 @@ maps to upload alongside; they are not served.
   `dist/` on every push to `main`.
 - **A container**: `deploy/Dockerfile` serves `dist/` with nginx and the
   headers above; `API_URL` at start writes `config.js`, and without it the
-  container refuses to start unless `MOCK=1`.
+  container refuses to start unless `MOCK=1`. `REPORT_URL` and
+  `ANALYTICS_URL`, when given, go into `config.js` too, and their origins
+  into `connect-src`; each must be a plain http(s) URL.
 
 ## Releases
 

@@ -4,9 +4,38 @@ import ReactDOM from "react-dom/client";
 
 import App from "@/App";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { report } from "@/lib/report";
+import { mayShare, startAnalytics } from "@/lib/analytics";
+import { knobsOn } from "@/lib/api";
+import { APP_COMMIT, APP_VERSION } from "@/lib/app";
+import { runtime } from "@/lib/config";
+import { flagsFrom, setFlags } from "@/lib/flags";
+import { language } from "@/lib/i18n";
+import { usePrefs } from "@/lib/prefs";
+import { beaconReporter, both, report, setReporter, viewPath } from "@/lib/report";
 import { once } from "@/lib/storage";
 import "@/index.css";
+
+// What the host configured (config.js, lib/config.ts): the flags for this
+// deployment, where errors go and where usage goes.
+const config = runtime();
+setFlags(flagsFrom(config, location.search, knobsOn()));
+const beacon = (url: string, body: string) => navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+if (config.reportUrl) {
+  const toConsole = (error: unknown, context?: Record<string, string>) => console.error(error, context ?? "");
+  setReporter(
+    both(
+      toConsole,
+      beaconReporter(config.reportUrl, () => ({ view: viewPath(location.hash), version: APP_VERSION, commit: APP_COMMIT, language: language() }), beacon),
+    ),
+  );
+}
+if (config.analyticsUrl)
+  startAnalytics(
+    config.analyticsUrl,
+    () => usePrefs.getState().shareUsage && mayShare(),
+    () => ({ version: APP_VERSION, language: language() }),
+    beacon,
+  );
 
 // Errors nothing caught still get reported (lib/report.ts).
 window.addEventListener("error", (e) => report(e.error ?? e.message, { where: "window" }));

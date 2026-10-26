@@ -5,6 +5,7 @@ import { openShortcuts } from "@/components/shortcuts-sheet";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { APP_NAME } from "@/lib/app";
+import { flag } from "@/lib/flags";
 import { t } from "@/lib/i18n";
 import { openSettings, useStore } from "@/lib/store";
 import { builtinThemes } from "@/themes/builtin";
@@ -24,7 +25,7 @@ export function HomeView() {
             <code className="rounded bg-muted px-1 py-px font-mono text-tag text-foreground">src/lib/api.ts</code>
             {t("shell.home.introAfter")}
           </p>
-          <GettingStarted />
+          {flag("gettingStarted") && <GettingStarted />}
           <div className="mt-8 grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
             <Card icon={<FolderKanbanIcon />} title={t("shell.place.projects")} description={t("shell.home.projects")} onClick={() => useStore.getState().setView({ kind: "projects" })} />
             <Card icon={<SearchIcon />} title={t("shell.home.search")} description={t("shell.home.searchText")} keys="⌘K" onClick={() => useStore.getState().setPaletteOpen(true)} />

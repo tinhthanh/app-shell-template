@@ -5,6 +5,8 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- A deployment can turn features on or off, send unexpected errors to its own collector, and collect usage from people who turn on Settings › General › Share usage data (off by default, and never with Global Privacy Control), all from config.js or the container's REPORT_URL and ANALYTICS_URL.
+
 - An address the app doesn't know says "Nothing here" with a way Home, instead of quietly showing Home; a project that is gone says so without a pointless Try again, and one in a workspace you aren't in says it isn't yours to see.
 - A change saved on a project's page reaches the lists beside it at once: renamed, re-sorted, counted again, without leaving the page.
 - The app starts lighter (200 KB instead of 219 KB): the command palette, the sign-in page and the new-workspace form load once they are needed, or when the app is idle.
