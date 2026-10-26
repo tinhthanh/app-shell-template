@@ -44,7 +44,8 @@ export function Tip({
   children,
 }: {
   label: ReactNode;
-  side?: "top" | "bottom" | "left" | "right";
+  // inline-end is the side after the text: the right, or the left in a right-to-left page.
+  side?: "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
   align?: "start" | "center" | "end";
   delay?: number;
   className?: string;
@@ -78,7 +79,8 @@ export function Tip({
 
 interface TipSpec {
   label: ReactNode;
-  side?: "top" | "bottom" | "left" | "right";
+  // inline-end is the side after the text: the right, or the left in a right-to-left page.
+  side?: "top" | "bottom" | "left" | "right" | "inline-end" | "inline-start";
   align?: "start" | "center" | "end";
   delay?: number;
   className?: string;

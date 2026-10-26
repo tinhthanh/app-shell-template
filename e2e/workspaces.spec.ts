@@ -35,6 +35,27 @@ test("a new workspace is made from the rail, and shows", async ({ app }) => {
   await expect(dialog).toHaveCount(0);
   await expect(app.page.getByTestId("workspace-header")).toContainText("Initech");
   await expect(app.page.getByTestId("projects-empty")).toBeVisible();
+  // The keyboard is on the new tile, not back on "+".
+  await expect(app.page.locator("[data-testid=rail-workspace][data-workspace=w-initech]")).toBeFocused();
+});
+
+test("the sheet lists the workspace's projects while the list beside it is filtered", async ({ app }) => {
+  await app.open({ hash: "/projects?status=paused" });
+  await expect(app.page.getByTestId("project-row")).toHaveCount(1);
+  await expect(app.page.getByTestId("projects-column").getByTestId("column-project")).toHaveCount(8);
+});
+
+test("when the workspaces can't be read, the projects say so, with a way to try again", async ({ app }) => {
+  await app.open({ params: { fail: "1" }, hash: "/projects" });
+  const failed = app.page.getByTestId("projects-failed");
+  await expect(failed).toBeVisible();
+  await expect(failed.getByRole("button", { name: "Try again" })).toBeVisible();
+});
+
+test("a place's count is part of its name on the rail", async ({ app }) => {
+  await app.open({ hash: "/projects" });
+  await expect(app.page.getByTestId("project-row").first()).toBeVisible();
+  await expect(app.nav("projects")).toHaveAttribute("aria-label", "Projects, 8");
 });
 
 test("a project opened from another workspace brings its workspace with it", async ({ app }) => {

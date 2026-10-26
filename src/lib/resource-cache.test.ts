@@ -2,7 +2,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { cached, clearCache, forget, MAX_KEPT, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
+import { cached, clearCache, forget, listsOf, MAX_KEPT, mutate, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
+import type { Page } from "./types.ts";
 
 test.beforeEach(clearCache);
 
@@ -107,4 +108,15 @@ test("a long session keeps the answers used last, and never drops one on screen"
   for (let i = 0; i < 40; i++) remember(`n${i}`, i);
   assert.equal(cached("k30"), "again");
   stop();
+});
+
+test("a write reaches every kept list of the resource, and a refusal puts each back as it had it", async () => {
+  remember("rows2?status=active", { items: [{ id: "a", status: "active", name: "A" }], total: 1 });
+  remember("rows2", { items: [{ id: "a", status: "active", name: "A" }], total: 1 });
+  remember("rows2-tags", ["web"]);
+  assert.deepEqual(listsOf("rows2?status=active").sort(), ["rows2", "rows2?status=active"]);
+  await optimistic<Row>({ key: "row2:a", listKey: "rows2?status=active", id: "a", patch: { status: "paused" }, write: async () => ({ id: "a", status: "paused", name: "A" }) });
+  assert.equal(cached<Page<Row>>("rows2")?.items[0]?.status, "paused");
+  await assert.rejects(optimistic<Row>({ key: "row2:a", listKey: "rows2?status=active", id: "a", patch: { status: "archived" }, write: () => Promise.reject(new Error("no")) }), /no/);
+  assert.equal(cached<Page<Row>>("rows2")?.items[0]?.status, "paused");
 });

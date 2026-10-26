@@ -5,6 +5,12 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- After a sign-out, whoever signs in next starts clean: no notices, counts, Recent or workspace left from the last person, and a toast is shown once, not again.
+- The sheet's project list stays full while the list beside it is filtered, says so when it can't be read (with Try again), and a change or a delete reaches every list of the projects at once; a deleted project leaves Recent.
+- When the workspaces can't be read, Projects says so with Try again instead of loading for ever; a viewer is offered no new workspace, and a new one takes the keyboard.
+- The rail's tooltips and menus open on the reading side, so they mirror in a right-to-left page, and a place's count is part of its name for a screen reader.
+- Going offline while the app fetches its views in the background no longer reloads into a blank page; it carries on once back online.
+
 - The sidebar is a rail beside a sheet, as Shipyard's is: the rail has the places (the rest under its "…", where you choose which stay on it), your workspaces as tiles (the one on show raised, a dot when something in one waits, a + to make another) and Settings; the sheet shows the workspace, search and the open place's own list, with Projects grouped by status. ⌘\ folds the sheet away and leaves the rail.
 - Projects belong to a workspace: picking another on the rail lists its projects, and a project opened from a link brings its workspace with it. The list-only sidebar is gone.
 

@@ -3,7 +3,7 @@ import { type ReactNode, useEffect } from "react";
 
 import { type Column, DataTable } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
-import { toastError } from "@/components/error-note";
+import { ErrorNote, toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
 import { FormDialog } from "@/components/form-dialog";
 import { ListToolbar, NothingMatches } from "@/components/list-page";
@@ -37,7 +37,7 @@ import { useStore, type View } from "@/lib/store";
 import { useTitle } from "@/lib/title";
 import type { Page, Project, ProjectQuery, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
+import { loadWorkspaces, pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 import { ViewHeader } from "@/views/view-header";
 
 // Projects is the example resource, end to end: a list read a page at a
@@ -134,6 +134,13 @@ function ProjectList() {
     return (
       <div className="flex h-full items-center justify-center" data-testid="projects-loading">
         <PixelLoader label={t("projects.reading")} />
+      </div>
+    );
+  // Without the workspaces there is no list to read: say so, with Try again.
+  if (workspaces === "failed")
+    return (
+      <div className="mx-auto w-full max-w-xl px-page pt-8" data-testid="projects-failed">
+        <ErrorNote error={useWorkspaces.getState().error} onRetry={() => void loadWorkspaces(() => client.workspaces())} />
       </div>
     );
   return <WorkspaceProjects />;
@@ -260,10 +267,13 @@ function ProjectDetail({ id }: { id: string }) {
   useTitle(p?.name);
   // Opened, it goes first in the sidebar's Recent (lib/recent.ts).
   // Opened from another workspace (a link, the palette), it brings its own with it.
+  // Only one of the person's own: a record of a workspace they aren't in
+  // stays where it is. Watched, as the workspaces may come after the record.
   const home = p?.workspace;
+  const ours = useWorkspaces((s) => Boolean(home) && s.list.some((w) => w.id === home));
   useEffect(() => {
-    if (home) pickWorkspace(home);
-  }, [home]);
+    if (home && ours) pickWorkspace(home);
+  }, [home, ours]);
   const opened = p?.name;
   useEffect(() => {
     if (opened) setPrefs({ recent: withRecent(usePrefs.getState().recent, { kind: "project", id, name: opened }) });
@@ -293,7 +303,11 @@ function ProjectDetail({ id }: { id: string }) {
       listKey: listKey(view),
       id,
       remove: () => client.deleteProject(id),
-      after: () => useStore.getState().setView({ ...view, id: undefined }),
+      after: () => {
+        // Gone, it leaves the sidebar's Recent too.
+        setPrefs({ recent: usePrefs.getState().recent.filter((r) => !(r.kind === "project" && r.id === id)) });
+        useStore.getState().setView({ ...view, id: undefined });
+      },
     });
   return (
     <DetailPage

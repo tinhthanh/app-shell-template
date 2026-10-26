@@ -5,6 +5,7 @@
 
 export const en = {
   "projects.column.empty": "No projects here yet.",
+  "projects.column.failed": "Couldn't read the projects.",
   "projects.column.new": "New project",
   "projects.title": "Projects",
   "projects.countMatch": "{n} match",
@@ -45,6 +46,7 @@ export const en = {
 
 export const vi: Record<keyof typeof en, string> = {
   "projects.column.empty": "Chưa có dự án nào ở đây.",
+  "projects.column.failed": "Không đọc được các dự án.",
   "projects.column.new": "Dự án mới",
   "projects.title": "Dự án",
   "projects.countMatch": "{n} kết quả phù hợp",

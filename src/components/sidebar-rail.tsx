@@ -15,6 +15,7 @@ import { identicon } from "@/lib/identicon";
 import { isActive, type Place, places } from "@/lib/nav";
 import { IS_MAC, platformKeys } from "@/lib/platform";
 import { setPrefs, usePrefs } from "@/lib/prefs";
+import { useCan } from "@/lib/session";
 import { openSettings, useStore } from "@/lib/store";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,7 @@ export function WorkspaceRail({ folded, fixed = false }: { folded: boolean; fixe
       {folded && (
         <>
           {!fixed && <ShowSidebar />}
-          <Tip label={t("shell.searchTip", { keys: platformKeys("⌘K") })} side="right">
+          <Tip label={t("shell.searchTip", { keys: platformKeys("⌘K") })} side="inline-end">
             <button type="button" aria-label={t("shell.search")} onClick={() => useStore.getState().setPaletteOpen(true)} className={cn(railButton, ink.row)}>
               <SearchIcon />
             </button>
@@ -73,7 +74,7 @@ export function WorkspaceRail({ folded, fixed = false }: { folded: boolean; fixe
 
 function ShowSidebar() {
   return (
-    <Tip label={t("shell.showSidebarTip", { keys: "⌘\\" })} side="right">
+    <Tip label={t("shell.showSidebarTip", { keys: "⌘\\" })} side="inline-end">
       <button type="button" aria-label={t("shell.showSidebar")} onClick={() => setPrefs({ sidebarCollapsed: false })} className={cn(railButton, ink.glyph)}>
         <PanelOpenGlyph />
       </button>
@@ -99,10 +100,11 @@ function PlaceIcon({ place: p }: { place: Place }) {
   const active = isActive(p, view);
   const n = places().findIndex((x) => x.id === p.id) + 1;
   return (
-    <Tip label={badge ? `${p.label} · ${badge.count}` : p.label} side="right">
+    <Tip label={badge ? `${p.label} · ${badge.count}` : p.label} side="inline-end">
       <button
         type="button"
-        aria-label={p.label}
+        // The count is part of its name, for a screen reader as for the eye.
+        aria-label={badge ? `${p.label}, ${badge.count}` : p.label}
         aria-current={active ? "page" : undefined}
         aria-keyshortcuts={`${IS_MAC ? "Meta" : "Control"}+${n}`}
         data-testid={`nav-${p.id}`}
@@ -137,7 +139,7 @@ function MorePlaces({ top, more }: { top: Place[]; more: Place[] }) {
   };
   return (
     <Menu>
-      <Tip label={t("shell.morePlaces")} side="right">
+      <Tip label={t("shell.morePlaces")} side="inline-end">
         <MenuTrigger
           data-testid="more-places"
           render={
@@ -151,7 +153,7 @@ function MorePlaces({ top, more }: { top: Place[]; more: Place[] }) {
           <EllipsisIcon />
         </MenuTrigger>
       </Tip>
-      <MenuPopup side="right" align="start" className="min-w-52">
+      <MenuPopup side="inline-end" align="start" className="min-w-52">
         <MenuGroup>
           {top.map((p) => (
             <MenuItem key={p.id} data-testid={`more-${p.id}`} onClick={() => useStore.getState().setView({ ...p.view })}>
@@ -177,7 +179,7 @@ function MorePlaces({ top, more }: { top: Place[]; more: Place[] }) {
 function SettingsButton() {
   const on = useStore((s) => s.view.kind === "settings");
   return (
-    <Tip label={t("shell.place.settings")} side="right">
+    <Tip label={t("shell.place.settings")} side="inline-end">
       <button
         type="button"
         data-testid="nav-settings"
@@ -195,6 +197,7 @@ function SettingsButton() {
 // Workspaces is the rail's tiles: one per workspace, and one to make another.
 function Workspaces() {
   const list = useWorkspaces((s) => s.list);
+  const canCreate = useCan("workspace.create");
   const current = useWorkspaceId();
   return (
     <ul aria-label={t("shell.workspaces")} className="flex min-h-0 w-full flex-col items-center gap-1.5 overflow-y-auto pt-0.5 pb-1 [scrollbar-width:none]">
@@ -203,9 +206,11 @@ function Workspaces() {
           <WorkspaceTile workspace={w} selected={w.id === current} />
         </li>
       ))}
-      <li>
-        <NewWorkspace />
-      </li>
+      {canCreate && (
+        <li>
+          <NewWorkspace />
+        </li>
+      )}
     </ul>
   );
 }
@@ -218,7 +223,7 @@ function WorkspaceTile({ workspace: w, selected }: { workspace: Workspace; selec
   const label = waiting ? t("shell.workspaceWaiting", { name: w.name, n: waiting }) : w.name;
   return (
     <div className="relative flex w-full shrink-0 justify-center">
-      <Tip side="right" label={label}>
+      <Tip side="inline-end" label={label}>
         <button
           type="button"
           data-testid="rail-workspace"
@@ -299,6 +304,8 @@ function NewWorkspace() {
         const made = await client.createWorkspace({ name: v.name ?? "" });
         if (useStore.getState().view.kind === "projects") useStore.getState().setView({ kind: "projects" });
         addWorkspace(made);
+        // The keyboard goes to the new tile once it is drawn, not back to "+".
+        requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid=rail-workspace][data-workspace="${CSS.escape(made.id)}"]`)?.focus());
         toastManager.add({ type: "success", title: t("shell.workspaceMade", { name: made.name }) });
       }}
     >

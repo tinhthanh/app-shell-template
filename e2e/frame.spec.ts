@@ -42,8 +42,43 @@ test("a project opened goes under Recent, which folds and stays folded after a r
   expect(((await app.stored("app.prefs")) as { folded: string[] }).folded).toEqual(["recent"]);
 });
 
+test("a deleted project leaves Recent", async ({ app }) => {
+  await app.open({ hash: "/projects/p-api" });
+  const detail = app.page.getByTestId("project-detail");
+  await expect(detail.getByRole("heading", { name: "Public API", exact: true })).toBeVisible();
+  await detail.getByRole("button", { name: "Delete" }).click();
+  await app.page.getByTestId("confirm").getByRole("button", { name: "Delete" }).click();
+  await expect(app.page.locator("[data-slot=toast-title]", { hasText: "was deleted" })).toBeVisible();
+  await app.nav("home").click();
+  await expect(app.page.getByTestId("recent-project-p-api")).toHaveCount(0);
+  expect(((await app.stored("app.prefs")) as { recent: { id: string }[] }).recent.map((r) => r.id)).not.toContain("p-api");
+});
+
+test("after a sign-out, whoever signs in next sees none of the last person's notices or Recent", async ({ app }) => {
+  await app.open({ hash: "/projects/p-shop" });
+  await app.page.getByTestId("project-detail").getByRole("button", { name: "Paused", exact: true }).click();
+  await expect(app.page.getByTestId("notifications-unread")).toHaveText("1");
+  // From Home, so signing in again doesn't reopen the project (and put it back).
+  await app.nav("home").click();
+  await expect(app.page.getByTestId("recent-project-p-shop")).toBeVisible();
+  await app.page.getByTestId("account").click();
+  await app.page.getByRole("menuitem", { name: "Sign out" }).click();
+  const signin = app.page.getByTestId("signin");
+  await signin.getByRole("textbox", { name: "Email" }).fill("sam@acme.test");
+  await signin.getByLabel("Password").fill("hunter2");
+  await signin.getByRole("button", { name: "Sign in" }).click();
+  await expect(signin).toHaveCount(0);
+  await expect(app.nav("home")).toHaveAttribute("aria-current", "page");
+  await expect(app.page.getByTestId("notifications-unread")).toHaveCount(0);
+  await expect(app.page.getByTestId("recent-project-p-shop")).toHaveCount(0);
+  await app.page.getByTestId("notifications").click();
+  await expect(app.page.getByTestId("notification-centre").getByTestId("notice")).toHaveCount(0);
+});
+
 test("offline, the status bar says so, and back online the word goes", async ({ app }) => {
   await app.open();
+  // Once the views' code is in: offline, the background load would fail mid-test.
+  await expect(app.page.locator("html[data-views-loaded]")).toHaveCount(1);
   await app.context.setOffline(true);
   await expect(app.page.getByTestId("status-offline")).toHaveText("Offline");
   await app.context.setOffline(false);

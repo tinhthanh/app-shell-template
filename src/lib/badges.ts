@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import { onSignedOut } from "./session.ts";
+
 // A place's count in the sidebar ("Projects 8", "Review 2"): any view or
 // background job sets it by the place's id, and the sidebar draws it beside
 // the place's name (components/app-sidebar.tsx). loud marks a count that
@@ -12,6 +14,9 @@ export interface Badge {
 }
 
 export const usePlaceBadges = create<Record<string, Badge>>()(() => ({}));
+
+// The next person to sign in starts with no counts.
+onSignedOut(() => usePlaceBadges.setState({}, true));
 
 // setPlaceBadge shows a count on a place, or takes it away (0 or undefined).
 export function setPlaceBadge(placeId: string, count: number | undefined, loud = false) {

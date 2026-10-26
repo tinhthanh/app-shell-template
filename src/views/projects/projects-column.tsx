@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from "react";
 import { ink } from "@/components/ink";
-import { Tip } from "@/components/tip";
 import { client } from "@/lib/api";
 import { ago } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -29,11 +28,12 @@ export default function ProjectsColumn() {
   return ready ? <Column /> : null;
 }
 
-// The list on screen (Projects without a record open) reads the same key:
-// the column only follows what it keeps, so there is one read, and its
-// failure is the list's to show. On a record's page the column reads it.
+// The unfiltered list on screen reads the column's own key: the column only
+// follows what it keeps, so there is one read, and its failure is the
+// list's to show. Anywhere else (a record's page, a filtered or sorted
+// list, which reads another key) the column reads it itself.
 function Column() {
-  const listing = useStore((s) => s.view.kind === "projects" && !s.view.id);
+  const listing = useStore((s) => s.view.kind === "projects" && !s.view.id && !s.view.q && !s.view.status && !s.view.tags?.length && !s.view.sort);
   // Its key names the workspace on show (listOf), so another one is another list.
   useWorkspaceId();
   const key = listKey({ kind: "projects" });
@@ -42,7 +42,7 @@ function Column() {
 
 function Read({ listKey: key }: { listKey: string }) {
   const list = usePages((page, signal) => client.projects({ ...listOf({ kind: "projects" }), ...page }, { signal }), { key });
-  return <Rows rows={list.status === "ready" ? list.data.items : undefined} listKey={key} />;
+  return <Rows rows={list.status === "ready" ? list.data.items : undefined} failed={list.status === "failed" ? list.reload : undefined} listKey={key} />;
 }
 
 function Kept({ listKey: key }: { listKey: string }) {
@@ -53,7 +53,7 @@ function Kept({ listKey: key }: { listKey: string }) {
   return <Rows rows={kept?.items} listKey={key} />;
 }
 
-function Rows({ rows: shown, listKey: key }: { rows: Project[] | undefined; listKey: string }) {
+function Rows({ rows: shown, failed, listKey: key }: { rows: Project[] | undefined; failed?: () => void; listKey: string }) {
   const view = useStore((s) => s.view);
   const canCreate = useCan("project.create");
   const open = (p: Project) => useStore.getState().setView({ kind: "projects", id: p.id });
@@ -64,29 +64,35 @@ function Rows({ rows: shown, listKey: key }: { rows: Project[] | undefined; list
       <div className="flex h-7 shrink-0 items-center ps-lane pe-edge pt-3">
         <h3 className={cn("flex-1 text-label", ink.faint)}>{t("shell.place.projects")}</h3>
         {canCreate && (
-          <Tip label={t("projects.column.new")} side="bottom">
-            <ProjectForm
-              listKey={key}
-              onSaved={open}
-              trigger={
-                <button
-                  type="button"
-                  aria-label={t("projects.column.new")}
-                  data-testid="column-new-project"
-                  className={cn("inline-flex size-6 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-3.5", ink.glyph)}
-                />
-              }
-              label={null}
-            />
-          </Tip>
+          <ProjectForm
+            listKey={key}
+            onSaved={open}
+            trigger={
+              <button
+                type="button"
+                aria-label={t("projects.column.new")}
+                data-testid="column-new-project"
+                className={cn("inline-flex size-6 items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-foreground [&_svg]:size-3.5", ink.glyph)}
+              />
+            }
+            label={null}
+          />
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-edge pt-1.5 pb-3">
         {/* Reading: said for a screen reader, and named so a picture waits for the rows. */}
-        {!shown && (
-          <p className="sr-only" role="status" data-testid="projects-column-loading">
+        {!shown && !failed && (
+          <p className="sr-only" data-testid="projects-column-loading">
             {t("projects.reading")}
           </p>
+        )}
+        {failed && (
+          <div className="flex items-center gap-2 px-2 pt-1" data-testid="projects-column-failed">
+            <span className={cn("flex-1 text-desc", ink.faint)}>{t("projects.column.failed")}</span>
+            <button type="button" onClick={failed} className="rounded-md px-1.5 text-desc text-foreground underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring">
+              {t("common.tryAgain")}
+            </button>
+          </div>
         )}
         {shown && rows.length === 0 && <p className={cn("px-2 pt-1 text-desc", ink.faint)}>{t("projects.column.empty")}</p>}
         {PROJECT_STATUSES.map((status) => {

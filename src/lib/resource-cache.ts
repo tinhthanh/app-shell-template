@@ -73,6 +73,14 @@ function wrote(key: string): number {
   return n;
 }
 
+// listsOf is every kept list of the resource listKey names: the key itself
+// and its siblings with another query ("projects", "projects?status=paused",
+// another workspace's), so a write reaches each list the record may be in.
+export function listsOf(listKey: string): string[] {
+  const base = listKey.split("?")[0] ?? listKey;
+  return [...data.keys()].filter((k) => k === base || k.startsWith(`${base}?`));
+}
+
 // rowIn finds a row in a kept list, whole or a page at a time.
 function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: string): T | undefined {
   const rows = Array.isArray(list) ? list : list?.items;
@@ -89,9 +97,12 @@ function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: st
 // one's answer, or its refusal, changes nothing.
 export async function optimistic<T extends { id: string }>(o: { key: string; listKey?: string; id: string; patch: Partial<T>; write: () => Promise<T> }): Promise<T> {
   const before = cached<T>(o.key);
-  const rowBefore = o.listKey ? rowIn(cached<T[] | Page<T>>(o.listKey), o.id) : undefined;
-  const inList = (fn: (row: T) => T) => {
-    if (o.listKey) mutate<T[] | Page<T>>(o.listKey, (l) => editRows(l, (rows) => rows.map((row) => (row.id === o.id ? fn(row) : row))));
+  // Every kept list of the resource, with the row as each had it.
+  const lists = o.listKey ? [...new Set([o.listKey, ...listsOf(o.listKey)])] : [];
+  const before_ = new Map(lists.map((k) => [k, rowIn(cached<T[] | Page<T>>(k), o.id)]));
+  const rowBefore = o.listKey ? before_.get(o.listKey) : undefined;
+  const inList = (fn: (row: T, key: string) => T) => {
+    for (const k of lists) mutate<T[] | Page<T>>(k, (l) => editRows(l, (rows) => rows.map((row) => (row.id === o.id ? fn(row, k) : row))));
   };
   const mine = wrote(o.key);
   if (o.listKey) wrote(o.listKey);
@@ -108,7 +119,7 @@ export async function optimistic<T extends { id: string }>(o: { key: string; lis
   } catch (err) {
     if (newest()) {
       mutate<T>(o.key, () => before);
-      if (rowBefore) inList(() => rowBefore);
+      if (rowBefore || before_.size) inList((row, k) => before_.get(k) ?? row);
     }
     throw err;
   }

@@ -19,5 +19,6 @@ no longer hold, write a new record that supersedes it.
 | [0011](0011-sessions.md) | Sessions are a cookie by default, and never in storage |
 | [0012](0012-permissions.md) | What a person may do is one table, asked by name |
 | [0013](0013-words.md) | The app's words are one table per language, with no library |
+| [0014](0014-workspace-in-prefs.md) | The workspace on show is a preference, not part of the address |
 
 Format: Status, Context, Decision, Consequences, Revisit if. Under 40 lines.

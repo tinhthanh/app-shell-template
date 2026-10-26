@@ -169,6 +169,16 @@ test("a workspace lists its own projects and tags, and a new one is refused with
   assert.equal(p.workspace, "w-initech");
 });
 
+test("a new workspace's id is its own, even from a name with no letters to give, and a viewer may not make one", async () => {
+  const c = mockClient({ latency: 0 });
+  const first = await c.createWorkspace({ name: "Ünïcödé" });
+  const second = await c.createWorkspace({ name: "Работа" });
+  const ids = (await c.workspaces()).map((w) => w.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.notEqual(first.id, second.id);
+  await assert.rejects(mockClient({ latency: 0, role: "viewer" }).createWorkspace({ name: "Nope" }), (e: unknown) => e instanceof ApiError && e.status === 403);
+});
+
 test("the workspaces read doesn't count as failOnce's first call, but fails with the server", async () => {
   assert.equal((await mockClient({ latency: 0, failOnce: true }).workspaces()).length, 2);
   await assert.rejects(mockClient({ latency: 0, fail: true }).workspaces(), (e: unknown) => e instanceof ApiError && e.status === 503);

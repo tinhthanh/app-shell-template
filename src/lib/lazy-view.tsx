@@ -33,7 +33,8 @@ export function lazyView<P extends object>(load: () => Promise<ComponentType<P>>
 
 // preloadViews loads every lazy view's code a while after the app starts,
 // one at a time when the main thread is free. Safari has no
-// requestIdleCallback; there it is a timer.
+// requestIdleCallback; there it is a timer. Offline it waits to be back
+// online, and a load the network dropped is tried again then.
 export function preloadViews(): () => void {
   const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
   const idle = (cb: () => void) => (ric ? ric(cb, { timeout: 2000 }) : window.setTimeout(cb, 50));
@@ -42,10 +43,23 @@ export function preloadViews(): () => void {
   let handle = 0;
   let stopped = false;
   const next = () => {
-    const load = loaders[i++];
-    if (!load || stopped) return;
+    if (stopped) return;
+    if (!navigator.onLine) {
+      window.addEventListener("online", () => (handle = idle(next)), { once: true });
+      return;
+    }
+    const load = loaders[i];
+    // All in: said on the page, for whatever waits on a settled app (a browser test going offline).
+    if (!load) {
+      document.documentElement.dataset.viewsLoaded = "";
+      return;
+    }
     void load()
-      .catch(() => {})
+      .then(
+        () => i++,
+        // Dropped by the network: the same one again once back; anything else, the next.
+        () => navigator.onLine && i++,
+      )
       .finally(() => {
         if (!stopped) handle = idle(next);
       });

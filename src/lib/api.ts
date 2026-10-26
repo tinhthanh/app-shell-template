@@ -135,11 +135,16 @@ const retriable = (err: unknown) => err instanceof ApiError && (err.code === "ne
 // pause waits ms, or rejects at once when the read is called off.
 const pause = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((done, fail) => {
-    const t = setTimeout(done, ms);
-    signal?.addEventListener("abort", () => {
+    const callOff = () => {
       clearTimeout(t);
       fail(new ApiError("Asked for something else.", 0, "aborted"));
-    });
+    };
+    // The listener goes when the wait is over, so a long-lived signal doesn't gather them.
+    const t = setTimeout(() => {
+      signal?.removeEventListener("abort", callOff);
+      done();
+    }, ms);
+    signal?.addEventListener("abort", callOff, { once: true });
   });
 
 async function call<T>(base: string, method: string, path: string, body?: unknown, o: ClientOptions = {}, signal?: AbortSignal): Promise<T> {

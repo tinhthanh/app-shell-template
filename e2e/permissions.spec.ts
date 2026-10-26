@@ -16,6 +16,12 @@ test("a viewer sees the projects but no way to create, edit or delete one", asyn
   await expect(detail.getByRole("group", { name: "Status" })).toHaveCount(0);
 });
 
+test("a viewer is offered no new workspace on the rail", async ({ app }) => {
+  await app.open({ params: { role: "viewer" }, hash: "/projects" });
+  await expect(app.page.locator("[data-testid=rail-workspace]").first()).toBeVisible();
+  await expect(app.page.getByTestId("new-workspace")).toHaveCount(0);
+});
+
 test("a viewer's empty list says someone else adds the first, with no button", async ({ app }) => {
   await app.open({ params: { role: "viewer", empty: "1" }, hash: "/projects" });
   const empty = app.page.getByTestId("projects-empty");

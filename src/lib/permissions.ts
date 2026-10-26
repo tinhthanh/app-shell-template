@@ -14,6 +14,7 @@ export const ACTIONS = {
   "project.create": ["owner", "member"],
   "project.edit": ["owner", "member"],
   "project.delete": ["owner"],
+  "workspace.create": ["owner", "member"],
 } satisfies Record<string, readonly Role[]>;
 
 export type Action = keyof typeof ACTIONS;
