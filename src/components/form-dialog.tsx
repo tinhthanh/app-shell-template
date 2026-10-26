@@ -29,11 +29,13 @@ export interface FormDialogProps {
   submit: string;
   failTitle: string;
   onSubmit(values: Record<string, string>): Promise<void>;
+  // Called as the dialog opens: put back what the form keeps outside its fields.
+  onOpen?(): void;
   // The Fields (components/ui/field.tsx).
   children: ReactNode;
 }
 
-export function FormDialog({ trigger, icon, label, title, description, initial, submit, failTitle, onSubmit, children }: FormDialogProps) {
+export function FormDialog({ trigger, icon, label, title, description, initial, submit, failTitle, onSubmit, onOpen, children }: FormDialogProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,7 +45,9 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
   // change event) counts as an edit as much as typing does.
   const dirty = () => {
     const f = new FormData(form.current ?? undefined);
-    return Object.keys(initial).some((k) => String(f.get(k) ?? "") !== initial[k]);
+    // A file field with nothing picked is an empty File, not an edit; one picked is its name.
+    const value = (v: FormDataEntryValue | null) => (v instanceof File ? (v.size || v.name ? v.name : "") : String(v ?? ""));
+    return Object.keys(initial).some((k) => value(f.get(k)) !== initial[k]);
   };
   const close = () => {
     setOpen(false);
@@ -53,7 +57,11 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (o) return setOpen(true);
+        if (o) {
+          // A form starts afresh each time it opens: what a cancelled one held (a file picked) goes.
+          onOpen?.();
+          return setOpen(true);
+        }
         if (!dirty()) return close();
         // Esc, the backdrop or Cancel with edits in the fields: ask first.
         confirm({ title: t("common.discard.title"), description: t("common.discard.description"), confirm: t("common.discard.confirm"), destructive: true, run: close });

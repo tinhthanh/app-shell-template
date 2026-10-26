@@ -178,3 +178,41 @@ test("⌘K finds a task and opens it", async ({ app }) => {
   await palette.getByRole("option", { name: /Document the webhook retries/ }).click();
   await expect(app.page.getByTestId("task-detail").getByRole("heading", { name: "Document the webhook retries", exact: true })).toBeVisible();
 });
+
+test("a task form opened and closed untouched closes without asking", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await app.page.getByRole("button", { name: "New task" }).first().click();
+  const dialog = app.page.getByRole("dialog", { name: "New task" });
+  await expect(dialog).toBeVisible();
+  await app.page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(app.page.getByTestId("confirm")).toHaveCount(0);
+});
+
+test("a file picked in a form that was then discarded isn't sent with the next one", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await app.page.getByRole("button", { name: "New task" }).first().click();
+  const dialog = app.page.getByRole("dialog", { name: "New task" });
+  await dialog.getByLabel("File").setInputFiles({ name: "old.txt", mimeType: "text/plain", buffer: Buffer.from("old") });
+  await app.page.keyboard.press("Escape");
+  await app.page.getByTestId("confirm").getByRole("button", { name: "Discard" }).click();
+  await expect(dialog).toHaveCount(0);
+  await app.page.getByRole("button", { name: "New task" }).first().click();
+  await dialog.getByRole("textbox", { name: "Title" }).fill("No file here");
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(app.page.getByTestId("task-file")).toContainText("No file");
+});
+
+test("the project filter names the project, from a project's page too", async ({ app }) => {
+  await app.open({ hash: "/projects/p-api" });
+  await app.page.getByTestId("project-tasks").click();
+  await expect(app.page.getByTestId("tasks-project-filter")).toHaveValue("Public API");
+});
+
+test("another workspace picked on a task's page goes to that workspace's tasks", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-icons" });
+  await expect(app.page.getByTestId("task-detail")).toBeVisible();
+  await app.page.locator("[data-testid=rail-workspace][data-workspace=w-globex]").click();
+  await expect(app.page.getByTestId("task-detail")).toHaveCount(0);
+  await expect(app.page.getByTestId("task-row")).toHaveCount(2);
+});

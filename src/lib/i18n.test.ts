@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { LANGUAGES, language, resolveLanguage, setLanguage, t } from "./i18n.ts";
+import { fill, LANGUAGES, language, resolveLanguage, setLanguage, t } from "./i18n.ts";
 import { en } from "./messages/index.ts";
 
 test("a word comes in the language in use, and English is the start", () => {
@@ -43,8 +43,8 @@ test("a count takes the form its number wants, written as the language writes nu
   assert.equal(t("projects.countAll", { n: 5000 }), "5.000 dự án");
   setLanguage("en");
   // A form may hold a blank of its own.
-  assert.equal(t("projects.bulk.statusDone", { n: 3, status: "Paused" }), "3 projects are now Paused");
-  assert.equal(t("projects.bulk.statusDone", { n: 1, status: "Paused" }), "1 project is now Paused");
+  assert.equal(fill("{n, plural, one {# project is now {status}} other {# projects are now {status}}}", { n: 3, status: "paused" }), "3 projects are now paused");
+  assert.equal(fill("{n, plural, one {# project is now {status}} other {# projects are now {status}}}", { n: 1, status: "paused" }), "1 project is now paused");
   // A count not given stays to be seen, as a blank does.
   assert.equal(t("projects.countAll", {}), en["projects.countAll"]);
 });
@@ -73,4 +73,14 @@ test("Vietnamese words put the tone mark one way: hòa, khỏe, thủy, not hoà
   // The older placement, the one most Vietnamese software uses; quý is the same in both.
   const newer = /o[áàảãạéèẻẽẹ](?=$|[^a-zà-ỹ])|(?<!q)u[ýỳỷỹỵ](?=$|[^a-zà-ỹ])/i;
   for (const [k, w] of Object.entries(LANGUAGES.vi.words)) assert.doesNotMatch(w, newer, k);
+});
+
+test("a bulk status reads as a sentence in each language, never a state word dropped into another sentence", () => {
+  assert.equal(t("projects.bulk.nowArchived", { n: 3 }), "3 projects are now archived");
+  setLanguage("vi");
+  assert.equal(t("projects.bulk.nowArchived", { n: 3 }), "Đã lưu trữ 3 dự án");
+  assert.equal(t("projects.bulk.nowActive", { n: 2 }), "2 dự án hiện đang hoạt động");
+  // No "đang đang" or "đang đã" in any word.
+  for (const w of Object.values(LANGUAGES.vi.words)) assert.doesNotMatch(w, /đang (đang|đã)/, w);
+  setLanguage("en");
 });

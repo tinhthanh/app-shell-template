@@ -100,3 +100,13 @@ test("Home's getting-started list ticks each step as it is done, and once put aw
   await expect(app.page.getByTestId("nav-home")).toBeVisible();
   await expect(app.page.getByTestId("getting-started")).toHaveCount(0);
 });
+
+test("gone offline after the app has fetched its views, Projects and the sheet's list still open", async ({ app }) => {
+  await app.open();
+  await expect(app.page.locator("html[data-views-loaded]")).toHaveCount(1);
+  await app.context.setOffline(true);
+  await app.nav("projects").click();
+  await expect(app.page.getByTestId("projects-column")).toBeVisible();
+  await expect(app.page.getByTestId("projects")).toBeVisible();
+  await app.context.setOffline(false);
+});

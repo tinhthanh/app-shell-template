@@ -63,6 +63,10 @@ const statuses = (): { value: StatusFilter; label: string }[] => [
   { value: "archived", label: t("projects.status.archived") },
 ];
 
+// The toast when several change at once: one sentence per status, so each
+// language can say it its own way (Vietnamese puts "Đã lưu trữ" first).
+const BULK_NOW = { active: "projects.bulk.nowActive", paused: "projects.bulk.nowPaused", archived: "projects.bulk.nowArchived" } as const;
+
 // The toast when a status changes (its word and tone are STATE, below).
 const NOW = { active: "projects.nowActive", paused: "projects.nowPaused", archived: "projects.nowArchived" } as const;
 
@@ -198,10 +202,16 @@ function WorkspaceProjects() {
     picked,
     rows.map((p) => p.id),
   );
+  // The bar goes when the picks do: the keyboard goes back to the list's row,
+  // not to the page (it was on the bar's button).
+  const letGo = () => {
+    setPicked(new Set());
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid=projects] [data-slot=data-table] tbody tr[tabindex="0"]')?.focus());
+  };
 
   const setPickedStatus = (status: ProjectStatus) => {
     const ids = [...selected];
-    setPicked(new Set());
+    letGo();
     // Each at once, Undo to put each back (components/bulk-status.ts).
     void setStatuses<Project, ProjectStatus>({
       to: new Map(ids.map((id) => [id, status])),
@@ -209,7 +219,7 @@ function WorkspaceProjects() {
       key,
       listKey: lk,
       write: (id, s) => client.updateProject(id, { status: s }),
-      words: { done: (n, s) => t("projects.bulk.statusDone", { n, status: t(STATE[s].word) }), failed: (n) => t("projects.bulk.statusFailed", { n }), undone: t("projects.bulk.undone") },
+      words: { done: (n, s) => t(BULK_NOW[s], { n }), failed: (n) => t("projects.bulk.statusFailed", { n }), undone: t("projects.bulk.undone") },
       kind: "project",
     });
   };
@@ -231,7 +241,7 @@ function WorkspaceProjects() {
         for (const id of gone) forget(key(id));
         dropRows(lk, gone);
         setPrefs({ recent: usePrefs.getState().recent.filter((r) => !gone.includes(r.id)) });
-        setPicked(new Set());
+        letGo();
         toastManager.add({ type: "success", title: t("projects.bulk.deleted", { n: gone.length }) });
         if (failed.length) toastError(failed[0], t("projects.bulk.deleteFailed", { n: failed.length }));
       },
@@ -254,7 +264,7 @@ function WorkspaceProjects() {
         }
       />
       {selected.size > 0 ? (
-        <BulkBar count={selected.size} onClear={() => setPicked(new Set())}>
+        <BulkBar count={selected.size} onClear={letGo}>
           {canEdit && (
             <Menu>
               <MenuTrigger render={<Button size="sm" variant="outline" data-testid="bulk-status" />}>

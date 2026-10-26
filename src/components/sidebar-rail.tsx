@@ -15,7 +15,7 @@ import { useCan } from "@/lib/session";
 import { openSettings, useStore } from "@/lib/store";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { initials, pickWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
+import { initials, switchWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/workspace";
 
 // The sidebar's rail, after Shipyard's (github.com/cosscom/shipyard, MIT):
 // the places pinned to it as icons, the rest under its "…" with the way to
@@ -227,10 +227,7 @@ function WorkspaceTile({ workspace: w, selected }: { workspace: Workspace; selec
           aria-label={label}
           aria-current={selected ? "true" : undefined}
           onClick={() => {
-            if (selected) return;
-            const view = useStore.getState().view;
-            if (view.kind === "projects" && view.id) useStore.getState().setView({ kind: "projects" });
-            pickWorkspace(w.id);
+            if (!selected) switchWorkspace(w.id);
           }}
           className={cn(
             "relative flex size-9 items-center justify-center rounded-[10px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",

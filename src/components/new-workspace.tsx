@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toastManager } from "@/components/ui/toast";
 import { client } from "@/lib/api";
 import { t } from "@/lib/i18n";
-import { useStore } from "@/lib/store";
-import { addWorkspace } from "@/lib/workspace";
+import { addWorkspace, leaveRecords } from "@/lib/workspace";
 
 // The rail's "+" and its form (components/sidebar-rail.tsx draws it, lazy,
 // so the form's code isn't in what the app starts with): a name, and the
@@ -27,7 +26,7 @@ export function NewWorkspace() {
       failTitle={t("shell.workspaceFailed")}
       onSubmit={async (v) => {
         const made = await client.createWorkspace({ name: v.name ?? "" });
-        if (useStore.getState().view.kind === "projects") useStore.getState().setView({ kind: "projects" });
+        leaveRecords();
         addWorkspace(made);
         // The keyboard goes to the new tile once it is drawn, not back to "+".
         requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-testid=rail-workspace][data-workspace="${CSS.escape(made.id)}"]`)?.focus());

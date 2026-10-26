@@ -1,7 +1,7 @@
 // Relative imports and plain timers: api.test.ts runs this in node.
 import { type RuntimeConfig, runtime } from "./config.ts";
 import { ApiError } from "./errors.ts";
-import { signedOut } from "./session.ts";
+import { refreshed as sessionRefreshed, signedOut } from "./session.ts";
 import type { Attachment, Page, Project, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, User, Workspace } from "./types.ts";
 
 // What a read can be given: a signal that calls it off when its answer is
@@ -129,6 +129,8 @@ export interface ClientOptions {
   // Where a 401 is answered by asking for a longer session, once, before the
   // call is tried again; null when the server has no such thing.
   refreshPath?: string | null;
+  // The person with their new session end, when a 401 was answered so.
+  onRefreshed?: (user: User) => void;
   // How long to wait before each retry of a read (RETRY_DELAYS_MS); the tests
   // give [0, 0].
   retryDelays?: number[];
@@ -167,8 +169,12 @@ async function refreshed(base: string, o: ClientOptions): Promise<boolean> {
   if (!path) return false;
   let ask = refreshing.get(o);
   if (!ask) {
-    ask = once(base, "POST", path, undefined, o).then(
-      () => true,
+    ask = once<User>(base, "POST", path, undefined, o).then(
+      (user) => {
+        // The longer session's end is the one to warn and sign out by.
+        if (user && typeof user === "object") o.onRefreshed?.(user);
+        return true;
+      },
       () => false,
     );
     refreshing.set(o, ask);
@@ -317,7 +323,9 @@ function deferred(load: () => Promise<Client>): Client {
 
 // client is the one the app uses: the fixtures, or the HTTP client. A 401
 // from either signs the person out (lib/session.ts).
-export const client: Client = isMock() ? deferred(() => import("./mock.ts").then((m) => m.mockClient({ onUnauthorized: signedOut }))) : httpClient(apiBase(), { onUnauthorized: signedOut });
+export const client: Client = isMock()
+  ? deferred(() => import("./mock.ts").then((m) => m.mockClient({ onUnauthorized: signedOut })))
+  : httpClient(apiBase(), { onUnauthorized: signedOut, onRefreshed: sessionRefreshed });
 
 // For the tests: the pieces on their own.
 export { errorBody };

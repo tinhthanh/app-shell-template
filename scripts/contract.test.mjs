@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { clientCalls, clientMethods, loadSpec, match, operations, problems } from "./contract.mjs";
+import { clientCalls, clientMethods, interfaceFields, loadSpec, match, operations, problems } from "./contract.mjs";
 import { allowedOrigin, startStub } from "./stub-server.mjs";
 
 const spec = loadSpec();
@@ -67,6 +67,8 @@ test("the stub answers the contract from the mock: a page, a refusal in the Erro
     assert.deepEqual(await refused.json(), { error: "A project needs a name.", code: "invalid", field: "name" });
     assert.equal((await fetch(`${stub.url}/projects/p-docs`, { method: "DELETE" })).status, 204);
     assert.equal((await fetch(`${stub.url}/nowhere`)).status, 404);
+    // No connection is kept to be reused after the server let it go.
+    assert.equal((await fetch(`${stub.url}/workspaces`)).headers.get("connection"), "close");
     assert.equal((await fetch(`${stub.url}/projects`, { method: "OPTIONS", headers: { Origin: "http://localhost:1420" } })).headers.get("access-control-allow-origin"), "http://localhost:1420");
     const foreign = await fetch(`${stub.url}/projects`, { headers: { Origin: "https://evil.test" } });
     assert.equal(foreign.headers.get("access-control-allow-origin"), null);
@@ -74,4 +76,10 @@ test("the stub answers the contract from the mock: a page, a refusal in the Erro
   } finally {
     await stub.close();
   }
+});
+
+test("a type's fields are read for the check, optional or not, and a comment line isn't one", () => {
+  const source = "export interface TaskQuery {\n  // The workspace.\n  workspace?: string;\n  q?: string;\n  limit: number;\n}\n";
+  assert.deepEqual(interfaceFields(source, "TaskQuery"), ["workspace", "q", "limit"]);
+  assert.deepEqual(interfaceFields(source, "Missing"), []);
 });

@@ -46,6 +46,15 @@ export function RecordPicker({
   const [query, setQuery] = useState("");
   const asked = useSettled(query);
   const [items, setItems] = useState<Picked[]>(initial ? [initial] : []);
+  // A new initial (the address changed, or the record's name came after its
+  // id) is shown in place: the field isn't drawn again, so the keyboard stays.
+  const initialId = initial?.id;
+  const initialName = initial?.name;
+  useEffect(() => {
+    const next = initialId ? { id: initialId, name: initialName ?? initialId } : null;
+    setValue(next);
+    if (next) setItems((now) => [next, ...now.filter((p) => p.id !== next.id)]);
+  }, [initialId, initialName]);
   const [failed, setFailed] = useState(false);
   // The latest find, so a new closure each render doesn't ask again; what is asked is the query.
   const finder = useRef(find);

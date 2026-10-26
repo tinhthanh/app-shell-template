@@ -119,6 +119,8 @@ export function takeOtherTabsPrefs(raw: string) {
   } catch {
     return;
   }
+  // The workspace on show is this tab's own: two tabs may show two workspaces.
+  next.workspace = usePrefs.getState().workspace;
   fromOtherTab = true;
   try {
     usePrefs.setState(next, true);

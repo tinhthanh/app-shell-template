@@ -23,7 +23,7 @@ else), and wins over the env. Serve it `no-cache`. What it may hold:
 | `apiUrl` | The API's base, over `VITE_API_URL` |
 | `mock` | `true` forces the fixtures, for a demo |
 | `flags` | Features on or off for this deployment, over their defaults: `{ gettingStarted: false }` (`FLAGS` in `src/lib/flags.ts`; a name that isn't there is ignored) |
-| `reportUrl` | Where unexpected errors are POSTed, as JSON, with `sendBeacon` (`ErrorReport` in `src/lib/report.ts`) |
+| `reportUrl` | Where unexpected errors are POSTed, as JSON (sent as `text/plain`, so a collector on another origin needs no CORS preflight; it reads the body as JSON), with `sendBeacon` (`ErrorReport` in `src/lib/report.ts`) |
 | `analyticsUrl` | Where usage events are POSTed, as JSON, for people who turned on Settings › General › Share usage data (`EVENTS` in `src/lib/analytics.ts`) |
 
 Each URL's origin must be in the CSP's `connect-src`; the container puts

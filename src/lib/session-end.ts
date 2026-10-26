@@ -11,10 +11,13 @@ const MAX_TIMER = 2 ** 31 - 1;
 
 // sessionTimes says how long until the warning and until the end, from now;
 // undefined when the session doesn't end or the date can't be read. A
-// warning already due comes at once.
-export function sessionTimes(endsAt: string | undefined, now: number): { warnIn: number; endIn: number } | undefined {
+// warning already due comes at once. final is false when the end is further
+// than a timer waits: then endIn is only when to look again, and there is
+// no warning yet.
+export function sessionTimes(endsAt: string | undefined, now: number): { warnIn: number; endIn: number; final: boolean } | undefined {
   const end = endsAt ? Date.parse(endsAt) : Number.NaN;
   if (Number.isNaN(end)) return undefined;
-  const endIn = Math.min(Math.max(0, end - now), MAX_TIMER);
-  return { warnIn: Math.max(0, endIn - WARN_BEFORE_MS), endIn };
+  const left = Math.max(0, end - now);
+  if (left > MAX_TIMER) return { warnIn: Number.POSITIVE_INFINITY, endIn: MAX_TIMER, final: false };
+  return { warnIn: Math.max(0, left - WARN_BEFORE_MS), endIn: left, final: true };
 }
