@@ -23,13 +23,15 @@
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "test:visual": "node scripts/visual.mjs",
     "shots": "node scripts/shots.mjs",
-    "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:words && pnpm check:type && pnpm check:grid && pnpm check:node && pnpm check:views && pnpm check:csp && pnpm check:themes && pnpm test && pnpm build && pnpm check:size",
+    "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:words && pnpm check:type && pnpm check:grid && pnpm check:node && pnpm check:views && pnpm check:csp && pnpm check:contract && pnpm check:themes && pnpm test && pnpm build && pnpm check:size",
     "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
     "check:node": "node scripts/check-node-imports.mjs",
     "check:views": "node scripts/check-views.mjs",
     "check:csp": "node scripts/check-csp.mjs",
-    "check:size": "node scripts/check-size.mjs"
+    "check:size": "node scripts/check-size.mjs",
+    "check:contract": "node --experimental-strip-types scripts/check-contract.mjs",
+    "stub": "node --experimental-strip-types scripts/stub-server.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

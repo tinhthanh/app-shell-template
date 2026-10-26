@@ -121,7 +121,7 @@
       }
     },
     {
-      "includes": ["src/lib/api.ts", "src/lib/mock.test.ts", "e2e/fixtures.ts"],
+      "includes": ["src/lib/api.ts", "src/lib/mock.test.ts", "e2e/fixtures.ts", "scripts/check-contract.mjs", "scripts/stub-server.mjs"],
       "linter": {
         "rules": {
           "style": {

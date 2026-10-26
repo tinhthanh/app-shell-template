@@ -30,7 +30,7 @@ Run these before you call something done, and paste their last lines in
 the PR:
 
 ```sh
-pnpm check                                   # typecheck, lint, check:titles, check:words, check:type, check:grid, check:node, check:views, check:csp, check:themes, test, build, check:size
+pnpm check                                   # typecheck, lint, check:titles, check:words, check:type, check:grid, check:node, check:views, check:csp, check:contract, check:themes, test, build, check:size
 pnpm test:coverage                           # the node-run modules: lines 90%, branches and functions 80% (CI runs it)
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds first, then Playwright
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
@@ -287,7 +287,9 @@ behaviour is proven in `e2e/`.
   (`THEME_REPORT=1` prints the margins; nudge lightness only, and note it);
   a ported theme gets a row in `THIRD_PARTY_NOTICES.md`.
 - **A resource:** a type in `src/lib/types.ts` (import-free), methods on
-  `Client` with their paths in `httpClient` (`src/lib/api.ts`), fixtures and
+  `Client` with their paths in `httpClient` (`src/lib/api.ts`), each an
+  operation in `api/openapi.json` (its `operationId` the method; a line in
+  `ARGS` and `SAMPLES`, `scripts/contract.mjs`; `pnpm check:contract`), fixtures and
   the mock methods (through `guard()`, cloning what they return) in
   `src/lib/mock.ts` (read, read one, create, update, delete), cases in
   `mock.test.ts` and `api.test.ts`; a view after `views/projects/`: keyed
