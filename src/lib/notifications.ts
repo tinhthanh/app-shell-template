@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { onSignedOut } from "./session.ts";
 import type { View } from "./store.ts";
 
 // What happened while you weren't looking, kept for the page's life: notify
@@ -17,6 +18,8 @@ export interface Notice {
   // ISO 8601, for the centre's "2 minutes ago".
   at: string;
   read: boolean;
+  // Shown as a toast already (components/notices.tsx), so a remount doesn't show it again.
+  toasted?: boolean;
   // Where its button goes: a record, a list.
   action?: { label: string; view: View };
 }
@@ -45,3 +48,12 @@ export function markAllRead() {
 export function clearNotices() {
   useNotifications.setState({ notices: [] });
 }
+
+// markToasted records that these were shown as toasts.
+export function markToasted(ids: string[]) {
+  const shown = new Set(ids);
+  useNotifications.setState((s) => ({ notices: s.notices.map((n) => (shown.has(n.id) ? { ...n, toasted: true } : n)) }));
+}
+
+// The next person to sign in sees none of these.
+onSignedOut(clearNotices);

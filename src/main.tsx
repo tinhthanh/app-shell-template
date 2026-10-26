@@ -14,9 +14,10 @@ window.addEventListener("unhandledrejection", (e) => report(e.reason, { where: "
 
 // A deploy replaces the hashed files: a tab left open then fails its next
 // lazy import. Once per visit, reload to pick up the new build instead of
-// showing an error.
+// showing an error. Offline, a reload would only leave a dead page: the
+// import fails as it would, and the next visit tries again.
 window.addEventListener("vite:preloadError", (e) => {
-  if (!once("app.reloaded-after-deploy")) return;
+  if (!navigator.onLine || !once("app.reloaded-after-deploy")) return;
   e.preventDefault();
   location.reload();
 });

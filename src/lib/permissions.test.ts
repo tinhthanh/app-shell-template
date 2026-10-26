@@ -13,12 +13,17 @@ test("an owner may do everything, a member everything but delete, a viewer nothi
   );
   assert.deepEqual(
     all.filter((a) => can({ role: "member" }, a)),
-    ["project.create", "project.edit"],
+    ["project.create", "project.edit", "workspace.create"],
   );
   assert.deepEqual(
     all.filter((a) => can({ role: "viewer" }, a)),
     [],
   );
+});
+
+test("a viewer can't make a workspace, a member can", () => {
+  assert.equal(can({ role: "viewer" }, "workspace.create"), false);
+  assert.equal(can({ role: "member" }, "workspace.create"), true);
 });
 
 test("nobody signed in may take any action", () => {

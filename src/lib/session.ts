@@ -23,8 +23,17 @@ export function signedIn(user?: User) {
 // (lib/permissions.ts), and redraws when who that is changes.
 export const useCan = (action: Action): boolean => useSession((s) => can(s.user, action));
 
+// What the person who left leaves behind, besides what was read: their
+// notices, counts, workspaces, Recent (lib/notifications.ts and the rest
+// register here), so the next person on a shared machine sees none of it.
+const forgetters = new Set<() => void>();
+export function onSignedOut(forget: () => void) {
+  forgetters.add(forget);
+}
+
 // signedOut forgets everything read for the person who left.
 export function signedOut() {
   clearCache();
+  for (const forget of forgetters) forget();
   useSession.setState({ status: "signed-out", user: undefined });
 }

@@ -206,17 +206,19 @@ export function mockClient(given: MockOptions = {}): Client {
       return structuredClone(workspaces);
     },
     async createWorkspace(input) {
-      await guard(true);
+      await guard(true, "workspace.create");
       const name = input.name.trim();
       if (!name) throw new ApiError("A workspace needs a name.", 422, "invalid", "name");
       if (workspaces.some((w) => w.name.toLowerCase() === name.toLowerCase())) throw new ApiError(`You're already in a workspace called ${name}.`, 422, "invalid", "name");
-      const w: Workspace = {
-        id: `w-${name
+      // An id from the name, made unique (a name in another script has no ASCII to give).
+      const slug =
+        name
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")}`,
-        name,
-      };
+          .replace(/^-|-$/g, "") || "workspace";
+      let id = `w-${slug}`;
+      for (let n = 2; workspaces.some((w) => w.id === id); n++) id = `w-${slug}-${n}`;
+      const w: Workspace = { id, name };
       workspaces = [...workspaces, w];
       return structuredClone(w);
     },

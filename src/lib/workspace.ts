@@ -8,24 +8,38 @@
 import { create } from "zustand";
 
 import { setPrefs, usePrefs } from "./prefs.ts";
+import { onSignedOut } from "./session.ts";
 import type { Workspace } from "./types.ts";
 
 // The person's workspaces, read once after signing in (App.tsx): a list
 // that needs the one on show waits while they load; if they can't be read,
 // it reads all the same, and its own failure says what is wrong.
-export const useWorkspaces = create<{ status: "loading" | "ready" | "failed"; list: Workspace[] }>()(() => ({ status: "loading", list: [] }));
+export const useWorkspaces = create<{ status: "loading" | "ready" | "failed"; list: Workspace[]; error?: unknown }>()(() => ({ status: "loading", list: [] }));
 
-// loadWorkspaces reads them through the client (lib/api.ts) and settles which one shows.
+// loadWorkspaces reads them through the client (lib/api.ts) and settles
+// which one shows. An answer to an older load (a sign-out between) is dropped.
+let loads = 0;
 export async function loadWorkspaces(read: () => Promise<Workspace[]>) {
+  const mine = ++loads;
+  useWorkspaces.setState({ status: "loading" });
   try {
     const list = await read();
-    useWorkspaces.setState({ status: "ready", list });
+    if (mine !== loads) return;
+    useWorkspaces.setState({ status: "ready", list, error: undefined });
     const id = settleWorkspace(usePrefs.getState().workspace, list);
     if (id) pickWorkspace(id);
-  } catch {
-    useWorkspaces.setState({ status: "failed" });
+  } catch (error) {
+    if (mine === loads) useWorkspaces.setState({ status: "failed", error });
   }
 }
+
+// Signed out, the workspaces, the one on show and the records opened last
+// go with the person: the next one on a shared machine sees none of them.
+onSignedOut(() => {
+  loads++;
+  useWorkspaces.setState({ status: "loading", list: [] });
+  setPrefs({ workspace: null, recent: [] });
+});
 
 // addWorkspace puts a new one on the rail, and shows it.
 export function addWorkspace(w: Workspace) {

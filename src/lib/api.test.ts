@@ -244,3 +244,28 @@ test("the workspaces are a GET and a POST, and a workspace's tags and projects a
   await client.projects({ workspace: "w-acme" });
   assert.equal(calls[3]?.url, "http://api.test/projects?workspace=w-acme");
 });
+
+test("a read tried again under one long-lived signal leaves no listener behind on it", async () => {
+  const ctrl = new AbortController();
+  let added = 0;
+  let removed = 0;
+  const add = ctrl.signal.addEventListener.bind(ctrl.signal);
+  const remove = ctrl.signal.removeEventListener.bind(ctrl.signal);
+  ctrl.signal.addEventListener = ((...a: Parameters<AbortSignal["addEventListener"]>) => {
+    added++;
+    add(...a);
+  }) as AbortSignal["addEventListener"];
+  ctrl.signal.removeEventListener = ((...a: Parameters<AbortSignal["removeEventListener"]>) => {
+    removed++;
+    remove(...a);
+  }) as AbortSignal["removeEventListener"];
+  queue = [
+    { status: 503, body: "busy" },
+    { status: 503, body: "busy" },
+  ];
+  answer = { status: 200, json: { id: "p" } };
+  await client.project("p", { signal: ctrl.signal });
+  assert.equal(calls.length, 3);
+  assert.ok(added > 0);
+  assert.equal(removed, added);
+});

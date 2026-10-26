@@ -1,5 +1,5 @@
 import { BellIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Tip } from "@/components/tip";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { toastManager } from "@/components/ui/toast";
 import { ago } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { clearNotices, markAllRead, type Notice, unreadCount, useNotifications } from "@/lib/notifications";
+import { clearNotices, markAllRead, markToasted, type Notice, unreadCount, useNotifications } from "@/lib/notifications";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -97,21 +97,21 @@ export function NotificationBell({ className }: { className?: string }) {
   );
 }
 
-// NoticeToasts shows each notice as it comes, as a toast with its button.
+// NoticeToasts shows each notice as it comes, as a toast with its button,
+// once: a notice keeps that it was shown (lib/notifications.ts).
 export function NoticeToasts() {
   const notices = useNotifications((s) => s.notices);
-  const shown = useRef(new Set<string>());
   useEffect(() => {
-    for (const n of [...notices].reverse()) {
-      if (shown.current.has(n.id)) continue;
-      shown.current.add(n.id);
+    const fresh = notices.filter((n) => !n.toasted).reverse();
+    if (!fresh.length) return;
+    for (const n of fresh)
       toastManager.add({
         title: n.title,
         description: n.body,
         type: TOAST_TYPE[n.tone],
         ...(n.action ? { actionProps: { children: n.action.label, onClick: () => go(n) } } : {}),
       });
-    }
+    markToasted(fresh.map((n) => n.id));
   }, [notices]);
   return null;
 }
