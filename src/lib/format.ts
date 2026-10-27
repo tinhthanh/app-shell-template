@@ -1,4 +1,4 @@
-// Dates and numbers, in the person's language (Intl): every view formats
+// Dates, due days, numbers, money and file sizes, in the person's language (Intl): every view formats
 // through here, never by hand. locale defaults to the app's language
 // (lib/i18n.ts), in the browser's region when that is the same language
 // (en-GB, not en); the tests pin one. Pure, so format.test.ts runs it in node.

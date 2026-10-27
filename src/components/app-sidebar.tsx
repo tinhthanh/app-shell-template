@@ -265,7 +265,7 @@ function placeNumber(p: Place, fallback: number): number {
 
 // Account is who is signed in, with Sign out in its menu (lib/session.ts);
 // nothing while the app has no session yet or runs without one.
-function Account({ compact = false }: { compact?: boolean }) {
+function Account() {
   const user = useSession((s) => s.user);
   if (!user) return null;
   const initials = user.name
@@ -292,20 +292,16 @@ function Account({ compact = false }: { compact?: boolean }) {
         render={
           <button
             type="button"
-            className={cn(
-              "mt-1 flex h-side-row items-center gap-2 rounded-md px-2 text-desc text-(color:--ink-row) outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-              compact ? "size-9 justify-center px-0" : "w-full",
-            )}
+            className="mt-1 flex h-side-row w-full items-center gap-2 rounded-md px-2 text-desc text-(color:--ink-row) outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           />
         }
       >
-        {/* The button is named by the name it shows (on the rail, for a screen
-            reader only), so what is seen is what is said; the initials are a
+        {/* The button is named by the name it shows, so what is seen is what is said; the initials are a
             picture of it, and that it opens a menu is aria-haspopup's to say. */}
         <Avatar className="size-5" aria-hidden>
           <AvatarFallback className="text-tag">{initials}</AvatarFallback>
         </Avatar>
-        <span className={compact ? "sr-only" : "min-w-0 flex-1 truncate text-start"}>{user.name}</span>
+        <span className="min-w-0 flex-1 truncate text-start">{user.name}</span>
       </MenuTrigger>
       <MenuPopup align="start" className="min-w-48">
         <div className="px-2 py-1.5 text-muted-foreground text-meta">

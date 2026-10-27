@@ -3,7 +3,7 @@ import type { ProjectStatus, TaskStatus } from "./types.ts";
 import { PROJECT_STATUSES, TASK_STATUSES } from "./types.ts";
 
 // Each view's address, as the URL's hash: #/projects, #/projects/p-shop,
-// #/projects?q=shop&status=active&tags=web,ops, #/settings/appearance. The hash, not the path, so the app is one file
+// #/projects?q=shop&status=active&tags=web,ops, #/tasks?status=todo&project=p-shop, #/tasks/t-checkout, #/settings/appearance. The hash, not the path, so the app is one file
 // that any static host serves without a rewrite rule. lib/store.ts keeps
 // the hash and the view in step. Pure, so routes.test.ts runs it in node.
 

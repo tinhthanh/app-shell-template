@@ -27,7 +27,7 @@ export function dismissOnboarding() {
   setPrefs({ onboarding: { ...usePrefs.getState().onboarding, dismissed: true } });
 }
 
-// The steps tick themselves from what the person does: a record opened, the
+// The steps tick themselves from what the person does: a project opened, the
 // palette opened, a theme picked.
 useStore.subscribe((s, prev) => {
   if (s.view.kind === "projects" && s.view.id && s.view.id !== (prev.view.kind === "projects" ? prev.view.id : undefined)) markStep("open-record");

@@ -24,5 +24,7 @@ not silently: away from localhost, with the knobs off, a banner across the
 top (`mock-banner`) says the data is made up and how to configure an API;
 the status bar says "mock", and Settings › About says "mock fixtures".
 
-**Revisit if.** The app needs a real API in the browser suite (then: a
-contract test layer, not live calls).
+**Revisit if.** The app needs a real API in the browser suite. The
+contract test layer this pointed to now exists (ADR 0016: `api/openapi.json`,
+`pnpm check:contract`, `pnpm stub` and `e2e/contract.spec.ts`), so the
+answer is still that, not live calls.

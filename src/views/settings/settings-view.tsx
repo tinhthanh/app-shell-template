@@ -17,7 +17,9 @@ import { ShortcutsSection } from "@/views/settings/shortcuts-section";
 export { openSettings, type SettingsSectionId };
 
 // Settings' sections. Adding one: AGENTS.md › Adding things (an id in
-// lib/store.ts, SECTIONS in lib/routes.ts and here, an axe scene).
+// lib/store.ts, SECTIONS in lib/routes.ts and here, its line in Find a
+// setting's INDEX (find.tsx) with settings.findWords.<id> in every language,
+// an axe scene).
 // title is a key, not the word: this table is made once, as the module
 // loads, and the word is looked up when it is drawn, in the language then.
 interface Section {

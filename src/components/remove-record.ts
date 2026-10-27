@@ -5,10 +5,6 @@ import { editRows } from "@/lib/pages";
 import { forget, invalidate, listsOf, mutate } from "@/lib/resource-cache";
 import type { Page } from "@/lib/types";
 
-// removeRecord deletes a record the way the app does it: a confirm that
-// names it, the call, the record forgotten and its row taken out of the
-// list, a toast, then whatever comes next (back to the list). The confirm
-// explains a failure itself (the call throws through it).
 // dropRows takes deleted records out of every kept list of the resource, not
 // only the one they were deleted from, and has the lists on screen read
 // again (the totals and the next page's cursor are the server's to say).
@@ -18,6 +14,10 @@ export function dropRows(listKey: string, ids: readonly string[]) {
   invalidate(listKey);
 }
 
+// removeRecord deletes a record the way the app does it: a confirm that
+// names it, the call, the record forgotten and its row taken out of the
+// list, a toast, then whatever comes next (back to the list). The confirm
+// explains a failure itself (the call throws through it).
 export function removeRecord(o: {
   // What the confirm and the toast call it: the record's name.
   name: string;

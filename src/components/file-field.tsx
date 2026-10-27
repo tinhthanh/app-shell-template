@@ -9,8 +9,8 @@ import { t } from "@/lib/i18n";
 import type { Attachment } from "@/lib/types";
 
 // FileField is a form's one file: the file kept (its name and size, and a way
-// to take it off) or a new one picked. The form reads what to do from
-// choice when it saves: keep the kept one, send a new one (client.uploadFile),
+// to take it off) or a new one picked. onChoice tells the form what to do
+// when it saves: keep the kept one, send a new one (client.uploadFile),
 // or take it off. A refusal on the field's name (too big) shows under it.
 export type FileChoice = { kind: "keep" } | { kind: "new"; file: File } | { kind: "none" };
 

@@ -30,8 +30,13 @@ Each URL's origin must be in the CSP's `connect-src`; the container puts
 it there.
 
 With neither set, the app runs on its fixtures and, away from localhost,
-shows a banner saying so. The URL knobs (`?mock=1`, `?api=`, `?crash=`)
-are read only in development or in a build made with `VITE_KNOBS=1`.
+shows a banner saying so. The URL knobs that change where the app reads
+from or what it turns on (`?mock=1`, `?api=`, `?flags=`) are read only in
+development or in a build made with `VITE_KNOBS=1` (`knobsOn` in
+`src/lib/api.ts`). `?crash=` (`src/App.tsx`) and the mock's own knobs
+(`?slow=1`, `?fail=1`, `?empty=1` and the rest, `src/lib/mock.ts`) work
+whenever the app runs on its fixtures, in any build: they can't reach a
+real API.
 
 ## Caching
 
@@ -67,8 +72,10 @@ names a `reportUrl`, POSTs each error once (at most ten a page) as JSON:
 the message, the stack, where in the app, the view's path without its
 query, the version, the commit and the language. Any collector that takes
 JSON will do; for a vendor's client, call `setReporter` with it instead.
-Build with `SOURCEMAPS=1` for hidden source maps to upload alongside; they
-are not served.
+Build with `SOURCEMAPS=1` for hidden source maps to upload alongside: they
+land in `dist/` beside the scripts, with no comment pointing at them, so
+upload them and delete `dist/**/*.map` before serving. The release
+tarball is built with `SOURCEMAPS=1`, so it holds them.
 
 ## Usage data
 
@@ -82,17 +89,39 @@ properties it names and no others: never a name, an id or what was typed
 ## Hosts
 
 - **GitHub Pages**: `.github/workflows/pages.yml` builds and publishes
-  `dist/` on every push to `main`.
+  `dist/` on every push to `main`, once the repository variable `API_URL`
+  names an API or `MOCK` is `1` (a demo on the fixtures, built with
+  `VITE_KNOBS=1`). With neither, the job is skipped, not failed
+  (`node scripts/setup-repo.mjs` says how to set them).
 - **A container**: `deploy/Dockerfile` serves `dist/` with nginx and the
   headers above; `API_URL` at start writes `config.js`, and without it the
   container refuses to start unless `MOCK=1`. `REPORT_URL` and
   `ANALYTICS_URL`, when given, go into `config.js` too, and their origins
-  into `connect-src`; each must be a plain http(s) URL.
+  into `connect-src`; each must be a plain http(s) URL. The entrypoint
+  writes no `flags`: to turn features on or off, serve your own
+  `config.js`. The image has no `.git`, so the commit in error reports is
+  empty unless the build is given one:
+  `docker build --build-arg APP_COMMIT=$(git rev-parse HEAD) -f deploy/Dockerfile .`
+
+## The API
+
+A backend implements `api/openapi.json`: every path the client calls
+(`httpClient` in `src/lib/api.ts`), the session's included, and
+`POST /session/refresh` (Stay signed in) with it. `pnpm check:contract`
+holds the client and the mock to it (ADR 0016). Before there is a
+backend, `pnpm stub` (`scripts/stub-server.mjs`) serves the mock over
+HTTP on `http://localhost:8787` (`STUB_PORT` to move it); run the app
+against it with `VITE_API_URL=http://localhost:8787 pnpm dev`.
 
 ## Releases
 
-`node scripts/release.mjs X.Y.Z` bumps the version and dates the changelog;
-after its PR merges, a tag `vX.Y.Z` makes `.github/workflows/release.yml`
-build and publish a GitHub release with `dist` attached. The size budget
-(`pnpm check:size`) and the bundle's licence file
-(`dist/third-party-licenses.md`) come with every build.
+`node scripts/release.mjs X.Y.Z` bumps the version in `package.json` and
+dates the changelog; add the version's lines in plain words to
+`WHATS_NEW` in `src/lib/whats-new-notes.ts` (the What's new dialog) in
+the same PR. After it merges, push a tag `vX.Y.Z`: it must match
+`package.json`'s version, or `.github/workflows/release.yml` stops. That
+workflow runs `pnpm check`, builds (with `SOURCEMAPS=1`) and publishes a
+GitHub release with `dist/` attached as `app-vX.Y.Z.tar.gz` and the
+changelog's section as the notes. The size budget (`pnpm check:size`) and
+the bundle's licence file (`dist/third-party-licenses.md`) come with
+every build.

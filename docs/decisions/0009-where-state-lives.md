@@ -10,15 +10,17 @@ tested alone.
 theme, palette, and a view's filters, so they survive reload and Back),
 mirrored to the URL and `app.ui`. `prefs.ts` holds the person's settings,
 saved whole under `app.prefs` with a version and a migration. Server data
-is read where it is shown with `useResource` and kept by key in
-`lib/resource-cache.ts` for the page's life, never in the store: a view
-that comes back starts on what was kept and reads again behind, and a
-write shows its result at once through `mutate` and goes back if the
+is read where it is shown with `useResource` (a list that can grow a page
+at a time with `usePages`) and kept by key in `lib/resource-cache.ts` for
+the page's life (the last `MAX_KEPT`, 100, answers), never in the store: a
+view that comes back starts on what was kept and reads again behind, and a
+write shows its result at once through `optimistic()` and goes back if the
 server refuses. Storage keys are identifiers: renaming the app doesn't
 rename them. The frame keeps a few small stores beside these (the
 workspaces, the notices, the place counts, the status items): what the
-sidebar and the status bar draw, not a view's data, each forgotten on
-sign-out (`onSignedOut`).
+sidebar and the status bar draw, not a view's data. The workspaces, the
+notices and the counts are forgotten on sign-out (`onSignedOut`); a
+status item goes when the component that put it up unmounts.
 
 **Consequences.** A reload rebuilds everything from the URL, storage and
 the API. A setting change is one `setPrefs` call. Two apps from this

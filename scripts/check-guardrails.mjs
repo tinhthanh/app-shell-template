@@ -4,12 +4,17 @@
 //   BASE_SHA=… PR_LABELS="a,b" PR_ACTOR=… node scripts/check-guardrails.mjs
 //
 // What it refuses:
-//   - added lines with test.skip, test.fixme, test.only, @ts-expect-error or
-//     @ts-expect-error (a test that doesn't run proves nothing);
-//   - an added biome-ignore without a reason after the colon;
-//   - a change to a guardrail file (the lint config and plugins, the
-//     scripts here, the Playwright config, the workflows, AGENTS.md,
-//     CLAUDE.md, CODEOWNERS, the Claude settings) unless the PR carries
+//   - added lines in src, e2e or scripts with test.skip, test.fixme,
+//     test.only (a test that doesn't run proves nothing), @ts-expect-error or
+//     @ts-expect-error (fix the type instead);
+//   - an added biome-ignore without `lint/<rule>: ` and a reason of 15
+//     characters or more after the colon;
+//   - a change to a guardrail file (biome.json and biome-plugins/, the
+//     scripts/check-*.mjs, playwright.config.ts, everything under .github/
+//     (the workflows, CODEOWNERS), AGENTS.md, CLAUDE.md, .claude/ (the
+//     settings, hooks and skills), .githooks/, the tsconfigs,
+//     e2e/fixtures.ts, vite.config.ts, package.json, index.html and
+//     deploy/) unless the PR carries
 //     the label "guardrail-change", which CODEOWNERS routes to the owner.
 //     Dependabot (PR_ACTOR dependabot[bot]) may bump an action's version in
 //     the workflows without the label: that is all it ever changes there.

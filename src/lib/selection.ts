@@ -35,7 +35,7 @@ export function header(sel: Selection, ids: readonly string[]): "all" | "some" |
   return n === 0 ? "none" : n === ids.length ? "all" : "some";
 }
 
-// all picks every row shown, or none when they all were (the header box).
+// flipAll picks every row shown, or none when they all were (the header box).
 export const flipAll = (sel: Selection, ids: readonly string[]): Set<string> => (header(sel, ids) === "all" ? new Set() : new Set(ids));
 
 // kept is what is still picked of the rows still listed (a row deleted, or

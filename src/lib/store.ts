@@ -11,8 +11,8 @@ import type { ProjectStatus, TaskStatus } from "./types.ts";
 // The main area shows one of the app's views. Adding a kind: AGENTS.md ›
 // Adding things (or the add-view skill); the compiler and check:views
 // refuse a half-wired one.
-// Projects carries its list's filters, so they survive a reload, the back
-// button and a shared link; id opens one project, over the same filters.
+// Projects and Tasks carry their list's filters, so they survive a reload,
+// the back button and a shared link; id opens one record, over the same filters.
 export type View =
   | { kind: "home" }
   | { kind: "projects"; id?: string; q?: string; status?: ProjectStatus; tags?: string[]; sort?: string }

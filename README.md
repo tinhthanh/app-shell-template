@@ -28,12 +28,32 @@ What you get, wired and working:
   failed and loaded states, and a list that can grow is read a page at a
   time (`usePages`), filtered and sorted by the server.
 - **Sign-in, roles and permissions**: a sign-in page when nobody is signed
-  in (a 401 from any call signs out), and one table of what each role may
-  do (`src/lib/permissions.ts`), so a view leaves out what isn't the
-  person's to do.
+  in (a 401 from any call asks once for a longer session, then signs out),
+  and one table of what each role may do (`src/lib/permissions.ts`), so a
+  view leaves out what isn't the person's to do.
+- **Tabs that act as one**: signing out in one signs out all, a setting or
+  theme changed in one is the same in the rest, and a session the server
+  ends warns two minutes before, with Stay signed in.
+- **Tasks, a second resource**: a due day, a project picked as you type
+  (`RecordPicker`), the list narrowed to a project (`RecordFilter`) and a
+  file (`FileField`), with Settings › General › Hide done tasks as a saved
+  default filter the address still names.
+- **Bulk select with Undo**: a box per row, Space, Shift for a range, ⌘A;
+  set the status of several projects or delete them at once, and Undo a
+  status change.
+- **A host's config.js**: feature flags, an error reporter, and usage
+  events only from people who turn on Share usage data.
+- **Nothing here, not yours**: an unknown address is NotFound, not Home;
+  a 404 or a 403 is NotFound or Forbidden, without a pointless Try again.
+- **What's new**: a version's notes once after an update, and from ⌘K or
+  Settings › About.
+- **An API contract**: `api/openapi.json`, which the client and the mock
+  are checked against (`pnpm check:contract`), served from the fixtures by
+  `pnpm stub`.
 - **English and Vietnamese**: every word goes through `t()`
-  (`src/lib/i18n.ts`, `src/lib/messages/`), with dates and numbers in the
-  person's language; a Language setting, or the system's.
+  (`src/lib/i18n.ts`, `src/lib/messages/`), with plurals ("1 project",
+  "5,000 projects"), dates and numbers in the person's language; a
+  Language setting, or the system's.
 - **Patterns you'd otherwise write again**: errors in plain words with the
   raw text behind Details (`explain`, `ErrorNote`, `toastError`), a
   `confirm()` you can call from anywhere, a validated form that shows the
@@ -46,7 +66,8 @@ What you get, wired and working:
   changes, and axe runs over every screen in CI.
 - **Checks**: TypeScript, Biome (lint and format), scripts that hold the
   rules (no `title=`, no English outside `t()`, the type scale, the layout
-  grid, the CSP hash, the bundle's size), the theme contrast test, node
+  grid, the CSP hash, the bundle's size, the views wired end to end, the
+  API contract with `check:contract`), the theme contrast test, node
   unit tests, a Playwright suite on the
   production build with axe in both appearances, all in one GitHub Actions
   workflow.
@@ -58,7 +79,7 @@ pnpm install
 pnpm dev            # http://localhost:1420 on the mock fixtures
 pnpm stub           # the API contract (api/openapi.json) served from the fixtures, on :8787;
                     #   VITE_API_URL=http://localhost:8787 pnpm dev runs the real HTTP client
-pnpm check          # typecheck, lint, the rule checks, themes, unit tests, build, size
+pnpm check          # typecheck, lint, the rule checks, the API contract, themes, unit tests, build, size
 pnpm format         # Biome, in place
 pnpm test:e2e       # the browser suite (installs Chromium the first time with
                     #   pnpm exec playwright install --with-deps chromium)
@@ -116,11 +137,16 @@ The complete recipes, with every file each one touches, are in
    `src/lib/app.ts` (the sidebar, the window's title, Home's welcome,
    Settings › About); then `<title>` in `index.html`, `public/favicon.svg`,
    `name` and `version` in `package.json`, this README's title, the
-   contributor line in `LICENSE`, and start `CHANGELOG.md` afresh. The
+   contributor line in `LICENSE`, and start `CHANGELOG.md` and What's new's
+   notes (`src/lib/whats-new-notes.ts`) afresh. The
    name shows in every screenshot baseline: take them again with
-   `pnpm test:visual --update` (Docker on a Mac) and commit `e2e/snapshots/`. The storage keys (`app.*`) are identifiers:
+   `pnpm test:visual --update` (Docker on a Mac), or push and run
+   `node scripts/take-ci-baselines.mjs --take`, and commit `e2e/snapshots/`. The storage keys (`app.*`) are identifiers:
    two apps from this template on the same origin share them unless you
-   rename them in `src/lib/store.ts`, `prefs.ts`, `themes/apply.ts`, the
+   rename them in `src/lib/store.ts`, `prefs.ts`, `themes/apply.ts`,
+   `src/lib/tabs.ts` (the `app.prefs` and `app.ui` it listens for),
+   `src/main.tsx` (`BroadcastChannel("app")` and
+   `once("app.reloaded-after-deploy")`), the
    inline appearance script in `index.html` (its hash in `deploy/csp.txt`
    must be redone: `pnpm check:csp` prints the new one) and
    `e2e/fixtures.ts`.
@@ -134,12 +160,18 @@ The complete recipes, with every file each one touches, are in
    (`views/projects/projects-column.tsx`, its case in `SidebarSheet` in
    `components/app-sidebar.tsx`), the palette's `RECORD_KINDS` (`src/lib/nav.tsx`),
    Recent's kind, the "Open a project" step (`src/lib/onboarding.ts`) and
-   their words (`src/lib/messages/projects.ts`). Keep `Workspace` if your
+   their words (`src/lib/messages/projects.ts`). Tasks point at projects
+   (the mock's tasks, the task form's project picker, the list's project
+   filter): point them at your resource, or replace or remove
+   `views/tasks/` with its paths in `api/openapi.json`, `RECORD_KINDS.task`
+   and `src/lib/messages/tasks.ts`. Keep `Workspace` if your
    records belong to one (the `add-resource` skill has the step); without
    it, drop the rail's tiles and `workspace` from the query.
 3. **A view**: a `kind` in `View` (`src/lib/store.ts`), its address in
-   `src/lib/routes.ts`, a `lazyView` in `App.tsx`, a place in
-   `src/lib/nav.tsx`. The rail, ⌘1–9 and the palette follow; the sheet
+   `src/lib/routes.ts` and its round trip in `routes.test.ts`, a `lazyView`
+   and a `viewTitles` entry in `App.tsx`, a place in `src/lib/nav.tsx`, an
+   axe scene in `e2e/a11y.spec.ts` and a scene in `e2e/scenes.json`
+   (`pnpm check:views` says what is missing). The rail, ⌘1–9 and the palette follow; the sheet
    shows Recent for it until you give it a list of its own.
 4. **A setting**: a field in `Prefs` with a default (`src/lib/prefs.ts`),
    a `SettingsRow` in a section. Bump `PREFS_VERSION` and add a step to

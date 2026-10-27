@@ -24,7 +24,15 @@ Docker is needed only for `pnpm test:visual` on a Mac or Windows machine
 pnpm check                               # typecheck, lint, the rule checks (check:*), themes, unit tests, build, size budget
 E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs for what you touched
 pnpm test:visual                         # when the look changed (then --update, and commit the baselines)
+node scripts/take-ci-baselines.mjs       # no Docker: after a push, CI's own renderings and their diffs; --take writes them
 ```
+
+With no Docker, push: CI renders the pictures on Linux, fails the ones the
+change moved and keeps each `-actual.png` and `-diff.png`.
+`node scripts/take-ci-baselines.mjs` fetches them for your branch and lists
+the diffs; look at every one, then `--take` copies them over
+`e2e/snapshots/`, and you commit them. Say in the PR that the baselines are
+CI's and what each diff shows.
 
 Work on a branch. The pull request template asks for the proof: which
 tests cover the change, the last lines of the checks, screenshots for a
@@ -40,7 +48,8 @@ User-visible changes get a bullet under `## Unreleased` in `CHANGELOG.md`.
 
 `docs/architecture.md` is the map; `docs/decisions/` says why things are
 the way they are; `.claude/skills/` holds the recipes (add a view, a
-resource, a form, a theme, a browser test, a release).
+resource, a form, a theme, a browser test, a release, and `trial`, which
+measures how well the template guides an agent new to it).
 
 ## Reporting a problem
 

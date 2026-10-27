@@ -6,7 +6,9 @@ import { type Action, can } from "./permissions.ts";
 import { rankEach } from "./search-rank.ts";
 import { MAX_FILE } from "./upload.ts";
 
-// Mock mode (?mock=1, or no VITE_API_URL) runs the whole UI on these
+// Mock mode (?mock=1 while the URL knobs are on, `mock: true` in config.js,
+// or no API at all: none of ?api=, config.js's apiUrl or VITE_API_URL; see
+// isMock in lib/api.ts) runs the whole UI on these
 // fixtures, so it can be worked on and tested without a server. Relative
 // imports only: pnpm test runs this in node. State is
 // mutable within the page: an update shows up on the next read.
@@ -18,7 +20,7 @@ import { MAX_FILE } from "./upload.ts";
 //   ?mock=1&fail=1        every call fails with a server error
 //   ?mock=1&failOnce=1    the first call fails, the rest succeed (Try again)
 //   ?mock=1&failWrites=1  reads work, writes fail (a failed save)
-//   ?mock=1&empty=1       there are no projects
+//   ?mock=1&empty=1       there are no projects and no tasks
 //   ?mock=1&signedOut=1   nobody is signed in: the sign-in view, then alex
 //   ?mock=1&many=1        5,000 projects, for the list's scrolling and keys
 //   ?mock=1&failAfter=2   the first two calls work, every one after fails (a server
@@ -80,8 +82,6 @@ export const FIXTURES: Project[] = [
 // with a 403 (the Forbidden page), as a server would. Never listed.
 const ELSEWHERE: Project = { id: "p-vault", workspace: "w-initrode", name: "Vault", description: "Kept by another team.", status: "active", owner: "kim", tags: [], updatedAt: ago(90) };
 
-// The workspaces the person belongs to: Acme holds the projects above,
-// Globex two more, with one thing waiting (the rail's dot).
 // A day this many days from today, as a task's due day: "2026-11-02".
 const inDays = (n: number) => {
   const d = new Date(now + n * 86_400_000);
@@ -110,6 +110,9 @@ export const TASKS: Task[] = [
   { id: "t-resellers", workspace: "w-globex", title: "Invite the first resellers", status: "doing", project: { id: "p-portal", name: "Partner portal" }, updatedAt: ago(60 * 8) },
 ];
 
+// The workspaces the person belongs to: Globex holds two of the projects and
+// two of the tasks above, with one thing waiting (the rail's dot), and Acme
+// the rest.
 export const WORKSPACES: Workspace[] = [
   { id: "w-acme", name: "Acme" },
   { id: "w-globex", name: "Globex", attention: 1 },
@@ -144,7 +147,7 @@ export interface MockOptions {
   failAfter?: number;
   // Writes fail, reads don't.
   failWrites?: boolean;
-  // Start with no projects.
+  // Start with no projects and no tasks.
   empty?: boolean;
   // Seed data of your own (defaults to FIXTURES).
   projects?: Project[];

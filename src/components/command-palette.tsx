@@ -27,8 +27,9 @@ import { keysFor } from "@/lib/shortcuts";
 import { paletteOpenedFrom, useStore } from "@/lib/store";
 import type { SearchHit } from "@/lib/types";
 
-// The command palette (⌘K): the app's places, its commands and its themes,
-// in one searchable list. Highlighting a theme previews it; closing without
+// The command palette (⌘K): the app's places, its commands, its themes and
+// the records the server finds for what was typed (client.search), each kind
+// in a group of its own (lib/nav.tsx RECORD_KINDS), in one searchable list. Highlighting a theme previews it; closing without
 // choosing puts the old one back.
 
 interface Item {

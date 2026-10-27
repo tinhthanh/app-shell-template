@@ -9,8 +9,8 @@ import { SettingsFind } from "@/views/settings/find";
 // split by hairlines, with every control in one lane along the end. After
 // Shipyard's (github.com/cosscom/shipyard, MIT).
 
-// badge sits beside the title (the Linux app's Alpha, in About); actions sit
-// beside "Find a setting".
+// badge sits beside the title (a Beta tag, say: no section here passes one
+// yet); actions sit beside "Find a setting".
 export function SettingsPage({ title, badge, description, actions, children }: { title: string; badge?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-2xl px-page pt-12 pb-20 max-md:pt-6">

@@ -11,10 +11,12 @@ saved preferences, beside the sidebar's width and Recent.
 stays `#/projects/<id>`. A project's id is enough to find it, so a link to
 one opens it whichever workspace is picked, and the projects view switches
 to the project's own workspace when it is one of the person's
-(`projects-view.tsx`); when it isn't, the server refuses it with a 403
+(`projects-view.tsx`; the tasks view does the same for a task,
+`tasks-view.tsx`); when it isn't, the server refuses it with a 403
 and the page says it isn't theirs to see (Forbidden, `components/not-here.tsx`;
 the mock's `p-vault`). Signing
-out forgets the pick and Recent (`onSignedOut` in `lib/session.ts`), so
+out forgets the pick and Recent (the `onSignedOut` handler in
+`lib/workspace.ts`), so
 the next person starts in their own first workspace.
 
 **Consequences.** Links stay short and don't break when a workspace is

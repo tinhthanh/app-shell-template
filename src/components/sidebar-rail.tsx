@@ -24,7 +24,7 @@ import { initials, switchWorkspace, useWorkspaceId, useWorkspaces } from "@/lib/
 // a tile to make another, and Settings at the foot. Beside it the sheet
 // (components/app-sidebar.tsx) shows the workspace and the place's own list.
 
-export const RAIL = 60; // w-rail, as a number for the sidebar's width
+export const RAIL = 60; // w-rail, as a number for the sidebar's width; RAIL_WIDTH in lib/sidebar-width.ts is kept equal
 
 const railButton =
   "relative inline-flex size-9 items-center justify-center rounded-[10px] outline-none hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-[18px]";
@@ -211,9 +211,10 @@ function Workspaces() {
   );
 }
 
-// WorkspaceTile is a workspace on the rail. Picking another while a record
-// of this one is open goes to its list, so the record doesn't bring this
-// workspace straight back.
+// WorkspaceTile is a workspace on the rail. Picking another is
+// switchWorkspace (lib/workspace.ts): a record open, or a list narrowed to a
+// project, goes back to its list first, so it doesn't bring this workspace
+// straight back.
 function WorkspaceTile({ workspace: w, selected }: { workspace: Workspace; selected: boolean }) {
   const waiting = w.attention ?? 0;
   const label = waiting ? t("shell.workspaceWaiting", { name: w.name, n: waiting }) : w.name;

@@ -9,7 +9,7 @@ import type { Page } from "./types.ts";
 // status is a union, so a view can't draw one state and forget another;
 // <ResourceView> (components/resource-view.tsx) draws them all:
 //
-//   const tags = useResource(() => client.projectTags(), [], { key: "project-tags" });
+//   const tags = useResource((signal) => client.projectTags({ signal }), [], { key: "project-tags" });
 //   <ResourceView resource={tags} label="Reading tags…" isEmpty={(t) => !t.length} empty={<Empty …/>}>
 //     {(tags) => <Tags tags={tags} />}
 //   </ResourceView>
@@ -85,7 +85,7 @@ export interface More {
 // the keyboard left is still there. A page that lands after the list
 // changed (another filter, a reload) is dropped.
 //
-//   const projects = usePages((page) => client.projects({ ...filters, ...page }), { key: `projects${listQuery(filters)}` });
+//   const projects = usePages((page, signal) => client.projects({ ...listOf(view), ...page }, { signal }), { key: `projects${listQuery(listOf(view))}` });
 //   <DataTable rows={projects.data.items} total={projects.data.total} more={projects.more} … />
 export function usePages<T extends { id: string }>(
   read: (page: { cursor?: string; limit: number }, signal?: AbortSignal) => Promise<Page<T>>,

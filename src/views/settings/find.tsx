@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 // "Find a setting", at the top of every section: typing lists the sections
 // that have what you typed, by their names and the words people look for
-// them with (lib/messages/settings.ts, in the language in use), and Enter
-// or a click opens the first. No shortcut of its own: ⌘F is the browser's
+// them with (lib/messages/settings.ts, in the language in use); ↑ and ↓
+// light one, Enter opens the lit one and a click opens the one clicked. No shortcut of its own: ⌘F is the browser's
 // find, and Tab reaches it. After Shipyard's (github.com/cosscom/shipyard, MIT).
 
 const INDEX: { id: SettingsSectionId; title: Key; words: Key }[] = [

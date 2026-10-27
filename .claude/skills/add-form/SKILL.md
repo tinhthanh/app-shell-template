@@ -34,6 +34,7 @@ names. You write the fields and the save. `ProjectForm` in
        onSubmit={async (v) => {                      // v: the fields, trimmed; throw to refuse
          const saved = await client.createReport({ title: v.title ?? "", scope: v.scope ?? "" });
          mutate<Page<Report>>(listKey, (l) => editRows(l, (rows) => [saved, ...rows]) as Page<Report> | undefined);   // the key the list was read under (usePages)
+         invalidate(listKey);                        // where it falls under each filter and sort is the server's to say
          onSaved(saved);
          toastManager.add({ type: "success", title: t("reports.created", { name: saved.title }) });
        }}

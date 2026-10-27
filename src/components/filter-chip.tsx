@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 // FilterChip narrows a list to the rows that have something: a label, a
 // tag, a state. Chips start off, so nothing is narrowed; each one turned
-// on narrows further. Projects' tags use it.
+// on narrows further. Projects' tags and Tasks' hide done use it.
 //
 // Picking one of a few values is PickOne.
 export function FilterChip({ pressed, onPressedChange, children, className }: { pressed: boolean; onPressedChange(pressed: boolean): void; children: ReactNode; className?: string }) {

@@ -2,10 +2,12 @@ import { t } from "@/lib/i18n";
 import type { ShortcutId } from "@/lib/keys";
 import table from "@/lib/shortcuts.json";
 
-// The app's keyboard shortcuts, from shortcuts.json: the one table the key
-// handler (hooks/use-shortcuts), the Keyboard shortcuts sheet and Settings
-// › Shortcuts all read. What people see of one (its name, its group's) is
-// in the language in use, from lib/messages/settings.ts by id.
+// The app's keyboard shortcuts, from shortcuts.json: the one table the
+// Keyboard shortcuts sheet, Settings › Shortcuts and the palette's key hints
+// (keysFor) read. The key handler (hooks/use-shortcuts.ts) matches a press
+// through lib/keys.ts (shortcutFor), whose ids are the table's. What people
+// see of one (its name, its group's) is in the language in use, from
+// lib/messages/settings.ts by id.
 
 export type ShortcutGroup = "View" | "Go" | "Help";
 

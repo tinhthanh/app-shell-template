@@ -2,7 +2,7 @@
 // company: lib/types.ts Workspace), and the sidebar's rail switches between
 // them. Kept in prefs (workspace), so a reload stays where it was; a record
 // opened from another workspace (a link, the palette) brings its own
-// workspace with it (views/projects). After Shipyard's project rail
+// workspace with it (views/projects, views/tasks). After Shipyard's project rail
 // (github.com/cosscom/shipyard, MIT). Pure apart from prefs, so
 // workspace.test.ts runs it in node.
 import { create } from "zustand";

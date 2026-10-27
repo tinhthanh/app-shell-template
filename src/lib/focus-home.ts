@@ -3,45 +3,17 @@ import { useEffect } from "react";
 import { OVERLAYS } from "@/lib/overlays";
 
 // Focus is designed: when what had the keyboard goes away (a dialog, sheet
-// or popover closes and its opener is gone, a pane closes, a step of a page
+// or popover closes and its opener is gone, a row redraws, a step of a page
 // changes), the keyboard lands somewhere sensible, never on <body>. Only the
 // DOM is read here, so the ui primitives can use it without importing the
 // stores.
 //
-// Home is, in order: the focused pane, if a view marks one with
-// data-pane-focused (its first field or control), something a view marked
-// with data-focus-home or data-row, and else the main area itself.
+// Home is the main area itself, which a screen reader announces as the
+// view's landmark and from which Tab reaches the view's first control.
 
-const FIELD = "[contenteditable=true], textarea:not([disabled]), input:not([disabled]):not([type=hidden]), select:not([disabled])";
-const CONTROL = "button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])";
-
-// Shown and reachable: not under an inert region.
-const shown = (el: Element): el is HTMLElement => el instanceof HTMLElement && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden" && !el.closest("[inert]");
-
-// firstFocusable is where the keyboard starts inside a region: what a view
-// marked data-autofocus, else its first field, else its first control.
-export function firstFocusable(root: ParentNode | null | undefined, keep: (el: HTMLElement) => boolean = () => true): HTMLElement | undefined {
-  if (!root) return undefined;
-  for (const sel of ["[data-autofocus]", FIELD, CONTROL]) {
-    // data-focus-skip: a way back, or a toolbar's refresh, which is never
-    // where a step starts.
-    const hit = [...root.querySelectorAll(sel)].find((el): el is HTMLElement => shown(el) && keep(el) && !el.closest("[data-focus-skip]"));
-    if (hit) return hit;
-  }
-  return undefined;
-}
-
+// homeTarget is the main area, made focusable without drawing a ring on it.
 export function homeTarget(): HTMLElement | undefined {
   const main = document.querySelector("main");
-  if (!main) return undefined;
-  const pane = [...main.querySelectorAll("[data-pane-focused]")].find(shown);
-  if (pane) {
-    // The pane's own content, past a split pane's header buttons.
-    const t = firstFocusable(pane, (el) => !el.closest(".group\\/header"));
-    if (t) return t;
-  }
-  const marked = [...main.querySelectorAll("[data-focus-home], [data-row]")].find(shown);
-  if (marked) return marked;
   if (main instanceof HTMLElement) {
     if (!main.hasAttribute("tabindex")) main.tabIndex = -1;
     main.style.outline = "none";
@@ -75,7 +47,7 @@ export function rescueFocus(delay = 60) {
 }
 
 // FocusRescue goes inside a dialog, sheet or popover popup: when the popup
-// unmounts and its opener is gone (a menu item, a closed pane, a confirm
+// unmounts and its opener is gone (a menu item, a removed row, a confirm
 // opened by a shortcut), the keyboard goes home instead of to <body>.
 export function FocusRescue(): null {
   useEffect(() => () => rescueFocus(), []);

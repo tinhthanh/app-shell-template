@@ -15,14 +15,15 @@ export { ApiError };
 
 // The API the app reads and writes through. Every view talks to a Client,
 // never to fetch, so the whole UI runs on fixtures (lib/mock.ts) without a
-// server: `?mock=1` in the URL, or no VITE_API_URL set. The browser tests
-// (e2e/) run that way, so they are fixed and quick.
+// server: `?mock=1` in the URL (only while the URL knobs are on, knobsOn),
+// `mock: true` in config.js, or no API at all (none of ?api=, config.js's
+// apiUrl or VITE_API_URL). The browser tests (e2e/) run that way, so they
+// are fixed and quick.
 
 export interface Client {
   // A page of the projects that match, filtered and sorted by the server.
   projects(query?: ProjectQuery, o?: ReadOptions): Promise<Page<Project>>;
-  // Every tag in use, for the list's filter chips.
-  // Every tag in use in a workspace (all of them when left out).
+  // Every tag in use in a workspace (all of them when left out), for the list's filter chips.
   projectTags(o?: ReadOptions & { workspace?: string }): Promise<string[]>;
   // The workspaces the person belongs to, and making a new one.
   workspaces(o?: ReadOptions): Promise<Workspace[]>;
@@ -279,9 +280,11 @@ export function listQuery(query: ProjectQuery | TaskQuery = {}): string {
   return s ? `?${s}` : "";
 }
 
-// httpClient talks to a JSON API at base: GET /projects?… (a Page),
-// GET /project-tags, GET /projects/:id, PATCH /projects/:id,
-// GET/POST/DELETE /session. Change the paths to your server's.
+// httpClient talks to a JSON API at base, the paths api/openapi.json writes
+// down: GET/POST /projects (GET answers a Page), GET/PATCH/DELETE
+// /projects/:id, GET /project-tags, GET/POST /workspaces, GET/POST /tasks,
+// GET/PATCH/DELETE /tasks/:id, POST /files, GET /search, GET/POST/DELETE
+// /session and POST /session/refresh. Change the paths to your server's.
 export function httpClient(base: string, o: ClientOptions = {}): Client {
   const c = <T>(method: string, path: string, body?: unknown, signal?: AbortSignal) => call<T>(base, method, path, body, o, signal);
   return {
