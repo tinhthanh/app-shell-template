@@ -49,9 +49,11 @@ import { ViewHeader } from "@/views/view-header";
 // Projects is the example resource, end to end: a list read a page at a
 // time through the client, filtered and sorted by the server and kept by
 // key, narrowed by a search, a status and tags that live in the URL
-// (reload, Back and a link keep them), a detail that edits,
-// changes status at once and deletes with a confirm, and a form that
-// creates. Copy it for your own resources.
+// (reload, Back and a link keep them), rows picked together to set their
+// status at once (with Undo) or delete them after a confirm, a detail that
+// edits, changes status at once, deletes with a confirm and links to the
+// project's tasks (views/tasks/, ?project=), and a form that creates. Copy
+// it for your own resources.
 
 type StatusFilter = ProjectStatus | "";
 // statuses is the status filter's choices, in the language in use, so it is

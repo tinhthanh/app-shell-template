@@ -21,8 +21,8 @@ export function score(item: Searchable, query: string): number {
 }
 
 // rankEach ranks each kind of thing on its own, perKind of each at most,
-// and joins them in order: a search over projects and people shows some
-// of both, and eight matching projects can't crowd the people out.
+// and joins them in order: a search over projects and tasks shows some
+// of both, and eight matching projects can't crowd the tasks out.
 export function rankEach<T extends Searchable>(groups: T[][], query: string, perKind = 5): T[] {
   return groups.flatMap((g) => rank(g, query, perKind));
 }

@@ -12,17 +12,21 @@ names every call the app makes: each `Client` method is an operation whose
 `operationId` is the method's name, with its path, query, bodies and
 response schema. `pnpm check:contract` (part of `pnpm check`) holds the app
 to it: every method is an operation and every operation a method, with the
-HTTP method and path `httpClient` sends; and the mock, called with a sample
+HTTP method and path `httpClient` sends; the query and body types the
+client sends (`QUERIES`, `BODIES`) have the fields the operation's
+parameters and request body name; and the mock, called with a sample
 request per operation (`SAMPLES`, `scripts/contract.mjs`), answers what the
 response schema says, its refusals in the `Error` shape the client reads.
 `pnpm stub` serves the mock over HTTP by the same file
 (`scripts/stub-server.mjs`), so the real client runs end to end, and
 `e2e/contract.spec.ts` does that in the browser suite.
 
-**Consequences.** A new call is three edits that must agree (the contract,
-the client, the mock), and the check says which one is wrong. The schema
+**Consequences.** A new call is four edits that must agree (the contract,
+the client, the mock, and its `ARGS` and `SAMPLES` in `scripts/contract.mjs`),
+and the check says which one is wrong. The schema
 check is the subset the contract uses (types, required, enum, `$ref`,
-`allOf`, `additionalProperties: false`, date-time), a few dozen lines with
+`allOf`, `anyOf`, `items`, `minimum`, `additionalProperties: false`,
+date-time and date), a few dozen lines with
 no dependency; a contract that needs more grows it, with a test. The
 contract is the thing to hand a backend team, and a generator can make a
 server skeleton or a client from it.

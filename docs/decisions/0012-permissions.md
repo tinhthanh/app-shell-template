@@ -15,7 +15,9 @@ leaves out what the person may not do: the button isn't there, and a
 control that would write is shown as plain text. The mock (`?role=viewer`,
 `?role=member`) enforces the same table as a server would, with a 403
 (`code: "forbidden"`), which `explain()` already words as "You can't do
-that".
+that". A read refused (403) or not found (404) shows `<Forbidden>` or
+`<NotFound>` (`components/not-here.tsx`) in place of the view, with no Try
+again.
 
 **Consequences.** The server is the check; hiding is a courtesy, so a
 view never relies on it. A server must send `role` with `me()`; one with

@@ -39,7 +39,7 @@ export function DetailPage<T>({
     <div className="flex h-full flex-col" data-testid={testid}>
       <ViewHeader
         leading={
-          <Button size="icon-xs" variant="ghost" aria-label={t("common.backTo", { name: crumb.label.toLowerCase() })} data-autofocus onClick={onBack}>
+          <Button size="icon-xs" variant="ghost" aria-label={t("common.backTo", { name: crumb.label.toLowerCase() })} onClick={onBack}>
             <ArrowLeftIcon />
           </Button>
         }

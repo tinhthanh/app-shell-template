@@ -24,3 +24,6 @@ no longer hold, write a new record that supersedes it.
 | [0016](0016-api-contract.md) | The API is a contract file the client and the mock are held to |
 
 Format: Status, Context, Decision, Consequences, Revisit if. Under 40 lines.
+A decision that has moved since may add a dated **Since (YYYY-MM-DD).**
+paragraph before Revisit if (as 0011 does), and one that fixes words may
+add a glossary table, outside the 40 lines (as 0013's Vietnamese words).

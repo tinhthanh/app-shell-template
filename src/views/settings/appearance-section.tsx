@@ -28,7 +28,7 @@ export function AppearanceSection() {
   const [query, setQuery] = useState("");
 
   // The app's own, then every other theme by appearance; a search narrows
-  // them by name.
+  // them by name or id.
   const q = query.trim().toLowerCase();
   const shown = q ? themes.filter((th) => th.name.toLowerCase().includes(q) || th.id.includes(q)) : themes;
   const groups = [

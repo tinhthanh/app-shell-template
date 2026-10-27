@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 
-// The record in front, for the window's title ("Shop — Projects — App"):
+// The record in front, for the window's title ("Shop — Projects — App Shell"):
 // a detail view says its name with useTitle, and hooks/use-window-title.ts
 // puts it first. Cleared when the view unmounts.
 

@@ -16,7 +16,9 @@ skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`
   runs the same and more. Edits made from a shell aren't formatted by the
   editor hook, so run `pnpm format` before you look at a diff.
 - Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
-  when the tree has changes and blocks stopping while it is red; an
+  when the tree has changes and, while it is red, blocks the first stop
+  with its last lines (a second stop goes through, so a check that cannot
+  pass doesn't loop); an
   Edit/Write hook formats the file; force pushes, pushes to `main`,
   `pkill` and killing port 1420 are refused.
 
@@ -63,7 +65,9 @@ your afternoon.
 `pnpm exec playwright test` alone serves whatever is in `dist/`, which is
 the build from before your change: always go through `test:e2e`, which
 builds. CI (`.github/workflows/ci.yml`) runs all of it, the whole browser
-suite included, in both appearances.
+suite included: Playwright runs in Default Dark (`playwright.config.ts`),
+axe adds Default Light (`A11Y_FULL=1`), and the visual scenes are taken in
+both.
 
 ## Done means
 
@@ -72,15 +76,18 @@ suite included, in both appearances.
    named in the PR. A bug fix has a test that failed before the fix. A
    failure you say isn't yours ("it fails on main too") comes with its
    proof: the run on `main` (a CI link, or the command and its last lines).
-3. A UI change that alters a view in `e2e/visual.spec.ts` updates its
-   baselines (`pnpm test:visual --update`), and the PR shows them.
+3. A UI change that alters a scene in `e2e/scenes.json` updates its
+   baselines (`pnpm test:visual --update`, or CI's through
+   `node scripts/take-ci-baselines.mjs --take`), and the PR shows them.
 4. A UI change has a screenshot in Default Dark and Default Light
    (`pnpm shots` writes them to `shots/`), and its axe scene is updated; a
    new kit component gets a Kit section, a new view or settings section an
    axe scene.
 5. A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`.
-6. No new `biome-ignore`, `test.skip`, `test.fixme` or `ALLOW` entry without
-   a reason beside it.
+6. No new `test.skip`, `test.fixme` or `test.only` at all (CI refuses them
+   outright, `scripts/check-guardrails.mjs`), no `@ts-ignore` or
+   `@ts-expect-error`, a `biome-ignore` only as `biome-ignore lint/<rule>: <reason>`
+   (a reason of 15 characters or more), and no `ALLOW` entry without a reason beside it.
 7. The work is on a branch, as a PR against `main`, with a lowercase
    conventional subject (`feat: …`, `fix: …`, `test: …`, `docs: …`,
    `ci: …`, `chore: …`) that says what the user gets. The PR template's
@@ -92,9 +99,9 @@ CI holds you to this, and when it fails it says what in one comment on
 the PR (the failed tests by name, with the command to run them) and in
 the job summary. The `evidence` job refuses a change under `src/`
 with no changed test (write `no-test: <why>` in the PR body when none is
-possible) and a user-visible change with no changelog bullet; the
+possible, the why in 15 characters or more) and a user-visible change with no changelog bullet; the
 `guardrails` job refuses `test.skip`, `test.fixme`, `test.only`,
-`@ts-ignore`, a `biome-ignore` without a reason, and any edit to the checks,
+`@ts-ignore`, `@ts-expect-error`, a `biome-ignore` without a rule and a reason, and any edit to the checks,
 configs or these rules without the `guardrail-change` label.
 
 ## Which test proves it
@@ -102,10 +109,10 @@ configs or these rules without the `guardrail-change` label.
 | You changed | The proof |
 |---|---|
 | Pure logic in `src/lib/*.ts` or `src/themes/*.ts` | A `*.test.ts` beside it, run by node (see "Node-run modules") |
-| A view | Its round trip in `src/lib/routes.test.ts`, a scene in `e2e/a11y.spec.ts`, a behaviour test in an e2e spec |
+| A view | Its round trip in `src/lib/routes.test.ts`, a scene in `e2e/a11y.spec.ts`, a scene in `e2e/scenes.json` (its baselines), a behaviour test in an e2e spec |
 | A setting | A `prefs.test.ts` case (default, and the migration when `PREFS_VERSION` moves), and `e2e/settings.spec.ts` showing it persists (`app.stored("app.prefs")`) |
 | A shortcut | `src/lib/keys.test.ts` (the press reaches it), and `e2e/shell.spec.ts` pressing it with the `mod` helper |
-| A resource, or a view that reads | `src/lib/mock.test.ts`, and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` (`<ResourceView testid="x">` names them `x-loading`, `x-failed`, `x-empty`, and `x-missing`, `x-forbidden` for a 404 and a 403) |
+| A resource, or a view that reads | `src/lib/mock.test.ts` and `src/lib/api.test.ts`, `pnpm check:contract` (the client and the mock against `api/openapi.json`), and an e2e spec for loading, failed and empty through `?slow=1`, `?fail=1`, `?empty=1` (`<ResourceView testid="x">` names them `x-loading`, `x-failed`, `x-empty`; `x-missing`, `x-forbidden` for a 404 and a 403; `x-stale` for a reload that failed over rows already shown) |
 | A UI-kit component | A section on the Kit page (axe checks it in both appearances) |
 | A theme | `pnpm check:themes` |
 | Component behaviour (focus, dialogs, layout) | An e2e spec. There is no DOM test runner here, and we don't add one: Playwright on the real build is the proof |
@@ -119,7 +126,8 @@ configs or these rules without the `guardrail-change` label.
   a badge); use `<Tip>`. Plain truncated text may keep one (`check:titles`).
 - **Fixtures are synthetic** ("acme"). Nothing real goes in `src/lib/mock.ts`.
 - **No secrets** in code, URLs or logs. Configuration goes through `VITE_*`
-  env vars (`.env.example`).
+  env vars at build (`.env.example`) or the host's `config.js` at run time
+  (`src/lib/config.ts`).
 - **Sides are logical:** `start`/`end`, `ps`/`pe`, `ms`/`me`, `border-s`/`border-e`,
   `text-start`/`text-end`, never `left`/`right` (a Biome plugin refuses them
   outside the kit), so `?dir=rtl` mirrors the whole app.
@@ -265,7 +273,8 @@ behaviour is proven in `e2e/`.
   Kit, which stays last of the top group; ⌘1–9 follow the order); a
   `data-testid` on the view's root; a scene in
   `e2e/a11y.spec.ts`; a scene in `e2e/scenes.json` (`{ id, hash, ready }`:
-  its baseline and its `pnpm shots` picture; required, as the axe scene is);
+  its baselines and its `pnpm shots` picture; `pnpm check:views` refuses a
+  view kind, home and missing aside, with no scene whose hash starts with `#/<kind>`);
   a behaviour test.
 - **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
   nested object is merged in the initialiser, as `systemThemes` is); a
@@ -312,7 +321,13 @@ behaviour is proven in `e2e/`.
   they leave none), rows in a `DataTable`, one record in a `DetailPage`,
   writes through `optimistic()`, create and edit in a `FormDialog`, delete
   through `removeRecord()`: what you write is the columns, the fields and
-  the words. A refusal names its
+  the words. `views/tasks/` is the example for a record picked as you type
+  (`RecordPicker`), a filter on another resource (`RecordFilter`), a file
+  (`FileField`) and a default-filter setting. Its actions go in `ACTIONS`
+  (`lib/permissions.ts`), each write in the mock through `guard(true, "<action>")`;
+  its words in `src/lib/messages/<area>.ts`; and when the palette should find
+  it, a kind in `SearchHit` (`lib/types.ts`) and `RECORD_KINDS` (`lib/nav.tsx`).
+  A refusal names its
   field: `new ApiError(message, 422, "invalid", "name")`. Say in the PR's
   Assumptions what the task left open and you decided (fields, statuses,
   defaults, where the place goes), and under Not done what you left out.

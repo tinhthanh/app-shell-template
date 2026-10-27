@@ -9,9 +9,10 @@ import { Segmented } from "@/views/settings/controls";
 import { Code, fill, SettingsGroup, SettingsPage, SettingsRow, Value } from "@/views/settings/rows";
 
 // General shows one of each control a settings row takes: a segmented
-// pick, a read-only value and a button (a switch is on the Kit page), and
-// the Language setting (lib/i18n.ts), which redraws the app in the one
-// chosen. Replace the rest with yours.
+// pick, a switch, a read-only value and a button. Its settings are the
+// Language (lib/i18n.ts), which redraws the app in the one chosen, the
+// sidebar, Tasks' default of hiding done ones, sharing usage (only where
+// the host collects it) and where settings are kept. Replace the rest with yours.
 export function GeneralSection() {
   const collapsed = usePrefs((p) => p.sidebarCollapsed);
   const language = usePrefs((p) => p.language);

@@ -7,8 +7,8 @@ never on keyboard focus; an icon button whose only name is its `title`
 has none for a keyboard user.
 
 **Decision.** `<Tip label>` (`src/components/tip.tsx`) wraps the element
-and shows on hover and on keyboard focus alike; a tip layer shares one
-tooltip over many rows. `scripts/check-titles.mjs` refuses `title=` on
+and shows on hover and on keyboard focus alike (on focus only when the
+keyboard moved it there). `scripts/check-titles.mjs` refuses `title=` on
 anything interactive or iconic, by AST; plain truncated text and iframes
 may keep one.
 

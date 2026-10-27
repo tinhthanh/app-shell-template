@@ -49,7 +49,7 @@ for (const [id, name] of Object.entries(BODIES)) {
 
 const { mockClient } = await import("../src/lib/mock.ts");
 const client = mockClient({ latency: 0 });
-// The order in SAMPLES: reads first, then writes, sign-out last.
+// The order in SAMPLES matters: the records' reads and writes first, then the session, with sign-out next to last (a call after it would be refused) and sign-in last, which needs no session.
 for (const [id, sample] of Object.entries(SAMPLES)) {
   const o = ops.get(id);
   if (!o) continue;

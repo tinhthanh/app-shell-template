@@ -6,7 +6,7 @@ import { usePrefs } from "@/lib/prefs";
 import { clampWidth, dragged, RAIL_WIDTH, SIDEBAR_DEFAULT, SIDEBAR_MIN, sidebarMax, stepped } from "@/lib/sidebar-width";
 import { cn } from "@/lib/utils";
 
-// The sidebar's right edge is a handle: drag it to size the sidebar,
+// The sidebar's end edge (the right, the left in a right-to-left page) is a handle: drag it to size the sidebar,
 // double-click it for the default width, or focus it and use ← and →. Past
 // the narrowest a drag folds the sidebar to the rail, and dragging the
 // rail's edge out opens it again. While a drag runs the width goes straight

@@ -32,13 +32,13 @@ import { HomeView } from "@/views/home/home-view";
 // Home loads with the app; the other views load on first use (lib/lazy-view.tsx)
 // and are fetched once the app is idle, so a first visit draws at once.
 const ProjectsView = lazyView(() => import("@/views/projects/projects-view").then((m) => m.ProjectsView));
+const TasksView = lazyView(() => import("@/views/tasks/tasks-view").then((m) => m.TasksView));
+const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
+const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 // Code the app doesn't start with: the palette until it is first opened,
 // the sign-in page until someone is signed out.
 const CommandPalette = lazyView(() => import("@/components/command-palette").then((m) => m.CommandPalette));
 const SignInView = lazyView(() => import("@/views/signin/signin-view").then((m) => m.SignInView));
-const TasksView = lazyView(() => import("@/views/tasks/tasks-view").then((m) => m.TasksView));
-const KitView = lazyView(() => import("@/views/kit/kit-view").then((m) => m.KitView));
-const SettingsView = lazyView(() => import("@/views/settings/settings-view").then((m) => m.SettingsView));
 
 // What the window is called on each view, and what an error names. Every
 // kind but home must be here: tsc says so.

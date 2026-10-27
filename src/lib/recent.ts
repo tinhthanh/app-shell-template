@@ -1,7 +1,7 @@
-// The records opened last (a project, a customer), newest first, for the
-// sidebar's Recent: a detail view calls rememberRecent once its record has
-// loaded, and the list is kept in prefs (lib/prefs.ts). Pure apart from that,
-// so recent.test.ts runs it in node.
+// The records opened last (a project, a task), newest first, for the
+// sidebar's Recent: once its record has loaded, a detail view puts it first
+// with withRecent and keeps the list in prefs (lib/prefs.ts). Pure, so
+// recent.test.ts runs it in node.
 import type { SearchHit } from "./types.ts";
 
 export interface RecentItem {

@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils";
 import { UI_SIZES, useZoomHud } from "@/lib/zoom";
 
 // ZoomHud shows the text size for a moment after ⌘+, ⌘− or ⌘0 (lib/zoom.ts):
-// its size, and where that sits in the range. It is sized in px, not rem,
-// so it holds still while everything behind it grows.
+// its size, and where that sits in the range. Its box is sized in px, not
+// rem, so it holds still while everything behind it grows; its words are on
+// the type scale.
 
 const SHOW_MS = 1100;
 

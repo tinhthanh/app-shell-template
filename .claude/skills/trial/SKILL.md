@@ -26,8 +26,8 @@ Pick a free port in 1421–1439 for its browser tests (`lsof -nP -iTCP:14xx -sTC
 
 A feature that crosses the recipes: a resource (list, detail, a form
 with a choice, a write that shows at once, a delete), a place in the
-sidebar and the palette, and a setting. Past tasks: a Tickets area; a
-Members area with a Settings "Team" section. Write it as a product
+sidebar and the palette, and a setting. The tasks run before are in
+`docs/trials.md`: pick one not run before. Write it as a product
 owner would, with the fields and the verbs, and nothing about how.
 
 ## 3. The fresh agent

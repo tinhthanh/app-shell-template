@@ -26,8 +26,8 @@ number as the language writes it; Vietnamese, with one form, writes `{n}`.
 A number given to any blank is written the language's way (`5,000`,
 `5.000`). `i18n.test.ts` checks every count has `other` and only forms its
 language has. The
-Kit page and the release notes stay English: the one is for whoever
-builds the app, the other is a record. `pnpm check:words` refuses a new
+Kit page and What's new (`lib/whats-new-notes.ts`) stay English: the one
+is for whoever builds the app, the other is a record. `pnpm check:words` refuses a new
 English word written straight into a view or a component.
 
 **Vietnamese words.** One way of writing each, so the app reads as one
@@ -50,6 +50,6 @@ voice (`i18n.test.ts` holds the tone marks to it):
 A count is `{n, plural, …}` in English and plain `{n} …` in Vietnamese,
 which has one form (`Đã chọn {n}`, `{n} dự án`).
 
-**Revisit if.** A language needs plural forms or gender (then: ICU
-messages through a library), or the words come from a translation
+**Revisit if.** A language needs gender or other selects beyond the
+plural forms `t()` already takes (then: ICU messages through a library), or the words come from a translation
 service (then: the tables are generated, the keys stay).

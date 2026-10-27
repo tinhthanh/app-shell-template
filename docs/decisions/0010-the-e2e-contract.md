@@ -15,7 +15,8 @@ time (a plugin refuses `waitForTimeout`), use `data-testid`s and roles,
 one behaviour per test named as a sentence. Axe runs over every view and
 state in both appearances.
 
-**Consequences.** A new view needs a scene (`check-views` insists); a
+**Consequences.** A new view needs an axe scene in `e2e/a11y.spec.ts`
+and a picture in `e2e/scenes.json` (`check-views` insists on both); a
 new state needs a mock knob. The suite is the proof for components, so
 there is no DOM test runner.
 

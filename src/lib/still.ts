@@ -7,7 +7,8 @@
 // alone kept the main thread busy 4% of the time.
 // A hidden window (minimised, covered) holds still at once.
 //
-// :root[data-app-still] in index.css says which animations.
+// :root[data-app-still] in index.css and components/pixel-loader.css says
+// which animations.
 
 export const STILL_AFTER = 30_000;
 

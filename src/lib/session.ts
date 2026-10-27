@@ -7,8 +7,9 @@ import type { User } from "./types.ts";
 // Who is signed in, for the page's life only: never in storage (a token
 // belongs in an httpOnly cookie, or in memory through httpClient's headers
 // hook; docs/decisions/0011-sessions.md). unknown until the first me() call
-// answers; signed-out shows the sign-in view over everything (App.tsx), and
-// a 401 from any call lands there too. Pure apart from its state, so
+// answers; signed-out shows the sign-in view over everything (App.tsx). A
+// 401 from any call first asks once for a longer session (lib/api.ts), and
+// only when that is refused lands on the sign-in view too. Pure apart from its state, so
 // session.test.ts runs it in node.
 
 export type SessionStatus = "unknown" | "signed-in" | "signed-out";

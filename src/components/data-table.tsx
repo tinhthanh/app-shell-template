@@ -11,8 +11,8 @@ import { flipAll, header, ranged, type Selection, toggled } from "@/lib/selectio
 import { cn } from "@/lib/utils";
 
 // DataTable is the list every resource's rows go in: columns with a header
-// that sorts (aria-sort, up, down, then off), rows that open with a click
-// or Enter, the arrows, PageUp/Down, Home and End moving between them (one
+// that sorts (aria-sort, up, down, then off), rows that open with a click,
+// Enter or (without selection) Space, the arrows, PageUp/Down, Home and End moving between them (one
 // Tab stop for the whole list), and only the rows on screen in the DOM,
 // however many there are (@tanstack/react-virtual). Rows take their height
 // from density (h-row). The sort is the caller's: keep it in the view, so

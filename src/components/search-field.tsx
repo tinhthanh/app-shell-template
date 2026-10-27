@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 // SearchField is the app's search box: a magnifier at the start of an
 // Input of type search (role searchbox, so tests find it by its label),
-// which the projects list, the themes and the shortcuts share.
+// which the projects and tasks lists, the themes and the shortcuts share.
 export function SearchField({ value, onChange, placeholder, label, className }: { value: string; onChange(value: string): void; placeholder: string; label?: string; className?: string }) {
   return (
     <div className={cn("relative", className)}>

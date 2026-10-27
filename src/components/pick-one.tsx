@@ -13,8 +13,9 @@ export interface PickOneOption<T extends string> {
 
 // PickOne is the app's one control for picking one of a few values: a coss
 // ToggleGroup, 28px high, in a muted track, the chosen item raised and the
-// rest at 80% foreground. Settings and the Projects' status filter use it; a
-// page's filter with an "All" choice is one too. Narrowing by tags, any
+// rest at 80% foreground. Settings' segmented rows (views/settings/controls.tsx),
+// the status filters and a record's status on Projects and Tasks, and the Kit
+// use it; a page's filter with an "All" choice is one too. Narrowing by tags, any
 // number at once, is FilterChip.
 //
 // Base UI's ToggleGroup never presses an item whose value is the empty
@@ -51,7 +52,7 @@ export function PickOne<T extends string>({
       // Clicking the chosen item again keeps it chosen.
       onValueChange={(v) => v.length && onChange(fromItem(v[v.length - 1] as string) as T)}
       // shrink-0: in a row it keeps its one line and its neighbours give way
-      // (a file path beside Review's Unified/Split); it wraps only when it
+      // (a search field beside a status filter); it wraps only when it
       // is wider than the whole row (max-w-full).
       className={cn("w-fit max-w-full shrink-0 flex-wrap rounded-lg bg-muted p-0.5", className)}
     >

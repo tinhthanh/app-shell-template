@@ -3,10 +3,16 @@
 // has a place that reloads to Home, a section the URL can't name, or a key
 // that does nothing.
 //
-//   - every View kind (src/lib/store.ts) is read by hashToView
-//     (src/lib/routes.ts), a round trip in routes.test.ts, an entry in
-//     viewTitles (App.tsx, home excepted), and an axe scene (e2e/a11y.spec.ts);
-//   - every SettingsSectionId is in routes.ts's SECTIONS and settings-view.tsx;
+//   - every View kind (src/lib/store.ts) has a round trip in routes.test.ts
+//     and an axe scene (e2e/a11y.spec.ts); every kind but home (the empty
+//     address, which needs no reading and no title of its own) is read by
+//     hashToView (src/lib/routes.ts) and has an entry in viewTitles (App.tsx);
+//   - every View kind but home and missing has a picture in e2e/scenes.json
+//     (the visual baselines and pnpm shots) whose hash opens it (#/<kind>);
+//     home's scene is the empty address, and missing is any address the
+//     app doesn't know, so neither has a #/<kind> of its own;
+//   - every SettingsSectionId is in routes.ts's SECTIONS and settings-view.tsx,
+//     and has an axe scene;
 //   - every shortcut id (src/lib/shortcuts.json) has a case in run
 //     (src/hooks/use-shortcuts.ts).
 //
@@ -29,6 +35,7 @@ const routesTest = await read("src/lib/routes.test.ts");
 const app = await read("src/App.tsx");
 const a11y = await read("e2e/a11y.spec.ts");
 const settingsView = await read("src/views/settings/settings-view.tsx");
+const scenes = JSON.parse(await read("e2e/scenes.json"));
 
 for (const k of kinds) {
   const reader = /export function hashToView[\s\S]*?\n}\n/.exec(routes)?.[0] ?? "";
@@ -36,6 +43,8 @@ for (const k of kinds) {
   if (!routesTest.includes(`kind: "${k}"`)) problems.push(`view ${k}: no round trip in src/lib/routes.test.ts`);
   if (k !== "home" && !new RegExp(`\\b${k}: (?:"|t\\()`).test(/viewTitles =([\s\S]*?)satisfies/.exec(app)?.[1] ?? "")) problems.push(`view ${k}: no viewTitles entry in src/App.tsx`);
   if (!new RegExp(`id: ["\`]${k}\\b`).test(a11y)) problems.push(`view ${k}: no axe scene in e2e/a11y.spec.ts (a scene whose id starts with "${k}")`);
+  if (k !== "home" && k !== "missing" && !scenes.some((s) => new RegExp(`^#/${k}(?:[/?]|$)`).test(s.hash)))
+    problems.push(`view ${k}: no scene in e2e/scenes.json (one whose hash starts with "#/${k}")`);
 }
 const routeSections = /const SECTIONS[^=]*=\s*\[([^\]]*)\]/.exec(routes)?.[1] ?? "";
 for (const s of sections) {

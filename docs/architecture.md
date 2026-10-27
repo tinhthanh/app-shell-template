@@ -8,7 +8,7 @@ file headers say what each module is for; this says how they connect.
 
 ```
 view            useResource((signal) => client.project(id, { signal }), [id])   src/lib/resource.ts
-                usePages((page) => client.projects({…filters, …page}), { key })   a list, a page at a time
+                usePages((page, signal) => client.projects({…filters, …page}, { signal }), { key })   a list, a page at a time
   └─ client     mockClient() | httpClient(VITE_API_URL)       src/lib/api.ts, src/lib/mock.ts
        └─ answers with data, or throws ApiError(message, status, code)   src/lib/errors.ts
 <ResourceView>  loading   → <PixelLoader>                      src/components/resource-view.tsx
@@ -44,7 +44,7 @@ draws at once when you come back, and a write calls `mutate(key, …)` to
 show its result before the server confirms, putting it back on refusal.
 A list's filters are part of its `View`, so the URL carries them.
 
-A list that can grow (Projects) is read a page at a time with `usePages`:
+A list that can grow (Projects, Tasks) is read a page at a time with `usePages`:
 the server filters and sorts and answers a `Page` (`items`, `next`,
 `total`; `lib/pages.ts`), each filter and sort is kept under its own key
 (`projects?status=active`), `<DataTable more total>` asks for the next
@@ -54,8 +54,8 @@ a whole one's. Coming back, the first read asks for as many rows as were
 kept, so the row the keyboard left (`focusRow`) is still there. A short,
 bounded list (the tags in use) is read whole with `useResource`.
 
-A list is a workspace's: `listOf` (`views/projects/projects-view.tsx`)
-puts the workspace on show (`prefs.workspace`, `lib/workspace.ts`) in the
+A list is a workspace's: `listOf` (`views/projects/projects-view.tsx`,
+`views/tasks/tasks-view.tsx`) puts the workspace on show (`prefs.workspace`, `lib/workspace.ts`) in the
 query, so it is in the key too, and another workspace is another list. A
 write reaches every kept list of its resource (`listsOf` in
 `lib/resource-cache.ts`: `projects`, `projects?status=active`…), so a
@@ -66,15 +66,17 @@ filter you come back to doesn't show the old row.
 | State | Module | Persists as | Notes |
 |---|---|---|---|
 | The view in front, the theme, whether the palette is open | `src/lib/store.ts` (zustand) | `app.ui` (theme only) | The view mirrors the URL's hash |
-| The person's settings: density, text size, sidebar (folded, width, the places on the rail), system themes, language, the last What's new seen, the workspace on show, Recent, the folded sections, the getting-started steps | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
+| The person's settings: density, text size, sidebar (folded, width, the places on the rail), system themes, language, the last What's new seen, the workspace on show, Recent, the folded sections, the getting-started steps, hiding done tasks, sharing usage data | `src/lib/prefs.ts` (zustand) | `app.prefs`, versioned | `migratePrefs` moves old saves forward; `applyUiPrefs` writes `data-density`, the root font size and `--sidebar-w` |
 | Data from the API | the component, through `useResource` | nothing | Never in a store |
 | The last appearance | `src/themes/apply.ts` | `app.appearance` | Read by `index.html` before the first paint |
 | Who is signed in | `src/lib/session.ts` (zustand) | nothing | `me()` on start; a 401 anywhere → one ask for a longer session → else signed out → the sign-in view over the app (ADR 0011), in every tab (`lib/tabs.ts`); a session that ends is warned before (`hooks/use-session-end.ts`); their `role` and `useCan(action)` say what they may do (`lib/permissions.ts`, ADR 0012) |
-| The frame's: the workspaces, the notices, the place counts, the status items | `lib/workspace.ts`, `lib/notifications.ts`, `lib/badges.ts`, `lib/status-items.ts` (zustand) | nothing | Small stores the frame draws from (ADR 0009); each forgets itself on sign-out through `onSignedOut` (`lib/session.ts`), as the resource cache does, and the workspace pick and Recent go with them |
+| The frame's: the workspaces, the notices, the place counts, the status items | `lib/workspace.ts`, `lib/notifications.ts`, `lib/badges.ts`, `lib/status-items.ts` (zustand) | nothing | Small stores the frame draws from (ADR 0009); the workspaces, the notices and the counts forget themselves on sign-out through `onSignedOut` (`lib/session.ts`), as the resource cache does, and the workspace pick, Recent and the yes to sharing usage go with them; a status item goes when the component that put it up unmounts |
 
 Prefs and the theme follow across tabs: another tab's save arrives as a
-storage event and is taken whole, held to its shape, never saved back
-(`takeOtherTabsPrefs`, `takeOtherTabsUi`, `lib/tabs.ts`).
+storage event (`lib/tabs.ts`) and is taken whole, held to its shape, never
+saved back (`takeOtherTabsPrefs` in `lib/prefs.ts`, `takeOtherTabsUi` in
+`lib/store.ts`). The workspace on show is the exception: each tab keeps
+its own, so two tabs may show two workspaces.
 
 `src/lib/storage.ts` wraps `localStorage` in try/catch: storage can be
 missing or throw, and the app must work without it.
@@ -211,8 +213,8 @@ run in node.
 
 ## Knobs
 
-The URL knobs that choose where the app reads from (`?mock=1`, `?api=`)
-work only while the knobs are on: a dev build, or one built with
+The URL knobs that choose where the app reads from (`?mock=1`, `?api=`),
+and `?flags=`, work only while the knobs are on: a dev build, or one built with
 `VITE_KNOBS=1`. The mock's own knobs (`?slow=1` to `?failMore=1`) change
 the fixtures whenever the app runs on them. `?crash=` works on the
 fixtures or with the knobs on.
@@ -220,10 +222,12 @@ fixtures or with the knobs on.
 | Where | Knob | What it does |
 |---|---|---|
 | env | `VITE_API_URL` | The HTTP client's base; unset (and no `apiUrl` in `config.js`) means the mock |
-| env | `VITE_KNOBS=1` | Keeps `?mock=1`, `?api=` and `?crash=` in a production build, for a demo; never on a build that talks to a real API |
+| env | `VITE_KNOBS=1` | Keeps `?mock=1`, `?api=`, `?flags=` and `?crash=` in a production build, for a demo; never on a build that talks to a real API |
 | env | `PORT` | The dev server's port (1420) |
 | env | `BASE_PATH` | An absolute base for the built assets (`vite.config.ts`); relative (`./`) by default |
 | env | `SOURCEMAPS=1` | Hidden source maps in the build, for an error reporter (`docs/deploy.md`) |
+| env | `APP_COMMIT` | The commit the build names (in error reports), over `git rev-parse`; a Docker build has no `.git` (`vite.config.ts`) |
+| env | `STUB_PORT` | `pnpm stub`'s port (8787; `scripts/stub-server.mjs`) |
 | config.js | `apiUrl`, `mock` | Set by the host after the build (`window.__APP_CONFIG__`, read by `lib/config.ts`): the API's base, over `VITE_API_URL`, or `mock: true` for the fixtures |
 | config.js | `flags`, `reportUrl`, `analyticsUrl` | Features on or off (`lib/flags.ts`), where errors go (`lib/report.ts`), where usage goes for those who allow it (`lib/analytics.ts`); `docs/deploy.md` |
 | URL | `?flags=a,-b` | Turns flags on or off for the page (knobs on) |
@@ -233,16 +237,18 @@ fixtures or with the knobs on.
 | URL | `?fail=1` / `?failOnce=1` / `?failWrites=1` | Every call fails / the first fails / writes fail |
 | URL | `?failMore=1` | The list's second page fails once, then comes (Try again) |
 | URL | `?failAfter=2` | The first calls work, every one after fails: a server that goes down while you work (a reload keeps the rows, with a note) |
-| URL | `?empty=1` | No records (projects, and whatever else the mock holds) |
+| URL | `?empty=1` | No projects and no tasks (the workspaces stay) |
 | URL | `?hold=1` | Writes never answer: what a view shows before the server confirms stays to be looked at |
 | URL | `?many=1` | 5,000 invented projects, for the list's scrolling and keys |
 | URL | `?role=viewer` / `member` / `owner` | Who is signed in has that role; the writes it can't take are refused with a 403 (`lib/permissions.ts`) |
 | URL | `?crash=<kind>` | That view throws (the error boundary) |
 | URL | `?sessionMinutes=3` | The session ends that many minutes after sign-in or Stay signed in (the warning comes two minutes before) |
-| URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any password signs alex in) |
+| URL | `?signedOut=1` | Nobody is signed in: the sign-in view (any email and password that aren't empty sign alex in) |
 | URL | `?platform=mac` / `linux` | ⌘ or Ctrl, and how key hints read |
 | URL | `?dir=rtl` / `ltr` | The page's writing direction (the layout mirrors) |
 | test env | `E2E_PORT`, `E2E_WORKERS`, `E2E_REPORT`, `A11Y_FULL` | The suite's port, workers, HTML/JUnit report, light theme too |
+| test env | `E2E_SERVE=static` | Serves `dist/` with `scripts/serve-dist.mjs` instead of `vite preview`, where preview can't run (`playwright.config.ts`) |
+| test env | `VISUAL=1` | Runs `e2e/visual.spec.ts` off Linux too; `pnpm test:visual` sets both inside the Playwright Linux image (`scripts/visual.mjs`) |
 | test env | `THEME_REPORT=1` | `check:themes` prints every margin |
 
 ## Vocabulary
@@ -265,10 +271,10 @@ fixtures or with the knobs on.
 | closeSettings | Leaves Settings for the view it was opened from (`lib/store.ts`) |
 | state colours | success, warning, destructive, info; `--destructive-strong` is the fill white reads on |
 | density | compact or comfortable, as `data-density`; rows read `h-row`, `py-row-pad`, `h-side-row` |
-| Tip, tip layer | The app's tooltip (`tip.tsx`), never `title=`; a layer shares one tooltip over many rows |
+| Tip | The app's tooltip (`tip.tsx`), never `title=` |
 | Notice, notification centre | `notify()` (`lib/notifications.ts`): a toast now and a line in the sidebar's bell, with a way back |
 | Place badge | A count beside a place in the sidebar, `setPlaceBadge()` (`lib/badges.ts`); loud when it wants the person |
-| Status item | A fact a view puts in the status bar, `useStatusItem()` (`lib/status-items.ts`); offline is one |
+| Status item | A fact a view puts in the status bar, `useStatusItem()` (`hooks/use-status-item.ts`, over `lib/status-items.ts`); offline is one |
 | Rail, sheet | The sidebar's two columns: the rail of places and workspaces (`sidebar-rail.tsx`), the sheet of the workspace and the place's own list |
 | Workspace | What the person belongs to; every list reads the one on show (`lib/workspace.ts`), the rail switches it |
 | Recent | The sidebar's section of the records opened last (`lib/recent.ts`, kept in prefs), folded by its heading |
@@ -287,7 +293,7 @@ fixtures or with the knobs on.
 | optimistic | `optimistic()` in the resource cache: a write shown before the server confirms it, put back on refusal |
 | return focus | `returnFocusTo`/`useReturnFocus`: Back lands on the row the person left |
 | focus home | `useRescueRemovedFocus`: the keyboard never falls to `<body>` |
-| still | `watchStillness`: decorative animations pause while the window is hidden |
+| still | `watchStillness` (`lib/still.ts`): decorative animations pause while the window is hidden, or after 30 s in the background |
 | evidence | What a PR shows: tests named, checks pasted, screenshots (`AGENTS.md › Done means`) |
 | scenes | `e2e/scenes.json`: the addresses and ready marks that `visual.spec.ts` and `pnpm shots` share |
 | baselines | `e2e/snapshots/`: every view's picture, Linux's, compared by `e2e/visual.spec.ts`; `pnpm test:visual --update` rewrites them |

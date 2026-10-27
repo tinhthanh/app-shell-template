@@ -50,7 +50,10 @@ import { ViewHeader } from "@/views/view-header";
 // date field, written and read as a day by lib/format.ts, late in the
 // warning tone), the project it is for (a RecordPicker that asks the server
 // as the person types) and a file (a FileField, sent with client.uploadFile
-// before the task is saved). A project's page links here with ?project=.
+// before the task is saved). The list is narrowed by a project (a
+// RecordFilter, ?project=, which a project's page links here with) and hides
+// done tasks when the person's "Hide done tasks" setting says so and the
+// address doesn't (lib/default-filter.ts).
 
 type TasksView = Extract<View, { kind: "tasks" }>;
 type StatusFilter = TaskStatus | "";
