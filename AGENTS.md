@@ -15,6 +15,11 @@ skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`
   checks the subject; pre-push runs `pnpm check`. Never `--no-verify`: CI
   runs the same and more. Edits made from a shell aren't formatted by the
   editor hook, so run `pnpm format` before you look at a diff.
+- `pnpm check` builds `dist/`, which the browser suite serves: a check
+  that runs while a suite is going (the Stop hook below, between turns)
+  swaps the files under it, and its pages fail with 404s and a refused
+  connection. Run a long suite in the background only on a committed tree,
+  or wait for it before ending a turn.
 - Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
   when the tree has changes and, while it is red, blocks the first stop
   with its last lines (a second stop goes through, so a check that cannot
