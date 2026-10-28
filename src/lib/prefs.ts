@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { LANGUAGE_IDS, type LanguageChoice, resolveLanguage, setLanguage } from "./i18n.ts";
 import { isRecentItem, MAX_RECENT, type RecentItem } from "./recent.ts";
 import { clampWidth, SIDEBAR_DEFAULT } from "./sidebar-width.ts";
-import { load, save } from "./storage.ts";
+import { load, save, tabLoad, tabSave } from "./storage.ts";
 
 // The person's preferences, kept in this browser (localStorage, "app.prefs").
 // Saved whole on every change, and brought up to date by migratePrefs when
@@ -38,7 +38,7 @@ export interface Prefs {
   // The Tasks list leaves out done tasks unless its address asks for them (lib/default-filter.ts).
   hideDoneTasks: boolean;
   // Usage events may go to the host's analytics (lib/analytics.ts): only when the person says so.
-  shareUsage: boolean;
+  shareUsageFor: string | null;
 }
 
 export const DEFAULTS: Prefs = {
@@ -54,7 +54,7 @@ export const DEFAULTS: Prefs = {
   workspace: null,
   railPlaces: null,
   onboarding: { done: [], dismissed: false },
-  shareUsage: false,
+  shareUsageFor: null,
   hideDoneTasks: false,
 };
 
@@ -98,17 +98,27 @@ export function fromSaved(saved: Saved): Prefs {
     railPlaces: Array.isArray(saved.railPlaces) ? saved.railPlaces.filter((p): p is string => typeof p === "string") : null,
     folded: Array.isArray(saved.folded) ? saved.folded.filter((f): f is string => typeof f === "string") : [],
     // Only a yes the person gave: anything else is no.
-    shareUsage: saved.shareUsage === true,
+    // Whose yes it is (a user's id), so it is never someone else's; a yes saved before it was anyone's is no.
+    shareUsageFor: typeof saved.shareUsageFor === "string" ? saved.shareUsageFor : null,
     hideDoneTasks: saved.hideDoneTasks === true,
     onboarding: { done: Array.isArray(saved.onboarding?.done) ? saved.onboarding.done.filter((d): d is string => typeof d === "string") : [], dismissed: saved.onboarding?.dismissed === true },
   };
 }
 
-export const usePrefs = create<Prefs>()(() => fromSaved(saved));
+// The workspace on show is this tab's: kept for the tab (a reload stays on
+// it), and saved for the browser only when picked, so a new tab opens on the
+// one picked last, not on whichever tab last saved anything.
+export const usePrefs = create<Prefs>()(() => ({ ...fromSaved(saved), workspace: tabLoad("app.workspace") ?? fromSaved(saved).workspace }));
 
 // Another tab's change is taken as it is, not saved back (which would echo).
 let fromOtherTab = false;
-usePrefs.subscribe((p) => fromOtherTab || save("app.prefs", { ...p, version: PREFS_VERSION }));
+usePrefs.subscribe((p, prev) => {
+  if (p.workspace !== prev.workspace) tabSave("app.workspace", p.workspace);
+  if (fromOtherTab) return;
+  const picked = p.workspace !== prev.workspace;
+  const browsers = load<Saved>("app.prefs", {}).workspace;
+  save("app.prefs", { ...p, workspace: picked ? p.workspace : (browsers ?? p.workspace), version: PREFS_VERSION });
+});
 
 // takeOtherTabsPrefs applies what another tab saved (lib/tabs.ts hears it
 // as a storage event), so a setting changed there is the setting here.

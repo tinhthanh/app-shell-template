@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { cached, clearCache, forget, invalidate, listsOf, MAX_KEPT, mutate, onStale, optimistic, remember, subscribe, writeCount } from "./resource-cache.ts";
+import { cached, clearCache, forget, invalidate, listsOf, MAX_KEPT, mutate, onStale, optimistic, readAgainOnScreen, remember, subscribe, writeCount } from "./resource-cache.ts";
 import type { Page } from "./types.ts";
 
 test.beforeEach(clearCache);
@@ -139,4 +139,13 @@ test("a refused write reads nothing again: the lists are put back as they were",
   await assert.rejects(optimistic({ key: "project:p", listKey: "projects", id: "p", patch: {}, write: async () => Promise.reject(new Error("no")) }));
   assert.deepEqual(read, []);
   stop();
+});
+
+test("coming back reads again everything on screen, of every resource, and nothing that left it", () => {
+  const read: string[] = [];
+  const stops = ["projects?workspace=w-acme", "project:p-shop", "tasks"].map((k) => onStale(k, () => read.push(k)));
+  stops[2]?.();
+  readAgainOnScreen();
+  assert.deepEqual(read.sort(), ["project:p-shop", "projects?workspace=w-acme"]);
+  for (const stop of stops) stop();
 });

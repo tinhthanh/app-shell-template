@@ -61,6 +61,12 @@ write reaches every kept list of its resource (`listsOf` in
 `lib/resource-cache.ts`: `projects`, `projects?status=active`…), so a
 filter you come back to doesn't show the old row.
 
+What is on screen is read again when the person comes back: the window
+shown or focused after 30 s away, the network back, or the computer awake
+(`lib/return.ts` → `readAgainOnScreen` in `lib/resource-cache.ts`), behind
+what it shows. Every write carries `X-Requested-With: XMLHttpRequest`, which
+a server on the session cookie requires (CSRF; `docs/deploy.md` › The API).
+
 ## Where state lives
 
 | State | Module | Persists as | Notes |
@@ -297,6 +303,8 @@ fixtures or with the knobs on.
 | evidence | What a PR shows: tests named, checks pasted, screenshots (`AGENTS.md › Done means`) |
 | scenes | `e2e/scenes.json`: the addresses and ready marks that `visual.spec.ts` and `pnpm shots` share |
 | baselines | `e2e/snapshots/`: every view's picture, Linux's, compared by `e2e/visual.spec.ts`; `pnpm test:visual --update` rewrites them |
+| return | Coming back to the window, the network or a computer awake: `watchReturn` (`lib/return.ts`) reads again what is on screen |
+| vitals | LCP, CLS and INP rated and sent once as a usage event, with consent (`lib/vitals.ts`) |
 | flag | A feature on or off for a deployment: `FLAGS` in `lib/flags.ts`, `flag(id)`, set by config.js's `flags` |
 | track, EVENTS | A usage event, sent only with the person's yes; `EVENTS` in `lib/analytics.ts` says what may leave (ADR 0015) |
 | the trial | A fresh agent on a product task in a worktree, scored against the rules (`.claude/skills/trial`, `docs/trials.md`); a gap found there is a template bug |

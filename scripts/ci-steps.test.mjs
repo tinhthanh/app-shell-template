@@ -11,10 +11,15 @@ const root = resolve(import.meta.dirname, "..");
 test("every check pnpm check runs is a step of CI's app job", () => {
   const check = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).scripts.check;
   const ci = readFileSync(resolve(root, ".github/workflows/ci.yml"), "utf8");
+  // The app job's own steps, one whole line each: "pnpm test" mustn't be
+  // found inside "pnpm test:coverage", nor in a comment or another job.
+  const app = /^ {2}app:\n([\s\S]*?)(?=^ {2}\w[\w-]*:\n|(?![\s\S]))/m.exec(ci)?.[1] ?? "";
+  const steps = new Set([...app.matchAll(/^\s*- run: pnpm ([\w:]+)\s*$/gm)].map((m) => m[1]));
   const checks = [...check.matchAll(/pnpm (check:[a-z]+|typecheck|lint|test|build)\b/g)].map((m) => m[1]);
   assert.ok(checks.length > 5, "pnpm check names its checks");
+  assert.ok(steps.size > 5, "found the app job's steps");
   assert.deepEqual(
-    checks.filter((c) => !new RegExp(`run: pnpm ${c}\\b`).test(ci)),
+    checks.filter((c) => !steps.has(c)),
     [],
   );
 });

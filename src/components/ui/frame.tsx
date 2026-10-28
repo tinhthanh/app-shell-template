@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 // Frame has two looks. "inset" (the default) is coss's muted tray with
 // raised panels in it, for grouped inputs in dialogs. "card" is one bordered
 // card whose header and panels sit flat inside it, divided by a rule: use it
-// for a section of a page (Review, plugin screens), so the section has one
+// for a section of a page (a settings group, a record's part), so the section has one
 // outline, not a card inside a card. See the guideline in card.tsx.
 export function Frame({ className, variant = "inset", ...props }: React.ComponentProps<"div"> & { variant?: "inset" | "card" }): React.ReactElement {
   return (

@@ -29,3 +29,22 @@ export function save(key: string, value: unknown) {
     // Remembering is a convenience; losing it is fine.
   }
 }
+
+// tabLoad and tabSave keep a value for this tab only (sessionStorage): it
+// survives a reload of the tab, and another tab has its own.
+export function tabLoad(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function tabSave(key: string, value: string | null) {
+  try {
+    if (value === null) sessionStorage.removeItem(key);
+    else sessionStorage.setItem(key, value);
+  } catch {
+    // This tab forgets on reload; the browser's last pick still holds.
+  }
+}

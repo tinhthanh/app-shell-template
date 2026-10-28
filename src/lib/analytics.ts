@@ -1,6 +1,6 @@
 // Usage events: what people do, for the team that builds the app, sent only
 // when the host has somewhere to send them (config.js's analyticsUrl) and
-// the person has said yes (Settings › General, prefs.shareUsage, off by
+// the person signed in has said yes (Settings › General, prefs.shareUsageFor, off by
 // default) and their browser doesn't ask not to (Global Privacy Control).
 // EVENTS is the one table of what may be sent and with which properties, so
 // nothing else (no names, no ids, no search words) leaves the device.
@@ -15,6 +15,8 @@ export const EVENTS = {
   "record.status": ["kind", "status"],
   // The command palette was opened.
   "palette.open": [],
+  // How the page felt, as ratings only (lib/vitals.ts), and on which kind of view.
+  "web.vitals": ["lcp", "cls", "inp", "kind"],
 } as const satisfies Record<string, readonly string[]>;
 
 export type EventName = keyof typeof EVENTS;

@@ -3,7 +3,7 @@
   "info": {
     "title": "App Shell API",
     "version": "1.0.0",
-    "description": "What the app's HTTP client (src/lib/api.ts) asks of a server, and what the mock (src/lib/mock.ts) answers. Each operationId is a method of Client. `pnpm check:contract` holds the client and the mock to this file; `pnpm stub` serves it from the mock. Replace the projects with your resources, here first."
+    "description": "What the app's HTTP client (src/lib/api.ts) asks of a server, and what the mock (src/lib/mock.ts) answers. Each operationId is a method of Client. `pnpm check:contract` holds the client and the mock to this file; `pnpm stub` serves it from the mock. Replace the projects with your resources, here first. Every write (POST, PATCH, DELETE) carries X-Requested-With: XMLHttpRequest; a server using the session cookie refuses a write without it (cross-site request forgery)."
   },
   "paths": {
     "/projects": {

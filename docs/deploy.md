@@ -58,7 +58,17 @@ your API's origin. Add:
 X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=()
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
 ```
+
+`Strict-Transport-Security` belongs where TLS ends (the load balancer or
+CDN in front of the container), not in the container, which serves plain
+HTTP behind it: set `max-age=31536000; includeSubDomains` there. Trusted
+Types (`require-trusted-types-for 'script'`) fits the app, which writes no
+HTML as text, but turn it on only after a run in report-only mode
+(`Content-Security-Policy-Report-Only`) shows nothing in the libraries
+trips it.
 
 A host that can't set headers (GitHub Pages) can put the same policy in a
 `<meta http-equiv="Content-Security-Policy">` tag, minus `frame-ancestors`.
@@ -112,6 +122,12 @@ holds the client and the mock to it (ADR 0016). Before there is a
 backend, `pnpm stub` (`scripts/stub-server.mjs`) serves the mock over
 HTTP on `http://localhost:8787` (`STUB_PORT` to move it); run the app
 against it with `VITE_API_URL=http://localhost:8787 pnpm dev`.
+
+Every write (POST, PATCH, DELETE) carries `X-Requested-With: XMLHttpRequest`.
+With a session cookie, the server refuses a write without it: a form or a
+script on another site can't set that header without the server's CORS
+allowing it, so a cross-site request is turned away (CSRF). The cookie is
+`HttpOnly; Secure; SameSite=Lax` as well (ADR 0011).
 
 ## Releases
 

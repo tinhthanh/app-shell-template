@@ -16,8 +16,14 @@ export type FileChoice = { kind: "keep" } | { kind: "new"; file: File } | { kind
 
 export function FileField({ name, label, hint, kept, accept, onChoice }: { name: string; label: string; hint?: string; kept?: Attachment; accept?: string; onChoice(choice: FileChoice): void }) {
   const [showKept, setShowKept] = useState(Boolean(kept));
+  const [picked, setPicked] = useState<string>();
+  // What the form's dirty check reads under the field's name (before the file
+  // input, so FormData finds it first): the kept file's id, "new:" and the
+  // picked one's name, or nothing. Taking the kept one off is an edit.
+  const said = kept && showKept ? kept.id : picked ? `new:${picked}` : "";
   return (
     <Field name={name}>
+      <input type="hidden" name={name} value={said} />
       <FieldLabel>{label}</FieldLabel>
       {kept && showKept ? (
         <span className="flex w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-body" data-testid={`${name}-kept`}>
@@ -40,6 +46,7 @@ export function FileField({ name, label, hint, kept, accept, onChoice }: { name:
           render={<Input type="file" accept={accept} />}
           onChange={(e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
+            setPicked(file?.name);
             onChoice(file ? { kind: "new", file } : { kind: "none" });
           }}
         />

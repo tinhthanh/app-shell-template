@@ -216,3 +216,44 @@ test("another workspace picked on a task's page goes to that workspace's tasks",
   await expect(app.page.getByTestId("task-detail")).toHaveCount(0);
   await expect(app.page.getByTestId("task-row")).toHaveCount(2);
 });
+
+test("the project filter keeps its name while a search finds no task", async ({ app }) => {
+  await app.open({ hash: "/tasks?project=p-api" });
+  const filter = app.page.getByTestId("tasks-project-filter");
+  await expect(filter).toHaveValue("Public API");
+  await app.page.getByRole("searchbox", { name: "Find a task" }).fill("zzz");
+  await expect(app.page.getByTestId("nothing-matches")).toBeVisible();
+  await expect(filter).toHaveValue("Public API");
+});
+
+test("taking a task's file off and then closing asks first", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-webhooks" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the task" });
+  await dialog.getByRole("button", { name: "Remove retry-policy.pdf" }).click();
+  await app.page.keyboard.press("Escape");
+  await expect(app.page.getByTestId("confirm")).toContainText("Discard your changes?");
+});
+
+test("a reload with edits in a form asks first", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-icons" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  await app.page.getByRole("dialog", { name: "Edit the task" }).getByRole("textbox", { name: "Title" }).fill("Newer app icons");
+  const asked = new Promise<string>((done) => app.page.once("dialog", (d) => void d.accept().then(() => done(d.type()))));
+  await app.page.reload();
+  expect(await asked).toBe("beforeunload");
+});
+
+test("a reload with a form open and nothing changed doesn't ask", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-icons" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  await expect(app.page.getByRole("dialog", { name: "Edit the task" })).toBeVisible();
+  let asked = false;
+  app.page.once("dialog", (d) => {
+    asked = true;
+    void d.accept();
+  });
+  await app.page.reload();
+  await expect(app.page.getByTestId("task-detail")).toBeVisible();
+  expect(asked).toBe(false);
+});

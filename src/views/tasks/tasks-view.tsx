@@ -171,7 +171,12 @@ function WorkspaceTasks() {
   const backTo = useReturnFocus("data-task");
   const open = (task: Task) => useStore.getState().setView({ ...view, id: task.id });
   // The project filter's name: the first task names it, or its id until one does.
-  const projectName = tasks.status === "ready" ? (tasks.data.items[0]?.project?.name ?? view.project) : view.project;
+  // The filter's project, read under the key its page uses, so its name is
+  // known whatever the list holds (none matching, another filter loading).
+  const filterProject = useResource((signal) => (view.project ? client.project(view.project, { signal }) : Promise.resolve(undefined)), [view.project], {
+    key: view.project ? `project:${view.project}` : undefined,
+  });
+  const projectName = filterProject.status === "ready" ? filterProject.data?.name : undefined;
   return (
     <div className="flex h-full flex-col" data-testid="tasks">
       <ViewHeader
@@ -386,7 +391,7 @@ export function TaskForm({ task, listKey, onSaved, trigger, label }: { task?: Ta
       label={label}
       title={task ? t("tasks.edit") : t("tasks.new")}
       description={t("tasks.form.description")}
-      initial={{ title: task?.title ?? "", project: task?.project?.id ?? "", due: task?.due ?? "", attachment: "" }}
+      initial={{ title: task?.title ?? "", project: task?.project?.id ?? "", due: task?.due ?? "", attachment: task?.attachment?.id ?? "" }}
       submit={task ? t("common.save") : t("common.create")}
       failTitle={t("tasks.saveFailed")}
       onOpen={() => {

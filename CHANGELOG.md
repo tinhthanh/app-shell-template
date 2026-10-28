@@ -5,6 +5,12 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Coming back to the app after a while (another window, a closed laptop, the network back) reads what is on screen again, so a list isn't left stale.
+- A reload or a closed tab with edits in a form asks first.
+- Every save carries a header that a server can require against cross-site requests, and the container sends cross-origin isolation headers.
+- With the person's yes, how the page felt (loading, layout shifts, response to clicks) is sent as ratings, never raw times.
+- The Tasks project filter keeps the project's name while a search finds nothing; taking a task's file off counts as an edit; each tab's workspace survives its reload; a yes to sharing usage is the person's own and outlives their session; the sheet's list tries again when back online.
+
 - Stay signed in, in one tab, keeps every tab signed in; a session the server renewed on its own is followed too, and one ending months away is no longer cut short.
 - A task form closed untouched closes without asking, and a file picked in a form you discarded isn't sent with the next one.
 - The Tasks project filter names the project, and leaves the keyboard where it was.

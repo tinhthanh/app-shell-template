@@ -5,10 +5,12 @@ import { test } from "node:test";
 
 const store = new Map<string, string>();
 const g = globalThis as unknown as Record<string, unknown>;
+const tab = new Map<string, string>();
+g.sessionStorage = { getItem: (k: string) => tab.get(k) ?? null, setItem: (k: string, v: string) => void tab.set(k, v), removeItem: (k: string) => void tab.delete(k) };
 g.localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) };
 store.set("app.prefs", JSON.stringify({ density: "comfortable", sidebarWidth: 9000 }));
 
-const { DEFAULTS, migratePrefs, PREFS_VERSION, usePrefs } = await import("./prefs.ts");
+const { DEFAULTS, fromSaved, migratePrefs, PREFS_VERSION, usePrefs } = await import("./prefs.ts");
 
 test("saved prefs load over the defaults, and a width out of range is held in", () => {
   const p = usePrefs.getState();
@@ -46,8 +48,8 @@ test("prefs saved before there was a language follow the system", () => {
 });
 
 test("a chosen language is kept, and one this build has no words for follows the system", async () => {
-  assert.equal((await fresh({ language: "vi", version: 1 }, "vi")).language, "vi");
-  assert.equal((await fresh({ language: "klingon", version: 1 }, "klingon")).language, "system");
+  assert.equal(fromSaved({ language: "vi", version: 1 }).language, "vi");
+  assert.equal(fromSaved({ language: "klingon" as never, version: 1 }).language, "system");
 });
 
 test("an old save gets an empty Recent, nothing folded and a fresh getting-started list", () => {
@@ -58,13 +60,33 @@ test("an old save gets an empty Recent, nothing folded and a fresh getting-start
 });
 
 test("usage is shared only after a yes: off by default, off for an old save, and anything but true is no", async () => {
-  assert.equal(DEFAULTS.shareUsage, false);
-  assert.equal(usePrefs.getState().shareUsage, false);
-  assert.equal((await fresh({ shareUsage: "yes", version: 1 }, "share-odd")).shareUsage, false);
+  assert.equal(DEFAULTS.shareUsageFor, null);
+  assert.equal(usePrefs.getState().shareUsageFor, null);
+  // A yes from before it was anyone's (a boolean) is no.
+  assert.equal(fromSaved({ shareUsage: true, version: 1 } as never).shareUsageFor, null);
+  assert.equal(fromSaved({ shareUsageFor: "u-alex", version: 1 }).shareUsageFor, "u-alex");
 });
 
 test("Hide done tasks is off by default, off for an old save, and only true is on", async () => {
   assert.equal(DEFAULTS.hideDoneTasks, false);
   assert.equal(usePrefs.getState().hideDoneTasks, false);
-  assert.equal((await fresh({ hideDoneTasks: "yes", version: 1 }, "hide-odd")).hideDoneTasks, false);
+  assert.equal(fromSaved({ hideDoneTasks: "yes" as never, version: 1 }).hideDoneTasks, false);
+});
+
+test("a workspace picked is this tab's and the browser's; another save here doesn't put back an older pick", () => {
+  usePrefs.setState({ workspace: "w-acme" });
+  assert.equal(tab.get("app.workspace"), "w-acme");
+  assert.equal(JSON.parse(store.get("app.prefs") ?? "{}").workspace, "w-acme");
+  // Another tab picks Globex, then this one opens a record (Recent changes).
+  store.set("app.prefs", JSON.stringify({ ...JSON.parse(store.get("app.prefs") ?? "{}"), workspace: "w-globex" }));
+  usePrefs.setState({ recent: [{ kind: "project", id: "p-shop", name: "Shop" }] });
+  assert.equal(JSON.parse(store.get("app.prefs") ?? "{}").workspace, "w-globex");
+  assert.equal(usePrefs.getState().workspace, "w-acme");
+});
+
+test("a reload of a tab stays on its own workspace, whatever the browser picked last", async () => {
+  tab.set("app.workspace", "w-acme");
+  assert.equal((await fresh({ workspace: "w-globex", version: 1 }, "tab-own")).workspace, "w-acme");
+  // A new tab (nothing kept for it) opens on the browser's last pick: what fromSaved reads.
+  assert.equal(fromSaved({ workspace: "w-globex", version: 1 }).workspace, "w-globex");
 });

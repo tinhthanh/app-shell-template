@@ -2,7 +2,7 @@
 import { type RuntimeConfig, runtime } from "./config.ts";
 import { ApiError } from "./errors.ts";
 import { refreshed as sessionRefreshed, signedOut } from "./session.ts";
-import type { Attachment, Page, Project, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, User, Workspace } from "./types.ts";
+import type { Attachment, Page, Project, ProjectInput, ProjectPatch, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, User, Workspace } from "./types.ts";
 
 // What a read can be given: a signal that calls it off when its answer is
 // no longer wanted (another filter, a view that left; lib/resource.ts).
@@ -29,8 +29,8 @@ export interface Client {
   workspaces(o?: ReadOptions): Promise<Workspace[]>;
   createWorkspace(input: Pick<Workspace, "name">): Promise<Workspace>;
   project(id: string, o?: ReadOptions): Promise<Project>;
-  updateProject(id: string, patch: Partial<Pick<Project, "name" | "description" | "status" | "tags">>): Promise<Project>;
-  createProject(input: Pick<Project, "name" | "description"> & { workspace?: string }): Promise<Project>;
+  updateProject(id: string, patch: ProjectPatch): Promise<Project>;
+  createProject(input: ProjectInput): Promise<Project>;
   deleteProject(id: string): Promise<void>;
   // A page of the tasks that match, and one task; making, changing and
   // deleting one (its project and file by id, null to take them off).
@@ -237,7 +237,10 @@ async function once<T>(base: string, method: string, path: string, body: unknown
     const sent = bodyOf(body);
     res = await fetch(`${base}${path}`, {
       method,
-      headers: { ...sent.headers, ...o.headers?.() },
+      // A write says it comes from the app: a form on another site can't set
+      // this header without CORS, so a server that refuses cookie writes
+      // without it is safe from cross-site requests (docs/deploy.md › The API).
+      headers: { ...sent.headers, ...(method === "GET" ? {} : { "X-Requested-With": "XMLHttpRequest" }), ...o.headers?.() },
       body: sent.body,
       credentials: o.credentials ?? "include",
       signal: ctrl?.signal,

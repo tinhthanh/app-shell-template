@@ -37,7 +37,8 @@ test("usage is sent only after the person turns it on, and their choice is kept"
   await expect(share).not.toBeChecked();
   await share.click();
   await expect(share).toBeChecked();
-  expect(((await app.stored("app.prefs")) as { shareUsage: boolean }).shareUsage).toBe(true);
+  // The yes is the signed-in person's, by id.
+  expect(((await app.stored("app.prefs")) as { shareUsageFor: string }).shareUsageFor).toBe("u-alex");
   // Nothing went before the yes (Settings itself was opened before it).
   expect(sent).toEqual([]);
   await app.page.getByTestId("settings-back").click();
