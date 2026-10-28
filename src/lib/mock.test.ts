@@ -286,3 +286,13 @@ test("search finds projects and tasks, each in its own group, a task by its proj
     ["Print labels in bulk"],
   );
 });
+
+test("a page of tasks says how many of every match are late, not only of the page", async () => {
+  const c = mockClient({ latency: 0 });
+  const all = await c.tasks({ workspace: "w-acme" });
+  const page = await c.tasks({ workspace: "w-acme", limit: 1, sort: "title:asc" });
+  assert.equal(page.items.length, 1);
+  assert.equal(page.summary?.late, all.summary?.late);
+  assert.equal(all.summary?.late, 1);
+  assert.equal((await c.tasks({ workspace: "w-acme", status: "done" })).summary?.late, 0);
+});

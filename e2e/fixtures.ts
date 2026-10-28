@@ -101,10 +101,12 @@ export const test = base.extend<{ app: App }>({
         }
         const q = new URLSearchParams({ mock: "1", platform: "linux", ...opts.params });
         const url = `/?${q}${opts.hash ? `#${opts.hash}` : ""}`;
-        // The same address again is only a fragment change to the browser:
-        // load it afresh, so the app starts over with what was seeded.
-        if (page.url().endsWith(url)) await page.reload();
-        else await page.goto(url);
+        // An address that differs only after its # is a fragment change to the
+        // browser, which wouldn't load the page: go there, then load it afresh,
+        // so the app starts over with what was seeded.
+        const same = new URL(page.url(), "http://x").search === `?${q}` && page.url() !== "about:blank";
+        await page.goto(url);
+        if (same) await page.reload();
         // The shell is up: a sidebar row, Settings' own list (a page of its
         // own, in the sidebar's place), the phone bar, or the sign-in page.
         await expect(page.getByTestId("nav-home").or(page.getByTestId("settings-back")).or(page.getByTestId("phone-bar")).or(page.getByTestId("signin")).first()).toBeVisible();

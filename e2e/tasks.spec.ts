@@ -257,3 +257,18 @@ test("a reload with a form open and nothing changed doesn't ask", async ({ app }
   await expect(app.page.getByTestId("task-detail")).toBeVisible();
   expect(asked).toBe(false);
 });
+
+test("a list the server refuses once says so, and Try again brings the tasks", async ({ app }) => {
+  // The project filter on the toolbar reads nothing until it is opened, so the one failure is the list's.
+  await app.open({ params: { failOnce: "1" }, hash: "/tasks" });
+  const failed = app.page.getByTestId("tasks-failed");
+  await expect(failed).toBeVisible();
+  await failed.getByRole("button", { name: "Try again" }).click();
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+});
+
+test("the count says how many of every match are late", async ({ app }) => {
+  await app.open({ hash: "/tasks" });
+  await expect(app.page.getByTestId("task-row")).toHaveCount(6);
+  await expect(app.page.getByTestId("tasks")).toContainText("6 tasks · 1 late");
+});

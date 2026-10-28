@@ -601,8 +601,25 @@
                           "items": {
                             "$ref": "#/components/schemas/Task"
                           }
+                        },
+                        "summary": {
+                          "type": "object",
+                          "required": [
+                            "late"
+                          ],
+                          "properties": {
+                            "late": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "Past their day and not done"
+                            }
+                          },
+                          "additionalProperties": false
                         }
-                      }
+                      },
+                      "required": [
+                        "summary"
+                      ]
                     }
                   ]
                 }
@@ -1061,6 +1078,10 @@
           "total": {
             "type": "integer",
             "minimum": 0
+          },
+          "summary": {
+            "type": "object",
+            "description": "What the server worked out over every match, not only this page; each list says its own fields"
           }
         },
         "additionalProperties": false
@@ -1144,6 +1165,10 @@
           },
           "detail": {
             "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "The record's status as stored; the app words it"
           }
         },
         "additionalProperties": false

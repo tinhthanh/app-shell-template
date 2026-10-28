@@ -71,3 +71,12 @@ test("a server's sort takes a column and a way, and leaves an unknown one alone"
   assert.equal(sortRows(all, "x:asc", by), all);
   assert.equal(sortRows(all, undefined, by), all);
 });
+
+test("a page says what the server worked out over every match, and the newest page's word holds", () => {
+  const rows = Array.from({ length: 5 }, (_, i) => ({ id: `r${i}` }));
+  const first = pageOf(rows, undefined, 2, { late: 3 });
+  assert.deepEqual(first.summary, { late: 3 });
+  const next = pageOf(rows, first.next, 2, { late: 2 });
+  assert.deepEqual(appendPage(first, next).summary, { late: 2 });
+  assert.equal("summary" in pageOf(rows), false);
+});

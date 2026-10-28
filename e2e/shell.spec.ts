@@ -383,3 +383,11 @@ test("in Vietnamese the sidebar, the palette and a project's date speak Vietname
   await expect(app.page.getByTestId("settings-general")).toBeVisible();
   await expect(app.page.getByTestId("settings-nav-general")).toContainText("General");
 });
+
+test("⌘K says a record's status in the person's language", async ({ app }) => {
+  await app.open({ prefs: { language: "vi" } });
+  await app.page.keyboard.press(`${mod()}+k`);
+  const palette = app.page.getByTestId("command-palette");
+  await palette.getByRole("combobox").fill("ware");
+  await expect(palette.getByRole("option", { name: /^Warehouse/ })).toContainText("đang hoạt động");
+});

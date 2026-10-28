@@ -181,7 +181,14 @@ function WorkspaceTasks() {
     <div className="flex h-full flex-col" data-testid="tasks">
       <ViewHeader
         title={t("tasks.title")}
-        description={tasks.status === "ready" ? t(filtered ? "tasks.countMatch" : "tasks.countAll", { n: tasks.data.total }) : undefined}
+        description={
+          tasks.status === "ready"
+            ? // How many are late is the server's (Page.summary), over every match, not the rows read so far.
+              [t(filtered ? "tasks.countMatch" : "tasks.countAll", { n: tasks.data.total }), tasks.data.summary?.late ? t("tasks.lateCount", { n: tasks.data.summary.late }) : ""]
+                .filter(Boolean)
+                .join(" · ")
+            : undefined
+        }
         actions={
           <>
             <Button size="sm" variant="outline" onClick={tasks.reload} disabled={tasks.loading} aria-label={t("common.reload")}>

@@ -289,3 +289,12 @@ export function DataTable<T>({
     </div>
   );
 }
+
+// focusRow gives the keyboard back to a table's row (the one Tab lands on)
+// inside root, as a bar or a dialog over it goes: after a bulk action, or
+// after a confirm (wait past its own focus rescue, components/confirm.tsx).
+export function focusRow(root: string, after = 0) {
+  const go = () => document.querySelector<HTMLElement>(`${root} [data-slot=data-table] tbody tr[tabindex="0"]`)?.focus();
+  if (after) window.setTimeout(go, after);
+  else requestAnimationFrame(go);
+}

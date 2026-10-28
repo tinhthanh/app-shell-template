@@ -64,7 +64,12 @@ export function RecordPicker({
   // The latest find, so a new closure each render doesn't ask again; what is asked is the query.
   const finder = useRef(find);
   finder.current = find;
+  // Nothing is asked until the list opens or something is typed: a picker
+  // drawn on a page (a toolbar's filter) mustn't read on its own, taking a
+  // read the page is waiting for (?failOnce=1's one failure, a slow server).
+  const [wanted, setWanted] = useState(false);
   useEffect(() => {
+    if (!wanted && !asked) return;
     const ctrl = new AbortController();
     finder.current(asked, ctrl.signal).then(
       (found) => {
@@ -74,7 +79,7 @@ export function RecordPicker({
       () => !ctrl.signal.aborted && setFailed(true),
     );
     return () => ctrl.abort();
-  }, [asked]);
+  }, [asked, wanted]);
   return (
     <Combobox<Picked>
       name={name}
@@ -86,6 +91,7 @@ export function RecordPicker({
         onPick?.(v);
       }}
       onInputValueChange={setQuery}
+      onOpenChange={(open) => open && setWanted(true)}
       // The server has matched already.
       filter={null}
       itemToStringLabel={(p) => p.name}

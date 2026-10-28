@@ -374,7 +374,10 @@ export function mockClient(given: MockOptions = {}): Client {
           (!query.hideDone || t.status !== "done") &&
           (!query.project || t.project?.id === query.project),
       );
-      return structuredClone(pageOf(sortRows(match, query.sort, TASK_SORTS), query.cursor, query.limit));
+      // The late ones of every match, worked out here as a server would (Page.summary).
+      const today = inDays(0);
+      const late = match.filter((t) => t.due !== undefined && t.status !== "done" && t.due < today).length;
+      return structuredClone(pageOf(sortRows(match, query.sort, TASK_SORTS), query.cursor, query.limit, { late }));
     },
     async task(id) {
       await guard();
@@ -425,8 +428,8 @@ export function mockClient(given: MockOptions = {}): Client {
       // Each kind is ranked on its own, so one can't crowd the other out.
       return rankEach<{ name: string; text: string; hit: SearchHit }>(
         [
-          projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, hit: { kind: "project", id: p.id, name: p.name, detail: `${p.owner} · ${p.status}` } })),
-          tasks.map((t) => ({ name: t.title, text: t.project?.name ?? "", hit: { kind: "task", id: t.id, name: t.title, detail: [t.project?.name, t.status].filter(Boolean).join(" · ") } })),
+          projects.map((p) => ({ name: p.name, text: `${p.description} ${p.owner}`, hit: { kind: "project", id: p.id, name: p.name, detail: p.owner, status: p.status } })),
+          tasks.map((t) => ({ name: t.title, text: t.project?.name ?? "", hit: { kind: "task", id: t.id, name: t.title, ...(t.project ? { detail: t.project.name } : {}), status: t.status } })),
         ],
         query,
       ).map(({ hit }) => hit);

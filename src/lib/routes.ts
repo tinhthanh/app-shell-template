@@ -20,7 +20,8 @@ function query(v: { q?: string; status?: string; tags?: string[]; project?: stri
   if (v.done) p.set("done", v.done);
   if (v.tags?.length) p.set("tags", v.tags.join(","));
   if (v.sort) p.set("sort", v.sort);
-  const s = p.toString();
+  // A colon reads as itself in an address (sort=name:asc), and reads back the same.
+  const s = p.toString().replace(/%3A/gi, ":");
   return s ? `?${s}` : "";
 }
 

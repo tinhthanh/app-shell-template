@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
-import { ago, date, dateTime, day, fileSize, money, number, today } from "./format.ts";
+import { ago, date, dateTime, day, fileSize, money, number, today, totalsOf } from "./format.ts";
 
 test("ago reads a time in the person's language, at each boundary", () => {
   mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-14T12:00:00Z") });
@@ -57,4 +57,17 @@ test("a file's size reads in the language's units", () => {
   assert.equal(fileSize(512, "en"), "512 byte");
   assert.equal(fileSize(182_400, "en"), "182.4 kB");
   assert.equal(fileSize(1_250_000, "vi"), "1,3 MB");
+});
+
+test("amounts add up by currency, never across them, the most used currency first", () => {
+  const rows = [
+    { amount: 100, currency: "USD" },
+    { amount: 2_500_000, currency: "VND" },
+    { amount: 50.5, currency: "USD" },
+  ];
+  assert.deepEqual(totalsOf(rows), [
+    { currency: "USD", amount: 150.5, count: 2 },
+    { currency: "VND", amount: 2_500_000, count: 1 },
+  ]);
+  assert.deepEqual(totalsOf([]), []);
 });

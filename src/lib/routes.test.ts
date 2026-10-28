@@ -50,3 +50,9 @@ test("an address the app doesn't know says so, kept as it was asked; none is Hom
   assert.deepEqual(hashToView("#/"), { kind: "home" });
   assert.deepEqual(hashToView("#projects"), { kind: "projects" });
 });
+
+test("a sort reads as itself in the address, colon and all", () => {
+  assert.equal(viewToHash({ kind: "tasks", sort: "due:asc" }), "#/tasks?sort=due:asc");
+  assert.deepEqual(hashToView("#/tasks?sort=due:asc"), { kind: "tasks", sort: "due:asc" });
+  assert.deepEqual(hashToView("#/tasks?sort=due%3Aasc"), { kind: "tasks", sort: "due:asc" });
+});
