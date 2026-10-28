@@ -34,13 +34,14 @@ export async function loadWorkspaces(read: () => Promise<Workspace[]>) {
   }
 }
 
-// Signed out, the workspaces, the one on show, the records opened last and
-// the person's yes to sharing usage go with them: the next one on a shared
-// machine sees none of it, and is asked for their own yes (lib/analytics.ts).
+// Signed out, the workspaces, the one on show and the records opened last
+// go with the person: the next one on a shared machine sees none of them.
+// (Their yes to sharing usage is theirs by id, prefs.shareUsageFor, so it
+// needs no forgetting and survives their own session ending.)
 onSignedOut(() => {
   loads++;
   useWorkspaces.setState({ status: "loading", list: [] });
-  setPrefs({ workspace: null, recent: [], shareUsage: false });
+  setPrefs({ workspace: null, recent: [] });
 });
 
 // addWorkspace puts a new one on the rail, and shows it.

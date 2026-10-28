@@ -48,7 +48,7 @@ test("reads GET their path and writes PATCH JSON, ids escaped", async () => {
   await client.updateProject("a b", { status: "paused" });
   assert.equal(calls[1]?.init.method, "PATCH");
   assert.equal(calls[1]?.init.body, JSON.stringify({ status: "paused" }));
-  assert.deepEqual(calls[1]?.init.headers, { "Content-Type": "application/json" });
+  assert.deepEqual(calls[1]?.init.headers, { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" });
 });
 
 test("the list asks for its filters, sort and page in the query, and leaves out what is unset", async () => {
@@ -315,7 +315,7 @@ test("tasks are their own paths, and a file goes as it is with its name in a hea
   assert.equal(calls[2]?.url, "http://api.test/files");
   assert.equal(calls[2]?.init.method, "POST");
   assert.equal(calls[2]?.init.body, file);
-  assert.deepEqual(calls[2]?.init.headers, { "Content-Type": "application/pdf", "X-File-Name": "a%20b.pdf" });
+  assert.deepEqual(calls[2]?.init.headers, { "Content-Type": "application/pdf", "X-File-Name": "a%20b.pdf", "X-Requested-With": "XMLHttpRequest" });
 });
 
 test("a 401 answered with a longer session gives the person with the new end", async () => {
@@ -328,4 +328,14 @@ test("a 401 answered with a longer session gives the person with the new end", a
   answer = { status: 200, json: [] };
   await c.projects();
   assert.deepEqual(got, ["2026-10-26T11:00:00.000Z"]);
+});
+
+test("a write says it comes from the app, against cross-site requests; a read doesn't need to", async () => {
+  await client.projects();
+  await client.updateProject("p", { status: "paused" });
+  await client.deleteProject("p");
+  const header = (i: number) => (calls[i]?.init.headers as Record<string, string> | undefined)?.["X-Requested-With"];
+  assert.equal(header(0), undefined);
+  assert.equal(header(1), "XMLHttpRequest");
+  assert.equal(header(2), "XMLHttpRequest");
 });

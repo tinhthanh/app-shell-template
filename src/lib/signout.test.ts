@@ -33,13 +33,14 @@ test("an answer to a workspaces load from before a sign-out is dropped", async (
   assert.deepEqual(useWorkspaces.getState().list, []);
 });
 
-test("signing out forgets the person's yes to sharing usage, so the next person is asked", async () => {
+test("a yes to sharing usage is its person's: it outlives their sign-out, and isn't anyone else's", async () => {
   const { setPrefs, usePrefs } = await import("./prefs.ts");
   const { signedIn, signedOut } = await import("./session.ts");
-  signedIn({ id: "u", name: "A", email: "a@acme.test", role: "owner" });
-  setPrefs({ shareUsage: true });
+  signedIn({ id: "u-alex", name: "A", email: "a@acme.test", role: "owner" });
+  setPrefs({ shareUsageFor: "u-alex" });
   signedOut();
-  assert.equal(usePrefs.getState().shareUsage, false);
+  // Kept, but by id: Sam signing in next doesn't share on Alex's yes (main.tsx compares the ids).
+  assert.equal(usePrefs.getState().shareUsageFor, "u-alex");
 });
 
 test("leaving for another workspace leaves an open record and a project filter for the list", async () => {

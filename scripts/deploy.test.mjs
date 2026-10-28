@@ -58,3 +58,10 @@ test("a collector's URL is held to the same rule as the API's", () => {
   assert.equal(r.status, 1);
   assert.match(r.stderr, /REPORT_URL must be an http\(s\) URL/);
 });
+
+test("every response keeps other windows and sites out: COOP and CORP same-origin", () => {
+  const r = start({ MOCK: "1" });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.conf(), /Cross-Origin-Opener-Policy "same-origin"/);
+  assert.match(r.conf(), /Cross-Origin-Resource-Policy "same-origin"/);
+});

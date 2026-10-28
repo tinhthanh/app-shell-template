@@ -1,5 +1,5 @@
 import { ChevronDownIcon, LogOutIcon, MenuIcon, PanelLeftCloseIcon, SearchIcon } from "lucide-react";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { toastError } from "@/components/error-note";
 import { ink, inkScale } from "@/components/ink";
@@ -112,6 +112,12 @@ const ProjectsColumn = lazyView(() => import("@/views/projects/projects-column")
 
 function SidebarSheet() {
   const kind = useStore((s) => s.view.kind);
+  // Back online, a list that couldn't load tries again (its boundary starts afresh).
+  const [online, cameBack] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    window.addEventListener("online", cameBack);
+    return () => window.removeEventListener("online", cameBack);
+  }, []);
   const role = useSession((s) => s.user?.role);
   return (
     <div data-testid="sidebar-sheet" className="flex min-w-0 flex-1 flex-col rounded-ss-xl border-sidebar-border border-s border-t bg-background">
@@ -128,7 +134,7 @@ function SidebarSheet() {
         </button>
       </div>
       {/* A column that can't load (offline before it was fetched) leaves Recent in its place, not a broken app. */}
-      <ErrorBoundary key={kind} scope={t("shell.sidebar")} fallback={<Recent />}>
+      <ErrorBoundary key={`${kind}:${online}`} scope={t("shell.sidebar")} fallback={<Recent />}>
         <Suspense>{kind === "projects" ? <ProjectsColumn /> : <Recent />}</Suspense>
       </ErrorBoundary>
       <div className="mt-auto px-edge pb-2">

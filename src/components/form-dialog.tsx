@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { confirm } from "@/components/confirm";
 import { toastError } from "@/components/error-note";
@@ -49,6 +49,18 @@ export function FormDialog({ trigger, icon, label, title, description, initial, 
     const value = (v: FormDataEntryValue | null) => (v instanceof File ? (v.size || v.name ? v.name : "") : String(v ?? ""));
     return Object.keys(initial).some((k) => value(f.get(k)) !== initial[k]);
   };
+  // A reload or a closed tab with edits in the fields asks first, as closing
+  // the dialog does (the browser says it in its own words).
+  useEffect(() => {
+    if (!open) return;
+    const stay = (e: BeforeUnloadEvent) => {
+      if (!dirty()) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", stay);
+    return () => window.removeEventListener("beforeunload", stay);
+  });
   const close = () => {
     setOpen(false);
     setErrors({});

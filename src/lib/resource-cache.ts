@@ -105,6 +105,12 @@ export function invalidate(listKey: string) {
   for (const [k, set] of readers) if (k === base || k.startsWith(`${base}?`)) for (const read of [...set]) read();
 }
 
+// readAgainOnScreen has everything on screen read again, behind what it
+// shows (lib/return.ts calls it when the person comes back).
+export function readAgainOnScreen() {
+  for (const set of readers.values()) for (const read of [...set]) read();
+}
+
 // rowIn finds a row in a kept list, whole or a page at a time.
 function rowIn<T extends { id: string }>(list: T[] | Page<T> | undefined, id: string): T | undefined {
   const rows = Array.isArray(list) ? list : list?.items;

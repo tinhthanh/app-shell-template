@@ -206,9 +206,13 @@ function WorkspaceProjects() {
   );
   // The bar goes when the picks do: the keyboard goes back to the list's row,
   // not to the page (it was on the bar's button).
-  const letGo = () => {
+  // After a confirm, later than its own focus rescue (components/confirm.tsx),
+  // which would otherwise send the keyboard to the page.
+  const letGo = (after = 0) => {
     setPicked(new Set());
-    requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid=projects] [data-slot=data-table] tbody tr[tabindex="0"]')?.focus());
+    const toRow = () => document.querySelector<HTMLElement>('[data-testid=projects] [data-slot=data-table] tbody tr[tabindex="0"]')?.focus();
+    if (after) window.setTimeout(toRow, after);
+    else requestAnimationFrame(toRow);
   };
 
   const setPickedStatus = (status: ProjectStatus) => {
@@ -243,7 +247,7 @@ function WorkspaceProjects() {
         for (const id of gone) forget(key(id));
         dropRows(lk, gone);
         setPrefs({ recent: usePrefs.getState().recent.filter((r) => !gone.includes(r.id)) });
-        letGo();
+        letGo(120);
         toastManager.add({ type: "success", title: t("projects.bulk.deleted", { n: gone.length }) });
         if (failed.length) toastError(failed[0], t("projects.bulk.deleteFailed", { n: failed.length }));
       },
@@ -266,7 +270,7 @@ function WorkspaceProjects() {
         }
       />
       {selected.size > 0 ? (
-        <BulkBar count={selected.size} onClear={letGo}>
+        <BulkBar count={selected.size} onClear={() => letGo()}>
           {canEdit && (
             <Menu>
               <MenuTrigger render={<Button size="sm" variant="outline" data-testid="bulk-status" />}>

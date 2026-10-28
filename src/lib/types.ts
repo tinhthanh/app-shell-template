@@ -113,6 +113,20 @@ export interface ProjectQuery {
   limit?: number;
 }
 
+// What making a project sends, and what changing one may.
+export interface ProjectInput {
+  name: string;
+  description: string;
+  workspace?: string;
+}
+
+export interface ProjectPatch {
+  name?: string;
+  description?: string;
+  status?: ProjectStatus;
+  tags?: string[];
+}
+
 // ---- The second resource: tasks ---------------------------------------------
 // A task is a workspace's too, and shows the fields beyond words: a due day,
 // a record it points at (its project) and a file (views/tasks/).

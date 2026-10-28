@@ -74,7 +74,7 @@ export function interfaceFields(source, name) {
 // parameters or request body, so renaming a field on one side fails the
 // check instead of quietly sending what the server doesn't read.
 export const QUERIES = { projects: "ProjectQuery", tasks: "TaskQuery" };
-export const BODIES = { createTask: "TaskInput", updateTask: "TaskInput" };
+export const BODIES = { createProject: "ProjectInput", updateProject: "ProjectPatch", createTask: "TaskInput", updateTask: "TaskInput" };
 
 // clientMethods is the methods of the Client interface in api.ts.
 export function clientMethods(source) {

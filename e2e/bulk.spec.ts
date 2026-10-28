@@ -98,3 +98,12 @@ test("letting the picks go leaves the keyboard on the list, not on the page", as
   await expect(app.page.getByTestId("bulk-bar")).toHaveCount(0);
   await expect(app.page.locator("[data-testid=project-row]:focus")).toHaveCount(1);
 });
+
+test("after a bulk delete the keyboard is on the list's row, not the page", async ({ app }) => {
+  await app.open({ hash: "/projects" });
+  await row(app, "p-shop").getByTestId("select-row").click();
+  await app.page.getByTestId("bulk-bar").getByRole("button", { name: "Delete" }).click();
+  await app.page.getByTestId("confirm").getByRole("button", { name: "Delete" }).click();
+  await expect(row(app, "p-shop")).toHaveCount(0);
+  await expect(app.page.locator("[data-testid=project-row]:focus")).toHaveCount(1);
+});

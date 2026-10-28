@@ -50,10 +50,15 @@ export function RecordPicker({
   // id) is shown in place: the field isn't drawn again, so the keyboard stays.
   const initialId = initial?.id;
   const initialName = initial?.name;
+  // A name not known yet (only the id) keeps the one shown for that id.
   useEffect(() => {
-    const next = initialId ? { id: initialId, name: initialName ?? initialId } : null;
-    setValue(next);
-    if (next) setItems((now) => [next, ...now.filter((p) => p.id !== next.id)]);
+    setValue((shown) => {
+      if (!initialId) return null;
+      const known = initialName && initialName !== initialId ? initialName : shown?.id === initialId ? shown.name : initialId;
+      const next = { id: initialId, name: known };
+      setItems((now) => [next, ...now.filter((p) => p.id !== next.id)]);
+      return next;
+    });
   }, [initialId, initialName]);
   const [failed, setFailed] = useState(false);
   // The latest find, so a new closure each render doesn't ask again; what is asked is the query.

@@ -30,6 +30,11 @@ the end the person is signed out, the sign-in page saying why
 (`lib/tabs.ts`): a sign-out in one signs out every one, a sign-in has a
 tab on the sign-in page ask `me()` again. Still nothing in storage.
 
+**Since (2026-10-28).** Every write carries `X-Requested-With:
+XMLHttpRequest`; a server on the session cookie refuses a write without it,
+so a cross-site form or script can't make one (CSRF). The session cookie is
+`HttpOnly; Secure; SameSite=Lax`.
+
 **Revisit if.** The app needs sessions without a cookie at all (then: a
 refresh token in memory, handed between tabs over the same channel, still
 not storage).
