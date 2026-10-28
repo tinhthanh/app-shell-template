@@ -161,3 +161,10 @@ test("Hide done tasks is kept, and the Tasks list then opens without them", asyn
   await app.open({ hash: "/tasks" });
   await expect(app.page).toHaveURL(/done=hide/);
 });
+
+test("a second open with other prefs starts with those, though only the address after its # differs", async ({ app }) => {
+  await app.open({ prefs: { density: "comfortable" } });
+  await expect(app.page.locator("html")).toHaveAttribute("data-density", "comfortable");
+  await app.open({ prefs: { density: "compact" }, hash: "/tasks" });
+  await expect(app.page.locator("html")).toHaveAttribute("data-density", "compact");
+});

@@ -2,7 +2,7 @@
 import { type RuntimeConfig, runtime } from "./config.ts";
 import { ApiError } from "./errors.ts";
 import { refreshed as sessionRefreshed, signedOut } from "./session.ts";
-import type { Attachment, Page, Project, ProjectInput, ProjectPatch, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, User, Workspace } from "./types.ts";
+import type { Attachment, Page, Project, ProjectInput, ProjectPatch, ProjectQuery, SearchHit, Task, TaskInput, TaskQuery, TaskSummary, User, Workspace } from "./types.ts";
 
 // What a read can be given: a signal that calls it off when its answer is
 // no longer wanted (another filter, a view that left; lib/resource.ts).
@@ -34,7 +34,7 @@ export interface Client {
   deleteProject(id: string): Promise<void>;
   // A page of the tasks that match, and one task; making, changing and
   // deleting one (its project and file by id, null to take them off).
-  tasks(query?: TaskQuery, o?: ReadOptions): Promise<Page<Task>>;
+  tasks(query?: TaskQuery, o?: ReadOptions): Promise<Page<Task, TaskSummary>>;
   task(id: string, o?: ReadOptions): Promise<Task>;
   createTask(input: TaskInput & { title: string }): Promise<Task>;
   updateTask(id: string, patch: TaskInput): Promise<Task>;

@@ -46,6 +46,8 @@ voice (`i18n.test.ts` holds the tone marks to it):
 | one sentence per status in a bulk toast | {n} dự án hiện đang {status} | a state word dropped into a sentence doubles words ("đang đang hoạt động") |
 | công việc, bản phát hành, phiên bản, ngày phát hành, tệp | nhiệm vụ, release, version, file | tasks, releases, a version, a ship date, a file |
 | hạn, trễ hạn | deadline, quá hạn | a due day, and one that has passed |
+| hóa đơn, số tiền, tiền tệ, ngày phát hành, hạn thanh toán | invoice, bill, currency | money: an invoice, its amount, its currency, its issue and due days |
+| đã thanh toán; Lập hóa đơn (a Settings section) | Thanh toán (for the section) | "paid" is đã thanh toán; a Billing section is Lập hóa đơn, so the two never read the same |
 
 A count is `{n, plural, …}` in English and plain `{n} …` in Vietnamese,
 which has one form (`Đã chọn {n}`, `{n} dự án`).

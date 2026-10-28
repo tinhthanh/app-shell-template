@@ -11,17 +11,20 @@ export const PAGE_SIZE = 50;
 // pageOf cuts one page out of rows a server has already filtered and
 // sorted. The cursor is the offset as a string; one that isn't a number
 // starts at the top.
-export function pageOf<T>(rows: T[], cursor?: string, limit = PAGE_SIZE): Page<T> {
+// summary is what the server says about every match (Page.summary).
+export function pageOf<T, S = undefined>(rows: T[], cursor?: string, limit = PAGE_SIZE, summary?: S): Page<T, S> {
   const start = Math.max(0, Number.parseInt(cursor ?? "0", 10) || 0);
   const end = start + Math.max(1, limit);
-  return { items: rows.slice(start, end), total: rows.length, ...(end < rows.length ? { next: String(end) } : {}) };
+  return { items: rows.slice(start, end), total: rows.length, ...(end < rows.length ? { next: String(end) } : {}), ...(summary !== undefined ? { summary } : {}) };
 }
 
 // appendPage puts the next page after the pages read so far. A row that
 // moved between the two reads (a record created above it) is not shown twice.
-export function appendPage<T extends { id: string }>(sofar: Page<T>, more: Page<T>): Page<T> {
+// The newest page's total and summary are the ones that hold.
+export function appendPage<T extends { id: string }, S = undefined>(sofar: Page<T, S>, more: Page<T, S>): Page<T, S> {
   const seen = new Set(sofar.items.map((r) => r.id));
-  return { items: [...sofar.items, ...more.items.filter((r) => !seen.has(r.id))], total: more.total, ...(more.next ? { next: more.next } : {}) };
+  const summary = more.summary ?? sofar.summary;
+  return { items: [...sofar.items, ...more.items.filter((r) => !seen.has(r.id))], total: more.total, ...(more.next ? { next: more.next } : {}), ...(summary !== undefined ? { summary } : {}) };
 }
 
 // editRows changes a kept list's rows, whether it is kept whole (T[]) or as

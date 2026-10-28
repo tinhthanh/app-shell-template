@@ -169,6 +169,12 @@ export interface TaskInput {
   workspace?: string;
 }
 
+// What a page of tasks says about all the tasks that match.
+export interface TaskSummary {
+  // How many are past their day and not done.
+  late: number;
+}
+
 export interface TaskQuery {
   workspace?: string;
   q?: string;
@@ -185,12 +191,15 @@ export interface TaskQuery {
 
 // ---- A list a page at a time (lib/pages.ts) --------------------------------
 
-export interface Page<T> {
+export interface Page<T, S = undefined> {
   items: T[];
   // Where the next page starts; absent on the last.
   next?: string;
   // How many match in all, for the count and a screen reader.
   total: number;
+  // What the server worked out over every match, not only this page (the
+  // late tasks; a list of money's totals): never summed from the rows read.
+  summary?: S;
 }
 
 // ---- Who is signed in (lib/session.ts) ------------------------------------
@@ -215,6 +224,9 @@ export interface SearchHit {
   kind: "project" | "task";
   id: string;
   name: string;
-  // A line under the name: the owner, the status.
+  // A line under the name: the owner, the project.
   detail?: string;
+  // The record's status as the server has it ("paused"), for the palette to
+  // say in the person's language (lib/nav.tsx RECORD_KINDS state).
+  status?: string;
 }

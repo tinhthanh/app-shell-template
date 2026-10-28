@@ -5,6 +5,11 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Tasks says how many of every match are late ("6 tasks · 1 late"), worked out by the server rather than from the rows read so far.
+- ⌘K says a record's status in the person's language.
+- A list's sort reads as itself in the address (sort=due:asc).
+- A list with a project filter no longer loses its first read to the filter, so a server that fails once shows Try again there as anywhere.
+
 - Coming back to the app after a while (another window, a closed laptop, the network back) reads what is on screen again, so a list isn't left stale.
 - A reload or a closed tab with edits in a form asks first.
 - Every save carries a header that a server can require against cross-site requests, and the container sends cross-origin isolation headers.

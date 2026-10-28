@@ -33,10 +33,23 @@ const PLACES = {
 // The kinds of record the palette finds (SearchHit's kind): the group they
 // are listed under, their icon, and the view one opens on. One entry per
 // kind, so a new kind without one fails to compile.
+// state is a hit's status in the person's language (read in render), or
+// nothing for one the app has no word for.
+const said = (words: Record<string, Key>) => (status: string) => (status in words ? t(words[status] as Key) : "");
 export const RECORD_KINDS = {
-  project: { group: "shell.records.projects", icon: <FolderKanbanIcon />, view: (id: string): View => ({ kind: "projects", id }) },
-  task: { group: "shell.records.tasks", icon: <ListTodoIcon />, view: (id: string): View => ({ kind: "tasks", id }) },
-} satisfies Record<SearchHit["kind"], { group: Key; icon: ReactNode; view(id: string): View }>;
+  project: {
+    group: "shell.records.projects",
+    icon: <FolderKanbanIcon />,
+    view: (id: string): View => ({ kind: "projects", id }),
+    state: said({ active: "projects.state.active", paused: "projects.state.paused", archived: "projects.state.archived" }),
+  },
+  task: {
+    group: "shell.records.tasks",
+    icon: <ListTodoIcon />,
+    view: (id: string): View => ({ kind: "tasks", id }),
+    state: said({ todo: "tasks.state.todo", doing: "tasks.state.doing", done: "tasks.state.done" }),
+  },
+} satisfies Record<SearchHit["kind"], { group: Key; icon: ReactNode; view(id: string): View; state(status: string): string }>;
 
 export function places(): Place[] {
   // The label is read here, at render, so it is in the language in use.

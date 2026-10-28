@@ -87,13 +87,13 @@ export interface More {
 //
 //   const projects = usePages((page, signal) => client.projects({ ...listOf(view), ...page }, { signal }), { key: `projects${listQuery(listOf(view))}` });
 //   <DataTable rows={projects.data.items} total={projects.data.total} more={projects.more} … />
-export function usePages<T extends { id: string }>(
-  read: (page: { cursor?: string; limit: number }, signal?: AbortSignal) => Promise<Page<T>>,
+export function usePages<T extends { id: string }, S = undefined>(
+  read: (page: { cursor?: string; limit: number }, signal?: AbortSignal) => Promise<Page<T, S>>,
   opts: { key: string },
-): Resource<Page<T>> & { more: More } {
+): Resource<Page<T, S>> & { more: More } {
   const key = opts.key;
   // biome-ignore lint/correctness/useExhaustiveDependencies: the key names what read asks for; read is a new closure every render.
-  const first = useResource((signal) => read({ limit: Math.max(PAGE_SIZE, cached<Page<T>>(key)?.items.length ?? 0) }, signal), [key], { key });
+  const first = useResource((signal) => read({ limit: Math.max(PAGE_SIZE, cached<Page<T, S>>(key)?.items.length ?? 0) }, signal), [key], { key });
   const [more, setMore] = useState<{ key: string; status: "loading" | "failed" }>();
   const asked = useRef<string>(undefined);
   const cursor = first.status === "ready" ? first.data.next : undefined;
@@ -108,7 +108,7 @@ export function usePages<T extends { id: string }>(
       (page) => {
         if (asked.current !== ask) return;
         asked.current = undefined;
-        mutate<Page<T>>(key, (sofar) => (sofar && sofar.next === cursor ? appendPage(sofar, page) : sofar));
+        mutate<Page<T, S>>(key, (sofar) => (sofar && sofar.next === cursor ? appendPage(sofar, page) : sofar));
         setMore(undefined);
       },
       () => {

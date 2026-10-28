@@ -74,3 +74,18 @@ export function fileSize(bytes: number, locale: string = lang()): string {
   const [n, unit] = bytes < 1000 ? [bytes, "byte"] : bytes < 1_000_000 ? [bytes / 1000, "kilobyte"] : [bytes / 1_000_000, "megabyte"];
   return new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: 1 }).format(n);
 }
+
+// totalsOf adds amounts up by currency, never across them: three invoices in
+// USD and one in VND are two totals, each to show with money(), in the order
+// of the most used currency first. A sum across currencies only means
+// something converted at a stated rate (AGENTS.md › Dates, numbers and money).
+export function totalsOf(rows: readonly { amount: number; currency: string }[]): { currency: string; amount: number; count: number }[] {
+  const by = new Map<string, { currency: string; amount: number; count: number }>();
+  for (const r of rows) {
+    const t = by.get(r.currency) ?? { currency: r.currency, amount: 0, count: 0 };
+    t.amount += r.amount;
+    t.count += 1;
+    by.set(r.currency, t);
+  }
+  return [...by.values()].sort((a, b) => b.count - a.count || a.currency.localeCompare(b.currency));
+}

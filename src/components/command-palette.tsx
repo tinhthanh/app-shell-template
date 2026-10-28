@@ -119,7 +119,15 @@ export function CommandPalette() {
         value: t(k.group),
         items: hits
           .filter((h) => h.kind === kind)
-          .map((h): Item => ({ value: `record:${h.kind}:${h.id}`, label: h.name, icon: k.icon, detail: h.detail, run: () => useStore.getState().setView(k.view(h.id)) })),
+          .map(
+            (h): Item => ({
+              value: `record:${h.kind}:${h.id}`,
+              label: h.name,
+              icon: k.icon,
+              detail: [h.detail, h.status && k.state(h.status)].filter(Boolean).join(" · ") || undefined,
+              run: () => useStore.getState().setView(k.view(h.id)),
+            }),
+          ),
       }))
       .filter((g) => g.items.length);
     const themeItems: Item[] = themes.map((th) => ({

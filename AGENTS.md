@@ -155,10 +155,14 @@ configs or these rules without the `guardrail-change` label.
   page is the exception.
 - **Dates, numbers and money go through `src/lib/format.ts`** (`ago`, `date`,
   `dateTime`, `day` for a day with no time such as a due day, `fileSize`, `number`, `money`): Intl, in the person's language; never a
-  hand-written format. An amount shown in another currency than it is
-  kept in is converted before `money()`, and says so wherever it shows
-  (a word in the column's header, a `<Tip>`); the PR says where the rate
-  comes from.
+  hand-written format. Amounts in different currencies are never added or
+  compared as bare numbers: a total is one per currency (`totalsOf`), a sort
+  by amount groups by currency first, unless they are converted. An amount
+  shown in another currency than it is kept in is converted before
+  `money()`, and says so wherever it shows (a word in the column's header, a
+  `<Tip>`); the PR says where the rate comes from. A list's total or count
+  over every match is the server's, in its page's `summary` (`Page`,
+  lib/types.ts; Tasks' late count), never summed from the rows read so far.
 - **What a host configures is `lib/config.ts`** (config.js, `docs/deploy.md`):
   a feature a deployment may turn off is a flag in `FLAGS` (`lib/flags.ts`),
   read with `flag(id)`; a usage event is a line in `EVENTS`
@@ -276,6 +280,13 @@ behaviour is proven in `e2e/`.
   its baselines and its `pnpm shots` picture; `pnpm check:views` refuses a
   view kind, home and missing aside, with no scene whose hash starts with `#/<kind>`);
   a behaviour test.
+- **Whose setting it is:** a setting a task calls the workspace's or the
+  team's is the server's, not this browser's: a field on `Workspace`
+  (`types.ts`, `api/openapi.json`), a write behind an action such as
+  `workspace.edit` in `ACTIONS`, read through `useWorkspaces`. Where there is
+  no server to own it yet, a pref keyed by the workspace's id
+  (`prefs.<x>ByWorkspace[id]`) is the fallback, said under Assumptions. A
+  person's own choice (density, language) is a pref.
 - **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
   nested object is merged in the initialiser, as `systemThemes` is); a
   `SettingsRow` in a section; `applyUiPrefs` if it changes layout. A new

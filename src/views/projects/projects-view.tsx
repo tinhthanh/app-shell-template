@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { BulkBar } from "@/components/bulk-bar";
 import { setStatuses } from "@/components/bulk-status";
 import { confirm } from "@/components/confirm";
-import { type Column, DataTable } from "@/components/data-table";
+import { type Column, DataTable, focusRow } from "@/components/data-table";
 import { DetailPage } from "@/components/detail-page";
 import { ErrorNote, toastError } from "@/components/error-note";
 import { FilterChip } from "@/components/filter-chip";
@@ -210,9 +210,7 @@ function WorkspaceProjects() {
   // which would otherwise send the keyboard to the page.
   const letGo = (after = 0) => {
     setPicked(new Set());
-    const toRow = () => document.querySelector<HTMLElement>('[data-testid=projects] [data-slot=data-table] tbody tr[tabindex="0"]')?.focus();
-    if (after) window.setTimeout(toRow, after);
-    else requestAnimationFrame(toRow);
+    focusRow("[data-testid=projects]", after);
   };
 
   const setPickedStatus = (status: ProjectStatus) => {

@@ -273,7 +273,7 @@ test("a header sorts the list up, down, then not at all, and the sort is in the 
   const table = app.page.getByRole("table", { name: "Projects" });
   const first = () => table.getByTestId("project-row").first().getAttribute("data-project");
   await table.getByRole("button", { name: "Name" }).click();
-  await expect(app.page).toHaveURL(/sort=name(:|%3A)asc$/);
+  await expect(app.page).toHaveURL(/sort=name:asc$/);
   await expect(table.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "ascending");
   await expect.poll(first).toBe("p-android");
   await table.getByRole("button", { name: "Name" }).click();
