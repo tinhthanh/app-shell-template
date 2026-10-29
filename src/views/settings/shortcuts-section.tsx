@@ -4,7 +4,7 @@ import { SearchField } from "@/components/search-field";
 import { Kbd } from "@/components/ui/kbd";
 import { t } from "@/lib/i18n";
 import { platformKeys } from "@/lib/platform";
-import { describe, groupName, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts";
+import { groupName, SHORTCUT_GROUPS, SHORTCUTS, shortcutName } from "@/lib/shortcuts";
 import { SettingsGroup, SettingsPage, SettingsRow } from "@/views/settings/rows";
 
 // Every shortcut, searchable, grouped; the same table as the Keyboard
@@ -14,7 +14,7 @@ export function ShortcutsSection() {
   const q = query.trim().toLowerCase();
   const grouped = SHORTCUT_GROUPS.map((title) => ({
     title,
-    items: SHORTCUTS.filter((s) => s.group === title && (!q || describe(s).toLowerCase().includes(q) || platformKeys(s.keys).toLowerCase().includes(q))),
+    items: SHORTCUTS.filter((s) => s.group === title && (!q || shortcutName(s).toLowerCase().includes(q) || platformKeys(s.keys).toLowerCase().includes(q))),
   })).filter((g) => g.items.length > 0);
 
   return (
@@ -24,7 +24,7 @@ export function ShortcutsSection() {
       {grouped.map((g) => (
         <SettingsGroup key={g.title} title={groupName(g.title)}>
           {g.items.map((s) => (
-            <SettingsRow key={s.id} label={describe(s)}>
+            <SettingsRow key={s.id} label={shortcutName(s)}>
               <Kbd>{s.keys}</Kbd>
             </SettingsRow>
           ))}

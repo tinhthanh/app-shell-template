@@ -8,12 +8,29 @@ import { type ComponentType, lazy, useState } from "react";
 // blank frame on a first visit). Render it under a <Suspense>.
 const loaders: (() => Promise<unknown>)[] = [];
 
+// What a lazy view keeps: its code once loaded, and the lazy that loads it
+// (made afresh after a failure, so the next visit really tries again).
+interface Entry<P> {
+  loaded?: ComponentType<P>;
+  lazy: ComponentType<P>;
+}
+
+// Shown draws a lazy view: the loaded code at once when it is in, else the
+// lazy under the caller's Suspense. Chosen once per mount: switching from the
+// lazy to the loaded code under a mounted view would remount it. At module
+// level, so React sees one component however many views there are.
+function Shown<P extends object>({ entry, props }: { entry: Entry<P>; props: P }) {
+  const [Ready] = useState(() => entry.loaded);
+  const Lazy = entry.lazy;
+  return Ready ? <Ready {...props} /> : <Lazy {...props} />;
+}
+
 export function lazyView<P extends object>(load: () => Promise<ComponentType<P>>): ComponentType<P> {
-  let loaded: ComponentType<P> | undefined;
   let pending: Promise<ComponentType<P>> | undefined;
+  const entry = {} as Entry<P>;
   const get = () =>
     (pending ??= load().then(
-      (c) => (loaded = c),
+      (c) => (entry.loaded = c),
       (err) => {
         // A failed fetch can be tried again on the next visit.
         pending = undefined;
@@ -21,26 +38,19 @@ export function lazyView<P extends object>(load: () => Promise<ComponentType<P>>
       },
     ));
   loaders.push(get);
-  // React keeps a lazy's failure for good, so a failed one is made afresh:
-  // the next visit (back online) really tries again.
+  // React keeps a lazy's failure for good, so a failed one is made afresh.
   const make = (): ComponentType<P> =>
     lazy(() =>
       get().then(
         (c) => ({ default: c }),
         (err) => {
-          Lazy = make();
+          entry.lazy = make();
           throw err;
         },
       ),
     );
-  let Lazy = make();
-  function View(props: P) {
-    // Chosen once per mount: switching from Lazy to the loaded component
-    // under a mounted view would remount it.
-    const [Ready] = useState(() => loaded);
-    return Ready ? <Ready {...props} /> : <Lazy {...props} />;
-  }
-  return View;
+  entry.lazy = make();
+  return (props: P) => <Shown entry={entry} props={props} />;
 }
 
 // preloadViews loads every lazy view's code a while after the app starts,

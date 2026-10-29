@@ -6,7 +6,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Sheet, SheetDescription, SheetFooter, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { ZoomHud } from "@/components/zoom-hud";
 import { t } from "@/lib/i18n";
-import { describe, groupName, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts";
+import { groupName, SHORTCUT_GROUPS, SHORTCUTS, shortcutName } from "@/lib/shortcuts";
 import { openSettings } from "@/lib/store";
 
 // The Keyboard shortcuts sheet (⌘/, or from the palette): every shortcut,
@@ -37,7 +37,7 @@ export function ShortcutsSheet() {
               <ul className="flex flex-col">
                 {SHORTCUTS.filter((s) => s.group === group).map((s) => (
                   <li key={s.id} className="flex min-h-side-row items-center gap-2 border-b border-dashed py-0.5 text-body last:border-b-0">
-                    <span className="min-w-0 flex-1 truncate">{describe(s)}</span>
+                    <span className="min-w-0 flex-1 truncate">{shortcutName(s)}</span>
                     <Kbd className="text-foreground/80">{s.keys}</Kbd>
                   </li>
                 ))}
