@@ -321,7 +321,7 @@ behaviour is proven in `e2e/`.
   (`src/hooks/use-shortcuts.ts`); an item in the palette if it should be
   searchable; `announce()` what it did when nothing shows on screen; and
   its name, `settings.shortcut.<id>`, in English and Vietnamese
-  (`src/lib/messages/settings.ts`, read by `describe` in `shortcuts.ts`).
+  (`src/lib/messages/settings.ts`, read by `shortcutName` in `shortcuts.ts`).
 - **A theme:** a `Theme` in `src/themes/builtin.ts` (colours and the full
   terminal palette; a unique id); `pnpm check:themes` must pass
   (`THEME_REPORT=1` prints the margins; nudge lightness only, and note it);

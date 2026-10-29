@@ -145,7 +145,7 @@ the person does it.
 press is (⌘ on a Mac, Ctrl elsewhere, from the browser's platform or
 `?platform=`); `hooks/use-shortcuts.ts` does it; the sheet and Settings
 list it. Key hints are written for a Mac and `<Kbd>` rewrites them.
-Each shortcut's name is a word, `settings.shortcut.<id>` (`describe` in
+Each shortcut's name is a word, `settings.shortcut.<id>` (`shortcutName` in
 `lib/shortcuts.ts`).
 
 ## Settings

@@ -28,10 +28,10 @@ export const SHORTCUTS = table.shortcuts as Shortcut[];
 // The order the lists follow.
 export const SHORTCUT_GROUPS: ShortcutGroup[] = ["Go", "View", "Help"];
 
-// describe is what a list of shortcuts calls one, in the language in use.
+// shortcutName is what a list of shortcuts calls one, in the language in use.
 // keys.test.ts holds the table's ids to ShortcutId, and the template's
 // type holds each to a word in lib/messages/settings.ts.
-export const describe = (s: Shortcut) => t(`settings.shortcut.${s.id as ShortcutId}`);
+export const shortcutName = (s: Shortcut) => t(`settings.shortcut.${s.id as ShortcutId}`);
 
 // groupName is a group's heading, in the language in use.
 export const groupName = (g: ShortcutGroup) => t(`settings.shortcutGroup.${g}`);
