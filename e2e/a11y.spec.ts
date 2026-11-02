@@ -112,7 +112,7 @@ const scenes: { id: string; run(app: App): Promise<void> }[] = [
       const dialog = app.page.getByRole("dialog", { name: "Edit the project" });
       await dialog.getByRole("textbox", { name: "Name" }).fill("");
       await dialog.getByRole("button", { name: "Save" }).click();
-      await expect(dialog.getByText("A project needs a name.")).toBeVisible();
+      await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("A project needs a name.");
     },
   },
   {

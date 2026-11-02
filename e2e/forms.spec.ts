@@ -27,7 +27,7 @@ test("a record the form can't do without is asked for in the app's words, and on
   await app.page.getByRole("button", { name: "Open a form" }).click();
   const dialog = app.page.getByRole("dialog", { name: "New report" });
   await dialog.getByRole("button", { name: "Create" }).click();
-  await expect(dialog.getByText("A report needs an owner.")).toBeVisible();
+  await expect(dialog.getByTestId("picker-owner")).toHaveAccessibleDescription(/A report needs an owner\./);
   await dialog.getByTestId("picker-owner").fill("shop");
   await app.page.getByRole("option", { name: "Shop" }).click();
   await dialog.getByRole("button", { name: "Create" }).click();

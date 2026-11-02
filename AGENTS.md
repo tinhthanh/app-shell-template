@@ -39,8 +39,9 @@ the PR:
 ```sh
 pnpm check                                   # typecheck, lint, check:titles, check:words, check:type, check:grid, check:node, check:views, check:csp, check:contract, check:themes, test, build, check:size
 pnpm test:coverage                           # the node-run modules: lines 90%, branches and functions 80% (CI runs it)
-E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs you touched: builds first, then Playwright
-E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts --repeat-each=5   # before calling a flake fixed
+pnpm test:e2e e2e/x.spec.ts                  # the specs you touched: builds first, then Playwright on a free port
+pnpm test:e2e e2e/x.spec.ts --repeat-each=5  # before calling a flake fixed
+pnpm shots '#/x'                             # a UI change: the pictures in shots/; open them and look (--phone for 375 wide)
 pnpm test:visual                             # when the look changed: the screenshots against e2e/snapshots/ (Docker on a Mac)
 pnpm test:visual --update                    # …and the new baselines, committed with the change
 node scripts/take-ci-baselines.mjs           # no Docker: after a push, CI's own renderings and their diffs; --take writes them
@@ -85,7 +86,9 @@ both.
    baselines (`pnpm test:visual --update`, or CI's through
    `node scripts/take-ci-baselines.mjs --take`), and the PR shows them.
 4. A UI change has a screenshot in Default Dark and Default Light
-   (`pnpm shots` writes them to `shots/`), and its axe scene is updated; a
+   (`pnpm shots` writes them to `shots/`; `--phone` at a phone's width),
+   which you have opened and looked at: a clipped label, a lost margin or a
+   row that wraps passes every test. Its axe scene is updated; a
    new kit component gets a Kit section, a new view or settings section an
    axe scene.
 5. A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`.
@@ -124,8 +127,9 @@ configs or these rules without the `guardrail-change` label.
 
 ## Rules
 
-- **Ports:** 1420 is the dev server. Playwright uses `E2E_PORT` in
-  1421–1439; check the port is free first (`lsof -nP -iTCP:1427 -sTCP:LISTEN`).
+- **Ports:** 1420 is the dev server. `pnpm test:e2e` and `pnpm shots` take
+  the first free port in 1421–1439 (`scripts/free-port.mjs`), so runs in
+  two worktrees don't meet; `E2E_PORT` picks one by hand.
 - **Kill only PIDs you started.** No `pkill node`, `pkill vite` or the like.
 - **No `title=`** on anything interactive or that carries meaning (an icon,
   a badge); use `<Tip>`. Plain truncated text may keep one (`check:titles`).
@@ -248,8 +252,11 @@ configs or these rules without the `guardrail-change` label.
 - **Browser tests** import `test` and `expect` from `./fixtures` (it refuses
   page errors and requests off the page), wait on what they expect
   (`toBeVisible`, `expect.poll`), never on time, and use `data-testid` or
-  roles, never text that moves. One behaviour per test, named as a sentence
-  about what the user gets.
+  roles, never text that moves. A state is asserted where it lives (the
+  chosen option's `aria-pressed`, a refusal as its field's
+  `toHaveAccessibleDescription`), never as text found somewhere nearby,
+  which a label of the same word satisfies. One behaviour per test, named
+  as a sentence about what the user gets.
 - **Edit `src/components/ui/` in place** (it was installed from the coss
   registry, `components.json`); re-adding a component from the registry
   overwrites local edits, so diff first.

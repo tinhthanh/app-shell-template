@@ -50,7 +50,7 @@ export function report(list, step) {
   const lines = ["<!-- ci-failures -->", "## CI: what failed", ""];
   if (step) lines.push(`The **${step}** step failed.`, "");
   if (list.length) {
-    lines.push(`${list.length} browser test${list.length === 1 ? "" : "s"} failed (run them with \`E2E_PORT=1427 pnpm test:e2e <spec>\`):`, "");
+    lines.push(`${list.length} browser test${list.length === 1 ? "" : "s"} failed (run them with \`pnpm test:e2e <spec>\`):`, "");
     for (const f of list.slice(0, MAX)) lines.push(`- \`${f.file}\` › ${f.name}${f.message ? `\n  \`${f.message}\`` : ""}`);
     if (list.length > MAX) lines.push(`- …and ${list.length - MAX} more; the e2e-report artifact has them all.`);
     if (list.some((f) => f.file === "e2e/visual.spec.ts"))

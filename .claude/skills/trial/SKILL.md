@@ -20,8 +20,6 @@ git worktree add ../app-shell-trial -b trial/<task> main
 cd ../app-shell-trial && CI=true pnpm install --frozen-lockfile   # its own node_modules, never a symlink
 ```
 
-Pick a free port in 1421–1439 for its browser tests (`lsof -nP -iTCP:14xx -sTCP:LISTEN`).
-
 ## 2. The task
 
 A feature that crosses the recipes: a resource (list, detail, a form
@@ -41,8 +39,8 @@ Start it on the worktree, with the repo as its only source. The prompt:
 >
 > Your task, as a product owner would phrase it: "<the task>"
 >
-> Rules: use `npx pnpm@11` if pnpm is not on PATH; use `E2E_PORT=<port>`
-> for browser tests; never use ports 1420 or 1377–1379; kill only
+> Rules: use `npx pnpm@11` if pnpm is not on PATH; never use ports 1420 or
+> 1377–1379 (the browser tests find a free port of their own); kill only
 > processes you started. Do not push and do not open a pull request (so
 > the visual baselines can't be taken: do what AGENTS.md › Checks says
 > when there is no Docker and no push):

@@ -1,8 +1,10 @@
+import { spawnSync } from "node:child_process";
 import { defineConfig, devices } from "@playwright/test";
 
 // The browser suite (e2e/): the production build, served by vite preview,
 // in Chromium, on the mock fixtures (?mock=1). pnpm test:e2e builds first.
-// E2E_PORT picks the port (1421–1439 leave the dev server's 1420 alone).
+// E2E_PORT picks the port (1421–1439 leave the dev server's 1420 alone);
+// without it, the first free one there (scripts/free-port.mjs).
 //
 // e2e/visual.spec.ts compares screenshots with Linux baselines
 // (e2e/snapshots/): it runs on Linux (CI), or anywhere with VISUAL=1,
@@ -10,7 +12,14 @@ import { defineConfig, devices } from "@playwright/test";
 // (scripts/visual.mjs). E2E_SERVE=static serves dist/ with
 // scripts/serve-dist.mjs there, where vite preview cannot run.
 
-const port = Number(process.env.E2E_PORT ?? 1434);
+// Found once, in the main process, and written back to E2E_PORT: the
+// workers load this file again and must serve and visit the same port.
+if (!process.env.E2E_PORT) {
+  const found = spawnSync(process.execPath, [`${import.meta.dirname}/scripts/free-port.mjs`], { encoding: "utf8" });
+  if (found.status !== 0) throw new Error(found.stderr.trim() || "scripts/free-port.mjs found no port");
+  process.env.E2E_PORT = found.stdout.trim();
+}
+const port = Number(process.env.E2E_PORT);
 const visual = process.platform === "linux" || !!process.env.VISUAL;
 
 export default defineConfig({

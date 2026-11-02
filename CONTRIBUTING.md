@@ -22,7 +22,7 @@ Docker is needed only for `pnpm test:visual` on a Mac or Windows machine
 
 ```sh
 pnpm check                               # typecheck, lint, the rule checks (check:*), themes, unit tests, build, size budget
-E2E_PORT=1427 pnpm test:e2e e2e/x.spec.ts    # the specs for what you touched
+pnpm test:e2e e2e/x.spec.ts                  # the specs for what you touched
 pnpm test:visual                         # when the look changed (then --update, and commit the baselines)
 node scripts/take-ci-baselines.mjs       # no Docker: after a push, CI's own renderings and their diffs; --take writes them
 ```
