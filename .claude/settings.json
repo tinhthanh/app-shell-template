@@ -3,6 +3,10 @@
     "allow": [
       "Bash(npx pnpm@11 *)",
       "Bash(pnpm *)",
+      "Bash(E2E_PORT=* pnpm *)",
+      "Bash(A11Y_FULL=* pnpm *)",
+      "Bash(THEME_REPORT=* pnpm *)",
+      "Bash(CI=true pnpm install*)",
       "Bash(node --experimental-strip-types *)",
       "Bash(node scripts/*)",
       "Bash(git status*)",
@@ -11,6 +15,19 @@
       "Bash(git branch*)",
       "Bash(git add *)",
       "Bash(git commit *)",
+      "Bash(git show*)",
+      "Bash(git fetch*)",
+      "Bash(git rev-parse*)",
+      "Bash(git stash*)",
+      "Bash(git switch -c *)",
+      "Bash(git checkout -b *)",
+      "Bash(git worktree add *)",
+      "Bash(git worktree list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh run view*)",
+      "Bash(gh run list*)",
       "Bash(lsof -nP -iTCP:*)"
     ],
     "deny": [
@@ -31,11 +48,11 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/format-file.mjs"
+            "command": "node .claude/hooks/after-edit.mjs"
           }
         ]
       }
