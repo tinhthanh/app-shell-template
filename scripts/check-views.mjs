@@ -1,5 +1,5 @@
 // Fails when a view, a settings section or a shortcut is only half wired:
-// the parts AGENTS.md › Adding things lists must all be there, or the app
+// the parts their skills list (.claude/skills/add-view, add-setting, add-shortcut) must all be there, or the app
 // has a place that reloads to Home, a section the URL can't name, or a key
 // that does nothing.
 //
@@ -58,7 +58,7 @@ const run = await read("src/hooks/use-shortcuts.ts");
 for (const { id } of shortcuts) if (!run.includes(`case "${id}"`)) problems.push(`shortcut ${id}: no case in run (src/hooks/use-shortcuts.ts)`);
 
 if (problems.length) {
-  console.error(`something is half wired (AGENTS.md › Adding things):\n\n  ${problems.join("\n  ")}\n`);
+  console.error(`something is half wired; the add-view, add-setting and add-shortcut skills (.claude/skills/) have every step:\n\n  ${problems.join("\n  ")}\n`);
   process.exit(1);
 }
 console.log(`check-views: ${kinds.length} views, ${sections.length} settings sections and ${shortcuts.length} shortcuts are wired`);

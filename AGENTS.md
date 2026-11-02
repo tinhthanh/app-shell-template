@@ -5,8 +5,11 @@ UI, zustand, Playwright. There is no backend here; the views read through
 `src/lib/api.ts`, which runs on the fixtures in `src/lib/mock.ts` unless
 `VITE_API_URL` is set. `docs/architecture.md` has the map and the
 vocabulary; `docs/decisions/` has why things are the way they are; the
-skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`, `trial`,
-`add-theme`, `release`) walk through the recipes below step by step.
+skills in `.claude/skills/` walk through each recipe step by step
+(`add-view`, `add-resource`, `add-form`, `add-setting`, `add-shortcut`,
+`add-theme`, `e2e-tests`, `open-pr`, `fix-ci`, `release`, `trial`), and
+the `reviewer` agent (`.claude/agents/reviewer.md`) reads a diff against
+these rules before a PR.
 
 ## Tooling
 
@@ -275,78 +278,31 @@ behaviour is proven in `e2e/`.
 
 ## Adding things
 
-- **A view:** a `kind` in `View` (`src/lib/store.ts`); its address in
-  `viewToHash` and `hashToView` (`src/lib/routes.ts`) and the round trip in
-  `routes.test.ts`; a `lazyView`, a render line and a `viewTitles` entry in
-  `App.tsx`; a place in `src/lib/nav.tsx` (a product place goes before
-  Kit, which stays last of the top group; ⌘1–9 follow the order); a
-  `data-testid` on the view's root; a scene in
-  `e2e/a11y.spec.ts`; a scene in `e2e/scenes.json` (`{ id, hash, ready }`:
-  its baselines and its `pnpm shots` picture; `pnpm check:views` refuses a
-  view kind, home and missing aside, with no scene whose hash starts with `#/<kind>`);
-  a behaviour test.
-- **Whose setting it is:** a setting a task calls the workspace's or the
-  team's is the server's, not this browser's: a field on `Workspace`
-  (`types.ts`, `api/openapi.json`), a write behind an action such as
-  `workspace.edit` in `ACTIONS`, read through `useWorkspaces`. Where there is
-  no server to own it yet, a pref keyed by the workspace's id
-  (`prefs.<x>ByWorkspace[id]`) is the fallback, said under Assumptions. A
-  person's own choice (density, language) is a pref.
-- **A setting:** a field and its default in `Prefs` (`src/lib/prefs.ts`; a
-  nested object is merged in the initialiser, as `systemThemes` is); a
-  `SettingsRow` in a section; `applyUiPrefs` if it changes layout. A new
-  field needs no version bump: the initialiser's spread fills in its
-  default (test that an old save gets it); bump `PREFS_VERSION` and add a
-  `migratePrefs` step only when an existing default changes in a way an old
-  saved value shouldn't override. A pick-one value that isn't one of the
-  options falls back to the default in the initialiser, as `sidebarWidth`
-  is clamped (test that a malformed save falls back). A setting that is a
-  list's default filter is written into the address when the list opens
-  with no say on it (`withDefault`, `lib/default-filter.ts`, with
-  `setView(…, { replace: true })`), so the address always says what the list
-  shows and a link means the same to everyone it is sent to; the list's own
-  chip writes `show` or `hide`. "Hide done tasks" is the worked example
-  (`views/tasks/`). A new section also needs
-  `SettingsSectionId` in `store.ts`, `SECTIONS` in `routes.ts` and in
-  `settings-view.tsx`, its line in Find a setting's `INDEX`
-  (`views/settings/find.tsx`, with `settings.findWords.<id>` in every
-  language), and an a11y scene. A row goes in a `SettingsGroup` on the
-  page, never in a card of its own.
-- **A shortcut:** a line in `src/lib/shortcuts.json` (a new group also goes
-  in `ShortcutGroup`/`SHORTCUT_GROUPS` in `shortcuts.ts`), its id in
-  `SHORTCUT_IDS` and a line in `shortcutFor` (`src/lib/keys.ts`; a Shift
-  shortcut goes above the Shift guard, compared as `k.toLowerCase()`; stay
-  clear of the browser's own keys such as ⌘⇧T, ⌘W, ⌘N, ⌘T), a press in
-  `keys.test.ts`'s reachability list, and a case in `run`
-  (`src/hooks/use-shortcuts.ts`); an item in the palette if it should be
-  searchable; `announce()` what it did when nothing shows on screen; and
-  its name, `settings.shortcut.<id>`, in English and Vietnamese
-  (`src/lib/messages/settings.ts`, read by `shortcutName` in `shortcuts.ts`).
-- **A theme:** a `Theme` in `src/themes/builtin.ts` (colours and the full
-  terminal palette; a unique id); `pnpm check:themes` must pass
-  (`THEME_REPORT=1` prints the margins; nudge lightness only, and note it);
-  a ported theme gets a row in `THIRD_PARTY_NOTICES.md`.
-- **A resource:** a type in `src/lib/types.ts` (import-free), methods on
-  `Client` with their paths in `httpClient` (`src/lib/api.ts`), each an
-  operation in `api/openapi.json` (its `operationId` the method; a line in
-  `ARGS` and `SAMPLES`, `scripts/contract.mjs`; `pnpm check:contract`), fixtures and
-  the mock methods (through `guard()`, cloning what they return) in
-  `src/lib/mock.ts` (read, read one, create, update, delete), cases in
-  `mock.test.ts` and `api.test.ts`; a view after `views/projects/`: keyed
-  reads (a page at a time when the list can grow), filters on the `View` in a `ListToolbar` (`NothingMatches` when
-  they leave none), rows in a `DataTable`, one record in a `DetailPage`,
-  writes through `optimistic()`, create and edit in a `FormDialog`, delete
-  through `removeRecord()`: what you write is the columns, the fields and
-  the words. `views/tasks/` is the example for a record picked as you type
-  (`RecordPicker`), a filter on another resource (`RecordFilter`), a file
-  (`FileField`) and a default-filter setting. Its actions go in `ACTIONS`
-  (`lib/permissions.ts`), each write in the mock through `guard(true, "<action>")`;
-  its words in `src/lib/messages/<area>.ts`; and when the palette should find
-  it, a kind in `SearchHit` (`lib/types.ts`) and `RECORD_KINDS` (`lib/nav.tsx`).
-  A refusal names its
-  field: `new ApiError(message, 422, "invalid", "name")`. Say in the PR's
-  Assumptions what the task left open and you decided (fields, statuses,
-  defaults, where the place goes), and under Not done what you left out.
+Each of these has a skill that is its checklist: load it before you start,
+and follow it step by step (the compiler and `pnpm check:views` refuse a
+half-wired view, but nothing refuses a missing test or word).
+
+- **A view** (`add-view`): a `kind` in `View`, its address and round trip,
+  a lazy view in `App.tsx`, a place in `nav.tsx` before Kit, a
+  `data-testid` on its root, an axe scene, a scene in `e2e/scenes.json`
+  (required) and a behaviour test.
+- **A resource** (`add-resource`): a type, `Client` methods, the contract
+  in `api/openapi.json`, the mock through `guard()`, its actions in
+  `ACTIONS`, and a view after `views/projects/` (`views/tasks/` for a
+  picker, a filter on another record, a file and a default filter) built
+  from the shared pieces: you write the columns, the fields and the words.
+- **A form** (`add-form`): a `FormDialog`, a refusal on the field it names.
+- **A setting** (`add-setting`): first, whose it is. A person's own choice
+  is a pref (`Prefs`, held to its shape in `fromSaved`, a `SettingsRow`,
+  its words in `settings.findWords`); a workspace's or a team's is the
+  server's (a field on `Workspace`), with a per-workspace pref only as a
+  fallback said under Assumptions. A list's default filter is written
+  into the address (`withDefault`).
+- **A shortcut** (`add-shortcut`): `shortcuts.json`, `keys.ts` and its
+  reachability test, `run` in `use-shortcuts.ts`, its name in both
+  languages, a press in `e2e/shell.spec.ts`.
+- **A theme** (`add-theme`): `pnpm check:themes` must pass; nudge lightness
+  only, and note it.
 - **A component in the kit:** show it on the Kit page (`src/views/kit/`); a
   new section goes in `KIT_SECTIONS` (`src/views/kit/sections.ts`), and the
   axe scenes in `e2e/a11y.spec.ts` follow that list on their own.
