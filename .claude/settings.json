@@ -31,11 +31,11 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/format-file.mjs"
+            "command": "node .claude/hooks/after-edit.mjs"
           }
         ]
       }

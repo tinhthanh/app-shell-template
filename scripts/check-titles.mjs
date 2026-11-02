@@ -20,7 +20,8 @@
 // not attributes and are not checked: only lower-case elements and the UI
 // kit's interactive components below are.
 //
-//   node scripts/check-titles.mjs     check src/
+//   node scripts/check-titles.mjs              check src/
+//   node scripts/check-titles.mjs <file>…      check only those
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import ts from "typescript";
@@ -116,9 +117,19 @@ function plainTruncatedText(node) {
   return children.every((c) => ts.isJsxText(c) || (ts.isJsxExpression(c) && (!c.expression || !hasJsx(c.expression))));
 }
 
+// Files named on the command line (the edit hook, .claude/hooks/check-file.mjs)
+// are the only ones read; with none, all of them are.
+const only = new Set(
+  process.argv
+    .slice(2)
+    .filter((a) => !a.startsWith("--"))
+    .map((p) => resolve(p)),
+);
+
 const problems = [];
 for (const root of roots) {
   for await (const file of files(root)) {
+    if (only.size && !only.has(file)) continue;
     const rel = relative(app, file);
     if (ALLOW.has(rel)) continue;
     const text = await readFile(file, "utf8");

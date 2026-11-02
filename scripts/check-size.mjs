@@ -3,7 +3,8 @@
 // budget, so a dependency that doubles the bundle is noticed in the PR
 // that adds it, not later. Run after pnpm build.
 //
-//   node scripts/check-size.mjs
+//   node scripts/check-size.mjs          measure dist/
+//   node scripts/check-size.mjs <dir>    measure another build (pnpm check's)
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -18,7 +19,7 @@ const BUDGET = { js: 220_000, css: 45_000 };
 // largest today is the Kit page, at 24 KB. A view past it is pulling in
 // something that should be its own chunk, or isn't needed at all.
 const LAZY_BUDGET = 40_000;
-const dist = resolve(import.meta.dirname, "../dist");
+const dist = process.argv[2] ? resolve(process.argv[2]) : resolve(import.meta.dirname, "../dist");
 const html = readFileSync(resolve(dist, "index.html"), "utf8");
 const refs = [...html.matchAll(/(?:src|href)="\.?\/?(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1]);
 const gz = (file) => gzipSync(readFileSync(resolve(dist, file))).length;

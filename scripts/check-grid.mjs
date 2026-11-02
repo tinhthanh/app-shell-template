@@ -18,6 +18,7 @@
 //
 //   node scripts/check-grid.mjs            check src/
 //   node scripts/check-grid.mjs --count    how many each file has, most first
+//   node scripts/check-grid.mjs <file>…    check only those
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 
@@ -41,8 +42,18 @@ async function* files(dir) {
   }
 }
 
+// Files named on the command line (the edit hook, .claude/hooks/check-file.mjs)
+// are the only ones read; with none, all of them are.
+const only = new Set(
+  process.argv
+    .slice(2)
+    .filter((a) => !a.startsWith("--"))
+    .map((p) => resolve(p)),
+);
+
 const found = [];
 for await (const f of files(src)) {
+  if (only.size && !only.has(f)) continue;
   const rel = relative(src, f);
   const lines = (await readFile(f, "utf8")).split("\n");
   lines.forEach((line, i) => {

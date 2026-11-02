@@ -15,17 +15,17 @@ skills in `.claude/skills/` (`e2e-tests`, `add-view`, `add-resource`, `add-form`
   checks the subject; pre-push runs `pnpm check`. Never `--no-verify`: CI
   runs the same and more. Edits made from a shell aren't formatted by the
   editor hook, so run `pnpm format` before you look at a diff.
-- `pnpm check` builds `dist/`, which the browser suite serves: a check
-  that runs while a suite is going (the Stop hook below, between turns)
-  swaps the files under it, and its pages fail with 404s and a refused
-  connection. Run a long suite in the background only on a committed tree,
-  or wait for it before ending a turn.
+- `pnpm check` builds into `node_modules/.check-dist`, never `dist/`,
+  so it can run while a browser suite serves `dist/`. Two `test:e2e` runs
+  at once still share `dist/`: run them one after the other.
 - Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
   when the tree has changes and, while it is red, blocks the first stop
   with its last lines (a second stop goes through, so a check that cannot
-  pass doesn't loop); an
-  Edit/Write hook formats the file; force pushes, pushes to `main`,
-  `pkill` and killing port 1420 are refused.
+  pass doesn't loop); after each Edit/Write, `scripts/check-file.mjs`
+  formats the file and checks it alone (Biome's errors, titles, words,
+  type sizes, the grid), and what it finds comes back at once: fix it
+  before the next edit. Force pushes, pushes to `main`, `pkill` and
+  killing port 1420 are refused.
 
 - Node 22 (`.nvmrc`) and pnpm 11 (`packageManager`). If `pnpm` is not on
   your PATH, run it as `npx pnpm@11` (or `corepack enable` on Node 22–24).

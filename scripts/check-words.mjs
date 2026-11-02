@@ -12,7 +12,8 @@
 // The Kit page (src/views/kit/) is for whoever builds the app and stays
 // English; the UI kit (src/components/ui/) has no words of its own.
 //
-//   node scripts/check-words.mjs     check src/
+//   node scripts/check-words.mjs              check src/
+//   node scripts/check-words.mjs <file>…      check only those
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import ts from "typescript";
@@ -60,9 +61,19 @@ const hidden = (el) =>
 const literal = (n) =>
   n && (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) ? n.text : n && ts.isTemplateExpression(n) ? n.head.text + n.templateSpans.map((s) => s.literal.text).join(" ") : undefined;
 
+// Files named on the command line (the edit hook, .claude/hooks/check-file.mjs)
+// are the only ones read; with none, all of them are.
+const only = new Set(
+  process.argv
+    .slice(2)
+    .filter((a) => !a.startsWith("--"))
+    .map((p) => resolve(p)),
+);
+
 const problems = [];
 for (const root of roots) {
   for await (const file of files(root)) {
+    if (only.size && !only.has(file)) continue;
     const rel = relative(app, file);
     if (SKIP.some((r) => r.test(rel)) || ALLOW.has(rel)) continue;
     const text = await readFile(file, "utf8");
