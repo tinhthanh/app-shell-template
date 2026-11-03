@@ -51,8 +51,11 @@ export function appSteps(yml) {
         }
         env[m[1]] = m[2].replace(/^"(.*)"$/, "$1");
       }
+    // A step runs as its words, never through a shell: one that needs a
+    // shell (a pipe, a quote, a variable) is a step this script can't copy.
+    if (/[|&;<>$`'"\\]/.test(run)) throw new Error(`ci-local: the step "${run}" needs a shell; give it a script of its own`);
     const kind = /playwright install/.test(run) ? "browsers" : /playwright test/.test(run) ? "e2e" : "check";
-    steps.push({ run, id: key("id"), env, kind });
+    steps.push({ run, argv: run.split(/\s+/), id: key("id"), env, kind });
   }
   return steps;
 }
@@ -136,7 +139,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     let r;
     if (step.kind === "browsers") {
       // The image has its browsers; here, --with-deps would ask for sudo.
-      r = docker ? { ok: true, s: 0, skip: true } : run("sh", ["-c", step.run.replace(" --with-deps", "")], dir, env);
+      r = docker
+        ? { ok: true, s: 0, skip: true }
+        : run(
+            step.argv[0],
+            step.argv.slice(1).filter((a) => a !== "--with-deps"),
+            dir,
+            env,
+          );
     } else if (step.kind === "e2e" && docker) {
       const amd = arch() !== "arm64";
       r = inDocker(amd ? "linux/amd64" : "linux/arm64", { ...step.env, ...(amd ? {} : { VISUAL: "0" }) }, []);
@@ -146,7 +156,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         r = { ok: v.ok, s: r.s + v.s };
       }
     } else {
-      r = run("sh", ["-c", step.run], dir, { ...env, ...step.env });
+      r = run(step.argv[0], step.argv.slice(1), dir, { ...env, ...step.env });
     }
     if (!r.ok && step.kind === "e2e" && existsSync(resolve(dir, "node_modules/.e2e-results/junit.xml")))
       spawnSync("node", ["scripts/ci-failures.mjs", "node_modules/.e2e-results/junit.xml", `Run ${step.run}`], { cwd: dir, stdio: "inherit" });

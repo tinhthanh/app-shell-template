@@ -49,7 +49,12 @@ test("only the app job's steps are read, each with its id and env", () => {
       - run: node scripts/check-evidence.mjs
 `;
   assert.deepEqual(appSteps(yml), [
-    { run: "pnpm lint", id: undefined, env: {}, kind: "check" },
-    { run: "pnpm exec playwright test", id: "e2e", env: { E2E_WORKERS: "2", A11Y_FULL: "1" }, kind: "e2e" },
+    { run: "pnpm lint", argv: ["pnpm", "lint"], id: undefined, env: {}, kind: "check" },
+    { run: "pnpm exec playwright test", argv: ["pnpm", "exec", "playwright", "test"], id: "e2e", env: { E2E_WORKERS: "2", A11Y_FULL: "1" }, kind: "e2e" },
   ]);
+});
+
+test("a step that needs a shell is refused, never run through one", () => {
+  const yml = "jobs:\n  app:\n    steps:\n      - run: pnpm build | tee out.txt\n";
+  assert.throws(() => appSteps(yml), /needs a shell/);
 });
