@@ -7,6 +7,7 @@
 <!-- CI checks these (scripts/check-evidence.mjs). Paste the last lines of each command. -->
 
 - [ ] `pnpm check` is green
+- [ ] `pnpm ci:local` is green, its browser suite in Linux (Docker); without Docker, said so below
 - [ ] `pnpm test:e2e e2e/<area>.spec.ts` passes for what I touched
 - [ ] Every behaviour I changed has a test, named below; a bug fix's test failed before the fix
 - [ ] A UI change has screenshots in Default Dark and Default Light below, and its Kit section or axe scene is updated
@@ -19,6 +20,10 @@
 
 ```
 # playwright test
+```
+
+```
+# pnpm ci:local (its summary)
 ```
 
 **Tests added or changed**
