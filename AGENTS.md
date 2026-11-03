@@ -48,7 +48,19 @@ pnpm shots '#/x'                             # a UI change: the pictures in shot
 pnpm test:visual                             # when the look changed: the screenshots against e2e/snapshots/ (Docker on a Mac)
 pnpm test:visual --update                    # …and the new baselines, committed with the change
 node scripts/take-ci-baselines.mjs           # no Docker: after a push, CI's own renderings and their diffs; --take writes them
+pnpm ci:local                                # last, before the push: what CI runs, on a clean copy of HEAD, the browser suite in Linux
 ```
+
+`pnpm ci:local` (`scripts/ci-local.mjs`) is CI on this machine: the app
+job's steps read from `ci.yml`, on a worktree of HEAD with a frozen install
+and `CI=true`, the whole browser suite in the Playwright Linux image on two
+CPUs, as CI's runner (Docker; start it first), then the evidence and
+guardrails gates on the branch's PR (or `PR_TITLE`, `PR_BODY`, `PR_LABELS`
+before it exists). Its summary is the one to paste. It finds what a run
+here doesn't: a file you never added, a lockfile not updated, and the races
+that show only on a slower Linux machine (a test green here and red on CI
+is one of those: run it in Linux, not again here). A push with `ci:local`
+red, or not run, learns the same thing seven minutes later.
 
 With no Docker (or one that doesn't answer), push: CI renders the
 pictures on Linux, fails the ones the change moved and keeps each
@@ -80,7 +92,8 @@ both.
 
 ## Done means
 
-1. `pnpm check` is green, and the specs for what you touched pass.
+1. `pnpm check` is green, the specs for what you touched pass, and before
+   the push `pnpm ci:local` is green (with Docker; without it, the PR says so).
 2. Every behaviour you changed has a test that proves it (the table below),
    named in the PR. A bug fix has a test that failed before the fix. A
    failure you say isn't yours ("it fails on main too") comes with its

@@ -20,6 +20,8 @@ A11Y_FULL=1 pnpm test:e2e e2e/a11y.spec.ts         # axe in the light theme too,
 
 `pnpm exec playwright test` alone serves the old `dist/`: always go through `test:e2e` after a change.
 
+A Mac is faster than CI's runner, so a race can pass here every time and fail there. `pnpm ci:local` runs the whole suite in the Playwright Linux image on two CPUs, as CI does (Docker): run it before the push, and to call a CI-only flake fixed, repeat that test there (the command is in the `fix-ci` skill).
+
 ## The fixture (`e2e/fixtures.ts`)
 
 - `app.open({ prefs, theme, params, hash })`: a fresh page; `prefs` and `theme` seed storage once; `params` go in the URL (`slow`, `fail`, `failOnce`, `failAfter`, `failWrites`, `failMore`, `hold`, `empty`, `many`, `crash`, `signedOut`, `sessionMinutes`, `role`, `platform`, `dir`, `flags`; `hold` keeps writes unanswered, the way to see what shows before the server confirms, never `slow` and a short timeout; time that must pass, such as a session ending, is `page.clock.install()` before the open and `clock.fastForward(…)` once the app is signed in, never a wait); `hash` is the view to land on (`"/projects/p-shop"`), instead of a hand-built `page.goto`; a test or an axe scene may call it again for another state (with other `prefs`: each open seeds its own, and the same address again is loaded afresh), or to open a shared link (`app.open({ hash: "/projects?tags=mobile" })`). A new address in the same page, without a reload, is `page.evaluate(() => { location.hash = "#/…" })`. It waits for the shell: a sidebar row, Settings' Back to app (`settings-back`: on Settings the sidebar, and its `nav-*` ids, are gone), the phone bar or the sign-in page.
@@ -31,6 +33,7 @@ A11Y_FULL=1 pnpm test:e2e e2e/a11y.spec.ts         # axe in the light theme too,
 
 - **Never read state once right after an action.** Use `await expect(locator).toBeVisible()`, `toHaveAttribute`, or `expect.poll(() => …)`, never `expect(await …)` straight after a press or a click.
 - **Wait for what you need, not for time.** No `waitForTimeout` (a plugin refuses it). Before axe, wait for `document.getAnimations()` to finish, as `a11y.spec.ts` does.
+- **Before an action, wait for every place its effect will show.** The sheet's list, a badge, the status bar each read on their own, some later than the view: a list whose read starts after a held write (`?hold=1`) answers as the server has it, without the change. Wait for the row there first, then act (`projects.spec.ts`, "a status change shows at once").
 - **Expect in-between states.** A reload or re-render can show a stale value first; assert the final one within the timeout.
 - **Text moves; ids don't.** Locate by `data-testid` or role + name; `exact: true` when a name is a prefix of another.
 - **Assert a state where it lives, not as a word on the page.** `detail.getByText("Active")` passes while Paused is chosen, because the Active button's own label matches. The chosen option is `getByRole("button", { name: "Active", exact: true })` with `aria-pressed="true"`; a refusal on a field is `expect(field).toHaveAccessibleDescription("A project needs a name.")`, which proves it is on that field. Text is the subject only when the words are the behaviour (a translation, a formatted date, a key hint).

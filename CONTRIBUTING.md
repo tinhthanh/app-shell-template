@@ -15,8 +15,9 @@ pnpm dev                      # http://localhost:1420/?mock=1 on the fixtures
 pnpm exec playwright install chromium
 ```
 
-Docker is needed only for `pnpm test:visual` on a Mac or Windows machine
-(the screenshot baselines are Linux renderings).
+Docker is needed for `pnpm test:visual` and `pnpm ci:local` on a Mac or
+Windows machine (the screenshot baselines are Linux renderings, and CI's
+races show on Linux).
 
 ## Before you open a pull request
 
@@ -25,6 +26,7 @@ pnpm check                               # typecheck, lint, the rule checks (che
 pnpm test:e2e e2e/x.spec.ts                  # the specs for what you touched
 pnpm test:visual                         # when the look changed (then --update, and commit the baselines)
 node scripts/take-ci-baselines.mjs       # no Docker: after a push, CI's own renderings and their diffs; --take writes them
+pnpm ci:local                            # last: what CI runs, on a clean copy of HEAD, the browser suite in Linux (Docker)
 ```
 
 With no Docker, push: CI renders the pictures on Linux, fails the ones the

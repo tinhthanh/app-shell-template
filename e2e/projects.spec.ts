@@ -192,6 +192,9 @@ test("a status change shows at once, before the server has answered, in the reco
   await app.open({ params: { hold: "1" }, hash: "/projects/p-shop" });
   const detail = app.page.getByTestId("project-detail");
   await expect(detail.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+  // The sheet reads its list after the workspaces, so later than the record:
+  // a list read that starts once the write is held never sees it.
+  await expect(app.page.getByTestId("projects-column").locator("[data-project=p-shop]")).toBeVisible();
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   await expect(detail.getByRole("button", { name: "Paused", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(app.page.getByTestId("projects-column").getByRole("region", { name: "Paused" }).locator("[data-project=p-shop]")).toBeVisible();
