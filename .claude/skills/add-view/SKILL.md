@@ -26,7 +26,7 @@ words), or `src/views/home/` for a static one.
 11. **`CHANGELOG.md`**: a bullet under Unreleased.
 
 Then `pnpm check` (typecheck, lint, `check:views`) and
-`E2E_PORT=1427 pnpm test:e2e e2e/reports.spec.ts e2e/a11y.spec.ts`.
+`pnpm test:e2e e2e/reports.spec.ts e2e/a11y.spec.ts`, then `pnpm shots '#/reports'` (and `--phone`) and look at the pictures.
 
 A settings section instead: `SettingsSectionId` in `store.ts`, `SECTIONS`
 in `routes.ts` and `settings-view.tsx`, a component of `SettingsPage`,

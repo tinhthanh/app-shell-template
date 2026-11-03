@@ -92,10 +92,10 @@ test("the edit form refuses an empty name, shows the server's refusal on the fie
   const name = dialog.getByRole("textbox", { name: "Name" });
   await name.fill("");
   await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog.getByText("A project needs a name.")).toBeVisible();
+  await expect(name).toHaveAccessibleDescription("A project needs a name.");
   await name.fill("Docs");
   await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(dialog.getByText("Another project is already called Docs.")).toBeVisible();
+  await expect(name).toHaveAccessibleDescription("Another project is already called Docs.");
   await name.fill("Shop 2");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toHaveCount(0);
@@ -115,7 +115,7 @@ test("a failed save is a toast in plain words, and the project is left as it was
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
   await expect(app.page.locator("[data-slot=toast-description]")).toContainText("The server is busy");
-  await expect(detail.getByText("Active", { exact: true })).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Active", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("a project that doesn't exist says so, with no Try again, and a way back", async ({ app }) => {
@@ -205,7 +205,7 @@ test("a status change the server refuses goes back, with a toast", async ({ app 
   await detail.getByRole("button", { name: "Paused", exact: true }).click();
   // The server refuses: back to Active, with the toast.
   await expect(app.page.locator("[data-slot=toast-title]", { hasText: "Couldn't update the project" })).toBeVisible();
-  await expect(detail.getByText("Active", { exact: true }).first()).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Active", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("a project renamed on its page is renamed in the sheet beside it, without leaving", async ({ app }) => {

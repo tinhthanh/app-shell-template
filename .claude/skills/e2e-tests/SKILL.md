@@ -13,9 +13,9 @@ modifier is Ctrl wherever the suite runs. Import `test`, `expect` and
 ## Running
 
 ```sh
-E2E_PORT=1427 pnpm test:e2e e2e/thing.spec.ts                    # builds first, then runs; a free port in 1421–1439
-E2E_PORT=1427 pnpm test:e2e e2e/thing.spec.ts --repeat-each=5    # before calling a flake fixed
-A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the light theme too, as CI does
+pnpm test:e2e e2e/thing.spec.ts                    # builds first, then runs on the first free port in 1421–1439 (E2E_PORT to choose)
+pnpm test:e2e e2e/thing.spec.ts --repeat-each=5    # before calling a flake fixed
+A11Y_FULL=1 pnpm test:e2e e2e/a11y.spec.ts         # axe in the light theme too, as CI does
 ```
 
 `pnpm exec playwright test` alone serves the old `dist/`: always go through `test:e2e` after a change.
@@ -33,6 +33,7 @@ A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts         # axe in the li
 - **Wait for what you need, not for time.** No `waitForTimeout` (a plugin refuses it). Before axe, wait for `document.getAnimations()` to finish, as `a11y.spec.ts` does.
 - **Expect in-between states.** A reload or re-render can show a stale value first; assert the final one within the timeout.
 - **Text moves; ids don't.** Locate by `data-testid` or role + name; `exact: true` when a name is a prefix of another.
+- **Assert a state where it lives, not as a word on the page.** `detail.getByText("Active")` passes while Paused is chosen, because the Active button's own label matches. The chosen option is `getByRole("button", { name: "Active", exact: true })` with `aria-pressed="true"`; a refusal on a field is `expect(field).toHaveAccessibleDescription("A project needs a name.")`, which proves it is on that field. Text is the subject only when the words are the behaviour (a translation, a formatted date, a key hint).
 - **A timeout under a second** is only for proving "at once" against the slow mock's 1.5 s (`{ timeout: 500 }` beside a comment that says so); everything else waits the default.
 - **Keys:** `${mod()}+k`, `${mod()}+Shift+Equal`, `Minus`; the page is on Linux unless opened with `params: { platform: "mac" }`.
 
@@ -63,7 +64,9 @@ the PR's review sees the pictures. Add a scene to `e2e/scenes.json` for a new vi
 
 `pnpm shots` writes every desktop scene of `e2e/scenes.json` in Default
 Dark and Default Light to `shots/` (gitignored), for a PR's "Proof"
-section. `pnpm shots '#/kit/buttons'` takes one address.
+section. `pnpm shots '#/kit/buttons'` takes one address; `--phone` takes
+them 375 wide. Open the pictures and look at them before you call a UI
+change done: nothing else sees a clipped label or a lost margin.
 
 ## A new test
 

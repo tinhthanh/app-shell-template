@@ -68,11 +68,11 @@ test("the form refuses no title, and a file too big before it is sent", async ({
   await app.page.getByRole("button", { name: "New task" }).first().click();
   const dialog = app.page.getByRole("dialog", { name: "New task" });
   await dialog.getByRole("button", { name: "Create" }).click();
-  await expect(dialog.getByText("A task needs a title.")).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Title" })).toHaveAccessibleDescription("A task needs a title.");
   await dialog.getByRole("textbox", { name: "Title" }).fill("Big file");
   await dialog.getByLabel("File").setInputFiles({ name: "huge.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
   await dialog.getByRole("button", { name: "Create" }).click();
-  await expect(dialog.getByText("Files up to 5 MB, please.")).toBeVisible();
+  await expect(dialog.getByLabel("File")).toHaveAccessibleDescription(/Files up to 5 MB, please\./);
 });
 
 test("an edit takes the file off and the project with it", async ({ app }) => {

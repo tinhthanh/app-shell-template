@@ -262,7 +262,7 @@ test("signed out, the sign-in page covers the app; signing in returns to the add
   await expect(signin).toBeVisible();
   await signin.getByRole("textbox", { name: "Email" }).fill("sam@acme.test");
   await signin.getByRole("button", { name: "Sign in" }).click();
-  await expect(signin.getByText("A password, please.")).toBeVisible();
+  await expect(signin.getByLabel("Password")).toHaveAccessibleDescription("A password, please.");
   await signin.getByLabel("Password").fill("hunter2");
   await signin.getByRole("button", { name: "Sign in" }).click();
   await expect(signin).toHaveCount(0);

@@ -17,7 +17,7 @@ fill.
 1. Write it in `src/themes/builtin.ts` and add it to `ownThemes`, or in `vscode.ts` and `vscodeThemes` for a port. The id is unique (`contrast.test.ts` checks).
 2. `THEME_REPORT=1 pnpm check:themes` prints every margin. A colour that fails: move its lightness only, keep hue and chroma, and note it in a `// Nudged:` comment above the theme, as the ports do.
 3. A port gets a row in `THIRD_PARTY_NOTICES.md` (source, author, licence).
-4. Look at it: `#/kit/tones`, `#/kit/feedback`, `#/kit/buttons` in that theme, and `A11Y_FULL=1 E2E_PORT=1427 pnpm test:e2e e2e/a11y.spec.ts` if it becomes a default.
+4. Look at it: `#/kit/tones`, `#/kit/feedback`, `#/kit/buttons` in that theme, and `A11Y_FULL=1 pnpm test:e2e e2e/a11y.spec.ts` if it becomes a default.
 5. To make it the system default for one appearance: `DEFAULTS.systemThemes` in `src/lib/prefs.ts`, with a `PREFS_VERSION` bump and a `migratePrefs` step.
 6. `CHANGELOG.md`: a bullet.
 

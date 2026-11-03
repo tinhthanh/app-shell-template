@@ -29,7 +29,7 @@ test("a new workspace is made from the rail, and shows", async ({ app }) => {
   await app.page.getByTestId("new-workspace").click();
   const dialog = app.page.getByRole("dialog", { name: "New workspace" });
   await dialog.getByRole("button", { name: "Create" }).click();
-  await expect(dialog.getByText("A workspace needs a name.")).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("A workspace needs a name.");
   await dialog.getByRole("textbox", { name: "Name" }).fill("Initech");
   await dialog.getByRole("button", { name: "Create" }).click();
   await expect(dialog).toHaveCount(0);
