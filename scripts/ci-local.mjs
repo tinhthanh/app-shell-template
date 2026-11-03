@@ -2,7 +2,8 @@
 // here in minutes rather than after a round trip to GitHub. The steps are
 // read from the app job in .github/workflows/ci.yml, so the two can't drift,
 // and run as CI runs them:
-//   - on a clean copy of HEAD (a worktree in node_modules/.ci-local), with a
+//   - on a clean copy of HEAD (a worktree in ~/.cache/ci-local: node won't
+//     strip types under node_modules, and Docker can mount it), with a
 //     frozen install: CI sees only what is committed, so a file never added,
 //     a lockfile not updated or an .env.local the build leans on fails here
 //     as it would there;
@@ -19,9 +20,10 @@
 //   pnpm ci:local          all of it
 //   pnpm ci:local --here   the browser suite on this machine, not in Docker
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
-import { arch } from "node:os";
-import { relative, resolve } from "node:path";
+import { arch, homedir } from "node:os";
+import { basename, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 
@@ -66,7 +68,7 @@ function run(cmd, args, cwd, env) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const here = process.argv.includes("--here");
-  const dir = resolve(root, "node_modules/.ci-local");
+  const dir = resolve(homedir(), ".cache/ci-local", `${basename(root)}-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
   const results = [];
   const note = [];
 
@@ -75,11 +77,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   rmSync(dir, { recursive: true, force: true });
   sh("git", ["worktree", "prune"], { cwd: root });
   if (sh("git", ["worktree", "add", "--detach", dir, "HEAD"], { cwd: root }).status !== 0) {
-    console.error("ci-local: couldn't make a worktree of HEAD in node_modules/.ci-local");
+    console.error(`ci-local: couldn't make a worktree of HEAD in ${dir}`);
     process.exit(1);
   }
   const dirty = git("status", "--porcelain").split("\n").filter(Boolean);
-  console.log(`ci-local: HEAD ${git("rev-parse", "--short", "HEAD")} in ${relative(root, dir)}`);
+  console.log(`ci-local: HEAD ${git("rev-parse", "--short", "HEAD")} in ${dir}`);
   if (dirty.length) note.push(`${dirty.length} uncommitted change${dirty.length > 1 ? "s are" : " is"} not in this run, as they won't be on CI: commit them and run again`);
 
   const env = { ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("VITE_"))), CI: "true" };
@@ -150,7 +152,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     results.push({ name: step.run + (step.kind === "e2e" ? (docker ? " (Linux, Docker)" : " (this machine)") : ""), mark: r.skip ? "–" : r.ok ? "✓" : "✗", s: r.s });
     failed = !r.ok;
   }
-  if (failed && existsSync(resolve(dir, "node_modules/.e2e-report"))) note.push(`the report: pnpm exec playwright show-report ${relative(root, resolve(dir, "node_modules/.e2e-report"))}`);
+  if (failed && existsSync(resolve(dir, "node_modules/.e2e-report"))) note.push(`the report: pnpm exec playwright show-report ${resolve(dir, "node_modules/.e2e-report")}`);
 
   // The PR's gates, as their own jobs: they run whatever the app job did.
   sh("git", ["fetch", "--quiet", "origin", "main"], { cwd: root });
