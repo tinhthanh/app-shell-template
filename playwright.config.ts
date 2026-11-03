@@ -9,7 +9,8 @@ import { defineConfig, devices } from "@playwright/test";
 // e2e/visual.spec.ts compares screenshots with Linux baselines
 // (e2e/snapshots/): it runs on Linux (CI), or anywhere with VISUAL=1,
 // which pnpm test:visual sets inside the Playwright Linux image
-// (scripts/visual.mjs). E2E_SERVE=static serves dist/ with
+// (scripts/visual.mjs); VISUAL=0 leaves it out on Linux, as pnpm ci:local
+// does in the arm64 image, which draws small text a little differently. E2E_SERVE=static serves dist/ with
 // scripts/serve-dist.mjs there, where vite preview cannot run.
 
 // Found once, in the main process, and written back to E2E_PORT: the
@@ -20,7 +21,7 @@ if (!process.env.E2E_PORT) {
   process.env.E2E_PORT = found.stdout.trim();
 }
 const port = Number(process.env.E2E_PORT);
-const visual = process.platform === "linux" || !!process.env.VISUAL;
+const visual = process.env.VISUAL ? process.env.VISUAL !== "0" : process.platform === "linux";
 
 export default defineConfig({
   testDir: "e2e",

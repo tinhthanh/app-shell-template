@@ -16,6 +16,7 @@ on your machine first, so nothing is learnt from a red CI.
 - A UI change: `pnpm shots '#/…'` (and `--phone`), opened and looked at; the baselines that move are taken (AGENTS.md › Checks) or listed under Not done.
 - A user-visible change has a bullet under `## Unreleased` in `CHANGELOG.md`, in the user's words.
 - A view kind, a setting, a shortcut: the recipe's tests are all there (AGENTS.md › Which test proves it).
+- Committed, then `pnpm ci:local`: CI's app job on a clean copy of HEAD, the browser suite in Linux (Docker), and the two gates below. Green before the push; its summary goes in the Proof. Without Docker, say in the PR that the browser suite ran only here.
 - If the change is large, ask the `reviewer` agent (`.claude/agents/reviewer.md`) to read the diff against the rules first.
 
 ## 2. The title

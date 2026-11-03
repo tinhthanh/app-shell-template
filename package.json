@@ -22,6 +22,7 @@
     "test:coverage": "node --experimental-strip-types --experimental-test-coverage --test-coverage-include=\"src/lib/**\" --test-coverage-include=\"src/themes/**\" --test-coverage-exclude=\"**/*.test.ts\" --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=80 --test \"src/lib/**/*.test.ts\" \"src/themes/*.test.ts\"",
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "test:visual": "node scripts/visual.mjs",
+    "ci:local": "node scripts/ci-local.mjs",
     "shots": "node scripts/shots.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:words && pnpm check:type && pnpm check:grid && pnpm check:node && pnpm check:views && pnpm check:csp && pnpm check:contract && pnpm check:themes && pnpm test && pnpm build:check && pnpm check:size node_modules/.check-dist",
     "lint": "biome check --error-on-warnings .",
