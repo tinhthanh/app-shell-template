@@ -2,9 +2,10 @@
 // here in minutes rather than after a round trip to GitHub. The steps are
 // read from the app job in .github/workflows/ci.yml, so the two can't drift,
 // and run as CI runs them:
-//   - on a clean copy of HEAD (a worktree in ~/.cache/ci-local: node won't
-//     strip types under node_modules, and Docker can mount it), with a
-//     frozen install: CI sees only what is committed, so a file never added,
+//   - on a clean copy of HEAD (a worktree in ~/Library/Caches/ci-local on a
+//     Mac, the temp folder elsewhere: node won't strip types under
+//     node_modules, Biome finds no package.json under a hidden folder, and
+//     Docker can mount it), with a frozen install: CI sees only what is committed, so a file never added,
 //     a lockfile not updated or an .env.local the build leans on fails here
 //     as it would there;
 //   - with CI=true and each step's own env, and no VITE_* from this shell;
@@ -22,7 +23,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
-import { arch, homedir } from "node:os";
+import { arch, homedir, tmpdir } from "node:os";
 import { basename, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
@@ -68,7 +69,7 @@ function run(cmd, args, cwd, env) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const here = process.argv.includes("--here");
-  const dir = resolve(homedir(), ".cache/ci-local", `${basename(root)}-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
+  const dir = resolve(process.platform === "darwin" ? resolve(homedir(), "Library/Caches") : tmpdir(), "ci-local", `${basename(root)}-${createHash("sha1").update(root).digest("hex").slice(0, 8)}`);
   const results = [];
   const note = [];
 
