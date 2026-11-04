@@ -202,7 +202,11 @@ configs or these rules without the `guardrail-change` label.
   `docs/decisions/0012-permissions.md`): a view asks `useCan("project.delete")`
   and leaves out what isn't theirs to do, never `user.role === …` in a
   component. The server decides; the mock refuses with a 403 under
-  `?role=viewer` or `?role=member`.
+  `?role=viewer` or `?role=member`. The contract is the table's source:
+  each operation's `x-permission` (public, signed-in, or an action) and the
+  top-level `x-roles` (each action's roles); `ACTIONS` is the same table,
+  and `pnpm check:contract` refuses a difference, an operation without
+  one, or a mock that lets a role through that `x-roles` leaves out.
 - **Key hints** are written for a Mac (`⌘K`) and shown through `<Kbd>`, which
   rewrites them for other platforms.
 - **Reads go through `useResource`** and are drawn by `<ResourceView>`
