@@ -5,7 +5,12 @@
 //     HTTP method and path httpClient sends, and every operation is a method;
 //   - every operation has a sample request, which fits its request body;
 //   - the mock (src/lib/mock.ts), called with each sample, answers what the
-//     operation's response schema says, and its refusals are the Error shape.
+//     operation's response schema says, and its refusals are the Error shape;
+//   - every operation says what a caller needs (x-permission: public,
+//     signed-in, or an action of x-roles); the client's role table
+//     (lib/permissions.ts ACTIONS) is x-roles; and the mock refuses as a
+//     server must: 401 to nobody for what isn't public, 403 to each role
+//     x-roles leaves out, and nothing to the roles it names.
 //
 //   node --experimental-strip-types scripts/check-contract.mjs   (pnpm check:contract)
 import { readFileSync } from "node:fs";
@@ -71,6 +76,47 @@ for (const [id, sample] of Object.entries(SAMPLES)) {
   }
   for (const p of problems(schema, answer, spec, id)) out.push(p);
 }
+// What a caller needs, and who may: one table, the contract's.
+const roles = spec["x-roles"] ?? {};
+const { ACTIONS } = await import("../src/lib/permissions.ts");
+const sorted = (table) =>
+  JSON.stringify(
+    Object.fromEntries(
+      Object.entries(table)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => [k, [...v].sort()]),
+    ),
+  );
+if (sorted(ACTIONS) !== sorted(roles)) out.push(`lib/permissions.ts ACTIONS is not the contract's x-roles: make them the same table\n    ACTIONS: ${sorted(ACTIONS)}\n    x-roles: ${sorted(roles)}`);
+// status is what the mock does with the sample for a caller: 0 when it answers.
+const status = async (id, opts) => {
+  try {
+    await mockClient({ latency: 0, ...opts })[id](...ARGS[id]({ params: {}, query: {}, ...SAMPLES[id] }));
+    return 0;
+  } catch (err) {
+    return err.status ?? -1;
+  }
+};
+for (const [id, o] of ops) {
+  const need = o.op["x-permission"];
+  if (!need) {
+    out.push(`${id}: no x-permission (public, signed-in, or an action of x-roles)`);
+    continue;
+  }
+  if (need !== "public" && need !== "signed-in" && !roles[need]) {
+    out.push(`${id}: x-permission "${need}" is not an action of x-roles`);
+    continue;
+  }
+  if (!SAMPLES[id]) continue;
+  if (need !== "public" && (await status(id, { signedOut: true })) !== 401) out.push(`${id}: the mock answers someone signed out; x-permission is "${need}", so it must be a 401`);
+  for (const role of roles[need] ? ["owner", "member", "viewer"] : []) {
+    const may = roles[need].includes(role);
+    const got = await status(id, { role });
+    if (may && got === 403) out.push(`${id}: the mock refuses a ${role}, whom x-roles lets take ${need}`);
+    if (!may && got !== 403) out.push(`${id}: the mock lets a ${role} take ${need}, which x-roles doesn't (a 403)`);
+  }
+}
+
 // A refusal: the shape the client reads (errorBody).
 try {
   await client.project("p-none");

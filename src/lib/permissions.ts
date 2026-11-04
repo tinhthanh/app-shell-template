@@ -8,8 +8,9 @@
 import { t } from "./i18n.ts";
 import type { Role, User } from "./types.ts";
 
-// Each action, and the roles that may take it. A new action goes here, and
-// a view asks for it by name.
+// Each action, and the roles that may take it: the contract's x-roles
+// (api/openapi.json), which a server reads too; pnpm check:contract refuses
+// a difference. A new action goes in both, and a view asks for it by name.
 export const ACTIONS = {
   "project.create": ["owner", "member"],
   "project.edit": ["owner", "member"],

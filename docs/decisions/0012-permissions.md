@@ -24,6 +24,14 @@ view never relies on it. A server must send `role` with `me()`; one with
 no roles answers `"owner"`. A new action is a line in `ACTIONS` and a
 `useCan` where it is offered. A role the table doesn't know may do nothing.
 
+**Since (2026-11-04).** The contract carries the table: `x-roles` (each
+action and its roles) and each operation's `x-permission` (`public`,
+`signed-in`, or an action). A server reads them as they are (the Go
+template's guard does), so the client, the mock and a server have one
+table; `ACTIONS` stays, so a view's `useCan` is typed, and
+`pnpm check:contract` holds it equal to `x-roles` and calls the mock as
+each role to see it refuse the roles left out.
+
 **Revisit if.** Permissions depend on the record (the project's own
 owner may delete it, nobody else): then `can(user, action, record)` asks
 the record's own fields, or the server sends what the person may do with
