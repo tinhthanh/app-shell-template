@@ -53,7 +53,8 @@ on GitHub Free
 (ADR 0017): `pnpm verify` runs the app job on a laptop, with the
 `reviewer` agent's verdict, and records it in `evidence/`; the pre-push hook
 and the evidence job hold the pushed head to that record
-(`scripts/check-proof.mjs`). `gh variable delete CI_MODE` turns the app job
+(`scripts/check-proof.mjs`). `evidence/` is committed only there; a repository whose CI runs on GitHub, as
+this template's does, keeps none. `gh variable delete CI_MODE` turns the app job
 back on. A self-hosted Linux runner is the other way out: its minutes are
 free, and `runs-on` names it. Run only your own pull requests on it, since
 the code in one runs on that machine.

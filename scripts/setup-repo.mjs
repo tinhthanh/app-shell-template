@@ -46,7 +46,8 @@ try {
   // Anything but the plan's refusal (no network, an expired login) is said as it is.
   if (!/HTTP 403|Upgrade to GitHub Pro/.test(String(e.stderr ?? e.message))) throw e;
   console.log("note: no rulesets on this plan (a private repository on GitHub Free), so nothing stops a red pull request merging: the pre-push hook and pnpm verify's record are the gate (ADR 0017)");
-  if (!vars.includes("CI_MODE"))
+  // A 403 can be a login's missing scope too: only a private repository ever goes local.
+  if (!vars.includes("CI_MODE") && gh("repo", "view", "--json", "isPrivate", "-q", ".isPrivate") === "true")
     step("CI_MODE=local: CI's app job runs on a laptop through pnpm verify, and CI checks its record (ADR 0017)", () => gh("variable", "set", "CI_MODE", "--body", "local"));
 }
 if (rulesets && !rulesets.some((r) => r.name === "main"))
