@@ -1,5 +1,27 @@
 #!/bin/sh
 # Everything CI checks, before the push: typecheck, lint, the checks, the
-# unit tests and the build (about ten seconds). The browser suite is CI's.
+# unit tests and the build (about ten seconds). The browser suite is CI's,
+# unless CI runs locally (the repository variable CI_MODE=local, ADR 0017):
+# then the head of each branch pushed needs pnpm verify's record of its
+# tree, green and reviewed ready (pnpm check:proof), since nothing runs the
+# suite after it. A tag (a release, made from main) isn't checked.
+# git gives the hook what is pushed on stdin: <ref> <sha> <remote ref> <remote sha>.
 set -e
-if command -v pnpm >/dev/null 2>&1; then pnpm -s check; else npx pnpm@11 -s check; fi
+# The refs first: nothing the checks run may read them away.
+refs=$(cat)
+if command -v pnpm >/dev/null 2>&1; then pnpm=pnpm; else pnpm="npx pnpm@11"; fi
+$pnpm -s check
+# Empty when the variable isn't set; a failure only when gh can't ask.
+if ! mode=$(gh variable list --json name,value -q '.[] | select(.name=="CI_MODE") | .value' 2>/dev/null); then
+  echo "pre-push: couldn't ask GitHub whether CI runs locally here (gh auth status); if it does, run pnpm verify before you ask for a merge." >&2
+  exit 0
+fi
+[ "$mode" = "local" ] || exit 0
+echo "$refs" | while read -r _ sha remote _; do
+  case "$remote" in refs/heads/*) ;; *) continue ;; esac
+  case "$sha" in *[!0]*) ;; *) continue ;; esac # a deletion pushes no commit
+  if ! node scripts/check-proof.mjs --ref "$sha"; then
+    echo "pre-push: CI runs locally here (CI_MODE=local): run pnpm verify, commit evidence/, and push again." >&2
+    exit 1
+  fi
+done

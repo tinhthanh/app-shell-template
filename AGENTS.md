@@ -50,6 +50,7 @@ pnpm test:visual                             # when the look changed: the screen
 pnpm test:visual --update                    # …and the new baselines, committed with the change
 node scripts/take-ci-baselines.mjs           # no Docker: after a push, CI's own renderings and their diffs; --take writes them
 pnpm ci:local                                # last, before the push: what CI runs, on a clean copy of HEAD, the browser suite in Linux
+pnpm verify                                  # where CI runs locally (CI_MODE=local): ci:local, then the reviewer agent's verdict, recorded in evidence/
 ```
 
 `pnpm ci:local` (`scripts/ci-local.mjs`) is CI on this machine: the app
@@ -62,6 +63,17 @@ here doesn't: a file you never added, a lockfile not updated, and the races
 that show only on a slower Linux machine (a test green here and red on CI
 is one of those: run it in Linux, not again here). A push with `ci:local`
 red, or not run, learns the same thing seven minutes later.
+
+Where Actions minutes cost (a private repository on a free plan; the
+repository variable `CI_MODE=local`, which `node scripts/setup-repo.mjs`
+sets there), CI skips the app job, and `pnpm verify` is it: `ci:local`,
+then the `reviewer` agent on the diff (`claude -p`, read-only), its answer
+in `evidence/review.md` and the run in `evidence/verify.json`. Commit
+`evidence/` and push: the pre-push hook and CI's evidence job refuse a
+head whose tree has no green run with the verdict "ready" (`pnpm check:proof`,
+ADR 0017). `gh variable get CI_MODE` says which this repository is. There,
+Docker is needed: nothing else draws the pictures, so a run without it is
+no proof, and the baselines are taken with `pnpm test:visual --update`.
 
 With no Docker (or one that doesn't answer), push: CI renders the
 pictures on Linux, fails the ones the change moved and keeps each
@@ -94,7 +106,8 @@ both.
 ## Done means
 
 1. `pnpm check` is green, the specs for what you touched pass, and before
-   the push `pnpm ci:local` is green (with Docker; without it, the PR says so).
+   the push `pnpm ci:local` is green (with Docker; without it, the PR says so),
+   or `pnpm verify`, its `evidence/` committed, where `CI_MODE=local`.
 2. Every behaviour you changed has a test that proves it (the table below),
    named in the PR. A bug fix has a test that failed before the fix. A
    failure you say isn't yours ("it fails on main too") comes with its

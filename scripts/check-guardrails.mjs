@@ -10,7 +10,8 @@
 //   - an added biome-ignore without `lint/<rule>: ` and a reason of 15
 //     characters or more after the colon;
 //   - a change to a guardrail file (biome.json and biome-plugins/, the
-//     scripts/check-*.mjs, playwright.config.ts, everything under .github/
+//     scripts/check-*.mjs, scripts/verify.mjs and scripts/ci-local.mjs (where
+//     CI runs locally they are CI, ADR 0017), playwright.config.ts, everything under .github/
 //     (the workflows, CODEOWNERS), AGENTS.md, CLAUDE.md, .claude/ (the
 //     settings, hooks and skills), .githooks/, the tsconfigs,
 //     e2e/fixtures.ts, vite.config.ts, package.json, index.html and
@@ -34,6 +35,7 @@ const GUARDRAILS = [
   /^biome\.json$/,
   /^biome-plugins\//,
   /^scripts\/check-.*\.mjs$/,
+  /^scripts\/(verify|ci-local)\.mjs$/,
   /^playwright\.config\.ts$/,
   /^\.github\//,
   /^AGENTS\.md$/,

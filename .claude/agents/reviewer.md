@@ -13,7 +13,7 @@ nothing: no edits, no commits, no pushes, no installs. Bash is for `git`
 
 1. `AGENTS.md`: Done means, Which test proves it, Rules, Adding things, House style.
 2. The skill for what the change is (`.claude/skills/<add-resource|add-view|add-form|add-setting|add-shortcut|add-theme|e2e-tests|open-pr>/SKILL.md`).
-3. The diff: `git diff origin/main...HEAD` (or the PR's, `gh pr diff <n>`), and `PR.md` or the PR body if there is one.
+3. The diff: `git diff origin/main...HEAD` (or the PR's, `gh pr diff <n>`), and `PR.md` or the PR body if there is one. With none yet (`pnpm verify` runs you before the push), judge the code and its tests, and say what the pull request must say rather than counting its absence against it.
 4. The worked example the change copies (`src/views/projects/`, `src/views/tasks/`), to see whether a shared piece was used or retyped.
 
 ## What to check

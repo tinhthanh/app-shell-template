@@ -35,3 +35,26 @@ the scripts make for `dependabot[bot]`: its "Bump" subject (it cannot be
 told to write lowercase) and its workflow edits without the label (an
 action's version is all it ever changes there). A major TypeScript bump is
 ignored until it is migrated by hand.
+
+## A private repository
+
+What GitHub gives each, on its free plan:
+
+| | Public | Private, GitHub Free |
+|---|---|---|
+| `ci.yml` | free | paid past the plan's minutes; with `CI_MODE=local` only the evidence and guardrails jobs run, seconds each |
+| `codeql.yml` | free | needs GitHub Advanced Security: the job stays off unless `CODEQL=on` |
+| `rulesets/main.json` | applied | not available: nothing stops a red pull request merging |
+| GitHub Pages | free | needs a paid plan |
+| Dependabot, releases, CODEOWNERS | free | free; with `CI_MODE=local`, Dependabot's pull requests still run the app job (no laptop verifies them) |
+
+`node scripts/setup-repo.mjs` sets `CI_MODE=local` on a private repository
+on GitHub Free
+(ADR 0017): `pnpm verify` runs the app job on a laptop, with the
+`reviewer` agent's verdict, and records it in `evidence/`; the pre-push hook
+and the evidence job hold the pushed head to that record
+(`scripts/check-proof.mjs`). `evidence/` is committed only there; a repository whose CI runs on GitHub, as
+this template's does, keeps none. `gh variable delete CI_MODE` turns the app job
+back on. A self-hosted Linux runner is the other way out: its minutes are
+free, and `runs-on` names it. Run only your own pull requests on it, since
+the code in one runs on that machine.
