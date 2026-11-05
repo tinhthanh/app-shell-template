@@ -20,9 +20,12 @@
 //
 //   pnpm ci:local          all of it
 //   pnpm ci:local --here   the browser suite on this machine, not in Docker
+//
+// What it said is also left in node_modules/.ci-local.json (HEAD, each
+// step's mark, the notes), which pnpm verify records (scripts/verify.mjs).
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { arch, homedir, tmpdir } from "node:os";
 import { basename, resolve } from "node:path";
 
@@ -186,5 +189,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const n of note) console.log(`  note: ${n}`);
   const red = results.some((r) => r.mark === "✗");
   console.log(red ? "ci-local: red" : "ci-local: green");
+  const head = git("rev-parse", "HEAD");
+  writeFileSync(resolve(root, "node_modules/.ci-local.json"), `${JSON.stringify({ commit: head, docker, steps: results, notes: note }, null, 2)}\n`);
   process.exit(red ? 1 : 0);
 }

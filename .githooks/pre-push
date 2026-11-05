@@ -1,5 +1,14 @@
 #!/bin/sh
 # Everything CI checks, before the push: typecheck, lint, the checks, the
-# unit tests and the build (about ten seconds). The browser suite is CI's.
+# unit tests and the build (about ten seconds). The browser suite is CI's,
+# unless CI runs locally (the repository variable CI_MODE=local, ADR 0017):
+# then the push needs pnpm verify's record of this tree, green and reviewed
+# ready (pnpm check:proof), since nothing runs the suite after it.
 set -e
-if command -v pnpm >/dev/null 2>&1; then pnpm -s check; else npx pnpm@11 -s check; fi
+if command -v pnpm >/dev/null 2>&1; then pnpm=pnpm; else pnpm="npx pnpm@11"; fi
+$pnpm -s check
+mode=$(gh variable get CI_MODE 2>/dev/null || true)
+if [ "$mode" = "local" ] && ! $pnpm -s check:proof; then
+  echo "pre-push: CI runs locally here (CI_MODE=local): run pnpm verify, commit evidence/, and push again." >&2
+  exit 1
+fi

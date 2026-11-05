@@ -1,0 +1,33 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { proofProblems, treeOf, verdictOf } from "./check-proof.mjs";
+import { REVIEW_TOOLS, reviewArgs } from "./verify.mjs";
+
+const lsTree = (...files) => files.map((f) => `100644 blob ${"a".repeat(40)}\t${f}`).join("\n");
+const green = (tree) => ({ commit: "abc1234", tree, steps: [{ name: "pnpm check", mark: "✓" }], review: "ready" });
+
+test("committing the record after the run leaves the tree the run checked", () => {
+  assert.equal(treeOf(lsTree("src/a.ts", "evidence/verify.json", "evidence/review.md")), treeOf(lsTree("src/a.ts")));
+  assert.notEqual(treeOf(lsTree("src/a.ts")), treeOf(lsTree("src/a.ts", "src/b.ts")));
+});
+
+test("a green, reviewed run of this tree is proof, and nothing else is", () => {
+  const tree = treeOf(lsTree("src/a.ts"));
+  assert.deepEqual(proofProblems(green(tree), tree), []);
+  assert.match(proofProblems(null, tree)[0], /no evidence\/verify.json/);
+  assert.match(proofProblems(green("another"), tree)[0], /another tree/);
+  assert.match(proofProblems({ ...green(tree), steps: [{ name: "pnpm exec playwright test", mark: "✗" }] }, tree)[0], /red: pnpm exec playwright test/);
+  assert.match(proofProblems({ ...green(tree), steps: [] }, tree)[0], /names no step/);
+  assert.match(proofProblems({ ...green(tree), review: "not ready" }, tree)[0], /"not ready", not "ready"/);
+});
+
+test("the reviewer's verdict is read from its own line", () => {
+  assert.equal(verdictOf("VERDICT: ready\n\nNo findings."), "ready");
+  assert.equal(verdictOf("Some preamble\nVERDICT: not ready: no test for the sort\n- src/x.ts:3"), "not ready");
+  assert.equal(verdictOf("Looks ready to me."), "none");
+});
+
+test("the reviewer is given only tools that read", () => {
+  assert.ok(reviewArgs().includes("reviewer"));
+  for (const tool of REVIEW_TOOLS) assert.match(tool, /^(Read|Grep|Glob|Bash\((git (diff|log|show)|gh pr (view|diff)):\*\))$/);
+});

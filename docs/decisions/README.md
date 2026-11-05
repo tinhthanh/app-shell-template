@@ -22,6 +22,7 @@ no longer hold, write a new record that supersedes it.
 | [0014](0014-workspace-in-prefs.md) | The workspace on show is a preference, not part of the address |
 | [0015](0015-usage-data.md) | Usage data is opt-in, and what may leave is one table |
 | [0016](0016-api-contract.md) | The API is a contract file the client and the mock are held to |
+| [0017](0017-ci-runs-locally-on-a-private-repo.md) | Where Actions minutes cost, CI runs on a laptop, reviewed, and says so |
 
 Format: Status, Context, Decision, Consequences, Revisit if. Under 40 lines.
 A decision that has moved since may add a dated **Since (YYYY-MM-DD).**

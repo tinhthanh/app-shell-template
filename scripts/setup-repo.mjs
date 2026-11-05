@@ -2,8 +2,11 @@
 // signed in as its owner: the guardrail-change label the guardrails job
 // asks for, the ruleset that makes main take only green squash-merged
 // pull requests (.github/rulesets/main.json), and the owner in
-// .github/CODEOWNERS. It says what is left: the Pages source and the
-// API_URL or MOCK variable. Running it again changes nothing.
+// .github/CODEOWNERS. A private repository gets CI_MODE=local (ADR 0017:
+// Actions minutes are paid for there, so pnpm verify runs CI's app job on a
+// laptop and CI checks its record); on a free plan it has no ruleset either,
+// and says so. It says what is left: the Pages source and the API_URL or
+// MOCK variable. Running it again changes nothing.
 //
 //   node scripts/setup-repo.mjs             the repository of this checkout
 //   node scripts/setup-repo.mjs --dry-run   say what it would do
@@ -32,8 +35,19 @@ const labels = gh("label", "list", "--limit", "200", "--json", "name", "-q", ".[
 if (!labels.includes("guardrail-change"))
   step("the guardrail-change label", () => gh("label", "create", "guardrail-change", "--color", "D93F0B", "--description", "Changes a check, a config or the rules agents follow"));
 
-const rulesets = JSON.parse(gh("api", `repos/${repo}/rulesets`));
-if (!rulesets.some((r) => r.name === "main"))
+const isPrivate = gh("repo", "view", "--json", "isPrivate", "-q", ".isPrivate") === "true";
+const vars = gh("variable", "list", "--json", "name", "-q", ".[].name").split("\n");
+if (isPrivate && !vars.includes("CI_MODE"))
+  step("CI_MODE=local: CI's app job runs on a laptop through pnpm verify, and CI checks its record (ADR 0017)", () => gh("variable", "set", "CI_MODE", "--body", "local"));
+
+// A private repository on GitHub Free has no rulesets: the API refuses with a 403.
+let rulesets = null;
+try {
+  rulesets = JSON.parse(gh("api", `repos/${repo}/rulesets`));
+} catch {
+  console.log("note: no rulesets on this plan (a private repository on GitHub Free), so nothing stops a red pull request merging: the pre-push hook and pnpm verify's record are the gate (ADR 0017)");
+}
+if (rulesets && !rulesets.some((r) => r.name === "main"))
   step("the ruleset on main (squash merges only, the three checks green, no force push)", () =>
     ghIn(readFileSync(resolve(root, ".github/rulesets/main.json"), "utf8"), "api", "-X", "POST", `repos/${repo}/rulesets`, "--input", "-"),
   );
@@ -43,7 +57,6 @@ const text = readFileSync(codeowners, "utf8");
 const next = text.replace(/@[\w-]+/g, `@${owner}`);
 if (next !== text) step(`@${owner} as the owner in .github/CODEOWNERS (commit it)`, () => writeFileSync(codeowners, next));
 
-const vars = gh("variable", "list", "--json", "name", "-q", ".[].name").split("\n");
 console.log("");
 if (!vars.includes("API_URL") && !vars.includes("MOCK"))
   console.log(`left to do: Pages publishes nothing until the repository has a variable, API_URL (your API) or MOCK=1 (a demo on the fixtures):

@@ -18,6 +18,7 @@ on your machine first, so nothing is learnt from a red CI.
 - A view kind, a setting, a shortcut: the recipe's tests are all there (AGENTS.md › Which test proves it).
 - Committed, then `pnpm ci:local`: CI's app job on a clean copy of HEAD, the browser suite in Linux (Docker), and the two gates below. Green before the push; its summary goes in the Proof. Without Docker, say in the PR that the browser suite ran only here.
 - If the change is large, ask the `reviewer` agent (`.claude/agents/reviewer.md`) to read the diff against the rules first.
+- Where CI runs locally (`gh variable get CI_MODE` says `local`: a private repository, ADR 0017), `pnpm verify` instead of `pnpm ci:local`: the same run, then the reviewer agent's verdict, recorded in `evidence/`. Green and "ready", commit `evidence/` and push; the pre-push hook and the evidence job refuse a push without it. "Not ready": fix what `evidence/review.md` says, commit, run it again. Its summary goes in the Proof, with the verdict.
 
 ## 2. The title
 

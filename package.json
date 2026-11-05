@@ -23,6 +23,8 @@
     "test:e2e": "tsc --noEmit -p e2e && pnpm -s build && playwright test",
     "test:visual": "node scripts/visual.mjs",
     "ci:local": "node scripts/ci-local.mjs",
+    "verify": "node scripts/verify.mjs",
+    "check:proof": "node scripts/check-proof.mjs",
     "shots": "node scripts/shots.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm check:titles && pnpm check:words && pnpm check:type && pnpm check:grid && pnpm check:node && pnpm check:views && pnpm check:csp && pnpm check:contract && pnpm check:themes && pnpm test && pnpm build:check && pnpm check:size node_modules/.check-dist",
     "lint": "biome check --error-on-warnings .",
