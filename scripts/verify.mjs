@@ -48,6 +48,7 @@ export function promptOf(pr) {
     : "There is no pull request text yet (verify runs before the push): judge the code and its tests, don't hold the missing text against it, and say in a few lines what the pull request must say (its label, Assumptions, Not done).";
   return `Review this branch as the reviewer agent does: its diff is \`git diff origin/main...HEAD\`.
 ${text}
+You are the last step of pnpm verify, whose record (evidence/verify.json, committed with the branch after you) carries each step's result: a Proof that points at it for this run's results, rather than pasting them, is as asked.
 Begin your answer with one line, exactly \`VERDICT: ready\` or \`VERDICT: not ready: <the reason, in a few words>\`.
 Ready means nothing you found must be fixed before it merges; a finding worth a follow-up is not a reason to say not ready.
 Then the findings, most serious first, each with file:line, as your instructions say.`;
