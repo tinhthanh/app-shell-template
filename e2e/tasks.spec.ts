@@ -87,6 +87,14 @@ test("an edit takes the file off and the project with it", async ({ app }) => {
   await expect(app.page.getByTestId("task-detail")).toContainText("No project");
 });
 
+test("taking the file off leaves the keyboard on the file field that takes its place", async ({ app }) => {
+  await app.open({ hash: "/tasks/t-webhooks" });
+  await app.page.getByRole("button", { name: "Edit the task" }).click();
+  const dialog = app.page.getByRole("dialog", { name: "Edit the task" });
+  await dialog.getByRole("button", { name: "Remove retry-policy.pdf" }).click();
+  await expect(dialog.getByLabel("File")).toBeFocused();
+});
+
 test("a status change shows at once, before the server answers", async ({ app }) => {
   await app.open({ params: { hold: "1" }, hash: "/tasks/t-icons" });
   const detail = app.page.getByTestId("task-detail");
