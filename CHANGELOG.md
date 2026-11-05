@@ -5,6 +5,7 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- Taking a file off a task leaves the keyboard on the file field, rather than nowhere, and a field typed in just after keeps what was typed.
 - Tasks says how many of every match are late ("6 tasks · 1 late"), worked out by the server rather than from the rows read so far.
 - ⌘K says a record's status in the person's language.
 - A list's sort reads as itself in the address (sort=due:asc).

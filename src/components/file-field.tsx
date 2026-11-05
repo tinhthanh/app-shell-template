@@ -1,5 +1,5 @@
 import { XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
@@ -12,11 +12,19 @@ import type { Attachment } from "@/lib/types";
 // to take it off) or a new one picked. onChoice tells the form what to do
 // when it saves: keep the kept one, send a new one (client.uploadFile),
 // or take it off. A refusal on the field's name (too big) shows under it.
+// Taking the kept one off puts the keyboard on the file input that takes its
+// place: the button pressed is gone, and focus left on nothing would be put
+// back by the dialog a moment later, wherever the person had moved on to.
 export type FileChoice = { kind: "keep" } | { kind: "new"; file: File } | { kind: "none" };
 
 export function FileField({ name, label, hint, kept, accept, onChoice }: { name: string; label: string; hint?: string; kept?: Attachment; accept?: string; onChoice(choice: FileChoice): void }) {
   const [showKept, setShowKept] = useState(Boolean(kept));
   const [picked, setPicked] = useState<string>();
+  const input = useRef<HTMLInputElement>(null);
+  const [removed, setRemoved] = useState(false);
+  useEffect(() => {
+    if (removed) input.current?.focus();
+  }, [removed]);
   // What the form's dirty check reads under the field's name (before the file
   // input, so FormData finds it first): the kept file's id, "new:" and the
   // picked one's name, or nothing. Taking the kept one off is an edit.
@@ -35,6 +43,7 @@ export function FileField({ name, label, hint, kept, accept, onChoice }: { name:
             aria-label={t("common.file.remove", { name: kept.name })}
             onClick={() => {
               setShowKept(false);
+              setRemoved(true);
               onChoice({ kind: "none" });
             }}
           >
@@ -43,7 +52,7 @@ export function FileField({ name, label, hint, kept, accept, onChoice }: { name:
         </span>
       ) : (
         <FieldControl
-          render={<Input type="file" accept={accept} />}
+          render={<Input ref={input} type="file" accept={accept} />}
           onChange={(e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             setPicked(file?.name);
