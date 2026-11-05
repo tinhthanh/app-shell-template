@@ -46,7 +46,7 @@ What GitHub gives each, on its free plan:
 | `codeql.yml` | free | needs GitHub Advanced Security: the job stays off unless `CODEQL=on` |
 | `rulesets/main.json` | applied | not available: nothing stops a red pull request merging |
 | GitHub Pages | free | needs a paid plan |
-| Dependabot, releases, CODEOWNERS | free | free |
+| Dependabot, releases, CODEOWNERS | free | free; with `CI_MODE=local`, Dependabot's pull requests still run the app job (no laptop verifies them) |
 
 `node scripts/setup-repo.mjs` sets `CI_MODE=local` on a private repository
 on GitHub Free

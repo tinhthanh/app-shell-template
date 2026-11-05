@@ -20,19 +20,20 @@ Claude Code's reviewer agent on the branch's diff, read-only (`claude -p
 tracked file but `evidence/`, each step's mark, the verdict. `pnpm
 check:proof` (`scripts/check-proof.mjs`) fails unless the record is this
 tree's, every step green and the verdict "ready"; the pre-push hook runs it
-when `CI_MODE` is `local`, and so does the evidence job on the pull
-request's head. The evidence and guardrails jobs still run: seconds each.
+when `CI_MODE` is `local` (on each branch pushed; a tag is a release of
+`main`), and so does the evidence job on the pull request's head. The
+evidence and guardrails jobs still run, seconds each, and the app job still
+runs when dispatched and on Dependabot's pull requests, which no laptop
+verifies.
 A public repository, this template, keeps the whole of CI.
 
 **Consequences.** A pull request costs two short jobs instead of the app
-job, and the review happens on every one, not when an agent remembers. The
-record is what a laptop said, not a signature: an agent could write one by
-hand. Against that: its tree must be the head's, `pnpm verify` takes
-minutes to run again on any commit, and the owner can dispatch `ci.yml`. A
-review costs Claude tokens, and an agent's verdict is advice, not a
-second person: the owner still reads before merging. Without rulesets,
-the hook is the gate, and a hook can be skipped (`--no-verify` is a
-house rule, not a lock).
+job, and every one is reviewed. The record is what a laptop said, not a
+signature (an agent could write one): its tree must be the head's, and the
+owner can run `pnpm verify` or dispatch `ci.yml` on any commit. A review
+costs Claude tokens, and its verdict is advice: the owner still reads
+before merging. Without rulesets the hook is the gate, and a hook can be
+skipped (`--no-verify` is a house rule, not a lock).
 
 **Revisit if.** The plan changes (paid minutes, rulesets) or a self-hosted
 Linux runner is set up (`runs-on` it, and its minutes are free): then

@@ -3,9 +3,10 @@
 // asks for, the ruleset that makes main take only green squash-merged
 // pull requests (.github/rulesets/main.json), and the owner in
 // .github/CODEOWNERS. A private repository on GitHub Free, which has no
-// rulesets and pays for Actions minutes, gets CI_MODE=local instead (ADR
-// 0017: pnpm verify runs CI's app job on a laptop, and CI checks its record). It says what is left: the Pages source and the API_URL or
-// MOCK variable. Running it again changes nothing.
+// rulesets and pays for Actions minutes, gets CI_MODE=local instead
+// (ADR 0017: pnpm verify runs CI's app job on a laptop, and CI checks its
+// record). It says what is left: the Pages source and the API_URL or MOCK
+// variable. Running it again changes nothing.
 //
 //   node scripts/setup-repo.mjs             the repository of this checkout
 //   node scripts/setup-repo.mjs --dry-run   say what it would do

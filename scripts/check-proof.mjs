@@ -38,8 +38,8 @@ export function proofProblems(record, tree) {
   if (record.tree !== tree) problems.push(`${VERIFY_JSON} is a run of another tree (commit ${String(record.commit ?? "?").slice(0, 7)}): run pnpm verify on this one`);
   for (const s of record.steps ?? []) if (s.mark === "✗") problems.push(`a step was red: ${s.name}`);
   if (!record.steps?.length) problems.push(`${VERIFY_JSON} names no step it ran`);
-  // With CI local, nothing else draws the pictures: a run without Docker never ran them.
-  if (record.docker !== true) problems.push("the run had no Docker, so the browser suite wasn't CI's Linux and the pictures didn't run: start Docker and run pnpm verify again");
+  // With CI local, nothing else draws the pictures: a suite not run in Linux (Docker, or a Linux machine) never ran them.
+  if (record.linux !== true) problems.push("the browser suite didn't run in Linux (no Docker), so it wasn't CI's and the pictures didn't run: start Docker and run pnpm verify again");
   if (record.review !== "ready") problems.push(`the reviewer's verdict is "${record.review ?? "none"}", not "ready" (evidence/review.md says why)`);
   return problems;
 }

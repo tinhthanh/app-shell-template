@@ -2,8 +2,9 @@
 # Everything CI checks, before the push: typecheck, lint, the checks, the
 # unit tests and the build (about ten seconds). The browser suite is CI's,
 # unless CI runs locally (the repository variable CI_MODE=local, ADR 0017):
-# then each commit pushed needs pnpm verify's record of its tree, green and
-# reviewed ready (pnpm check:proof), since nothing runs the suite after it.
+# then the head of each branch pushed needs pnpm verify's record of its
+# tree, green and reviewed ready (pnpm check:proof), since nothing runs the
+# suite after it. A tag (a release, made from main) isn't checked.
 # git gives the hook what is pushed on stdin: <ref> <sha> <remote ref> <remote sha>.
 set -e
 if command -v pnpm >/dev/null 2>&1; then pnpm=pnpm; else pnpm="npx pnpm@11"; fi
@@ -13,7 +14,8 @@ if ! mode=$(gh variable get CI_MODE 2>/dev/null); then
   exit 0
 fi
 [ "$mode" = "local" ] || exit 0
-while read -r _ sha _ _; do
+while read -r _ sha remote _; do
+  case "$remote" in refs/heads/*) ;; *) continue ;; esac
   case "$sha" in *[!0]*) ;; *) continue ;; esac # a deletion pushes no commit
   if ! node scripts/check-proof.mjs --ref "$sha"; then
     echo "pre-push: CI runs locally here (CI_MODE=local): run pnpm verify, commit evidence/, and push again." >&2

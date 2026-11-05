@@ -21,8 +21,9 @@
 //   pnpm ci:local          all of it
 //   pnpm ci:local --here   the browser suite on this machine, not in Docker
 //
-// What it said is also left in node_modules/.ci-local.json (HEAD, each
-// step's mark, the notes), which pnpm verify records (scripts/verify.mjs).
+// What it said is also left in node_modules/.ci-local.json (HEAD, whether
+// the suite ran in Linux, each step's mark, the notes), which pnpm verify
+// records (scripts/verify.mjs).
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -87,7 +88,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`ci-local: couldn't make a worktree of HEAD in ${dir}`);
     process.exit(1);
   }
-  const dirty = git("status", "--porcelain").split("\n").filter(Boolean);
+  // evidence/ is pnpm verify's record of this run, written after it (scripts/verify.mjs).
+  const dirty = git("status", "--porcelain")
+    .split("\n")
+    .filter((l) => l && !l.slice(3).startsWith("evidence/"));
   console.log(`ci-local: HEAD ${git("rev-parse", "--short", "HEAD")} in ${dir}`);
   if (dirty.length) note.push(`${dirty.length} uncommitted change${dirty.length > 1 ? "s are" : " is"} not in this run, as they won't be on CI: commit them and run again`);
 
@@ -190,6 +194,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const red = results.some((r) => r.mark === "✗");
   console.log(red ? "ci-local: red" : "ci-local: green");
   const head = git("rev-parse", "HEAD");
-  writeFileSync(resolve(root, "node_modules/.ci-local.json"), `${JSON.stringify({ commit: head, docker, steps: results, notes: note }, null, 2)}\n`);
+  writeFileSync(resolve(root, "node_modules/.ci-local.json"), `${JSON.stringify({ commit: head, linux: docker || (linux && !here), steps: results, notes: note }, null, 2)}\n`);
   process.exit(red ? 1 : 0);
 }
