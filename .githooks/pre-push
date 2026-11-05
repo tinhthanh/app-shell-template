@@ -9,7 +9,8 @@
 set -e
 if command -v pnpm >/dev/null 2>&1; then pnpm=pnpm; else pnpm="npx pnpm@11"; fi
 $pnpm -s check
-if ! mode=$(gh variable get CI_MODE 2>/dev/null); then
+# Empty when the variable isn't set; a failure only when gh can't ask.
+if ! mode=$(gh variable list --json name,value -q '.[] | select(.name=="CI_MODE") | .value' 2>/dev/null); then
   echo "pre-push: couldn't ask GitHub whether CI runs locally here (gh auth status); if it does, run pnpm verify before you ask for a merge." >&2
   exit 0
 fi

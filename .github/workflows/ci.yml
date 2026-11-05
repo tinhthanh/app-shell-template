@@ -27,7 +27,7 @@ jobs:
   # when dispatched (the owner's check of a record) and on Dependabot's pull
   # requests, which no laptop verifies.
   app:
-    if: vars.CI_MODE != 'local' || github.event_name == 'workflow_dispatch' || github.actor == 'dependabot[bot]'
+    if: vars.CI_MODE != 'local' || github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

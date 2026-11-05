@@ -6,9 +6,8 @@
 GitHub Free a private repository pays for Actions past a small allowance,
 gets no rulesets (nothing stops a red pull request merging) and no CodeQL.
 The app job is most of the minutes: the build and the browser suite with
-axe, several minutes a push. rang-sang, made from this template, turned CI
-off for this (its ADR 0023) and records a local run instead, but nothing
-there runs the reviewer agent, and its pre-push hook only warns.
+axe. rang-sang, made from this template, turned CI off for this (its ADR
+0023), but runs no review, and its pre-push hook only warns.
 
 **Decision.** The repository variable `CI_MODE=local` (`node
 scripts/setup-repo.mjs` sets it on a private repository) skips the app job.
@@ -30,10 +29,11 @@ A public repository, this template, keeps the whole of CI.
 **Consequences.** A pull request costs two short jobs instead of the app
 job, and every one is reviewed. The record is what a laptop said, not a
 signature (an agent could write one): its tree must be the head's, and the
-owner can run `pnpm verify` or dispatch `ci.yml` on any commit. A review
-costs Claude tokens, and its verdict is advice: the owner still reads
-before merging. Without rulesets the hook is the gate, and a hook can be
-skipped (`--no-verify` is a house rule, not a lock).
+owner can dispatch `ci.yml` on any commit. A review costs Claude tokens;
+its verdict is advice, and the owner still reads before merging. Without rulesets the hook is the gate, and a hook can be
+skipped (`--no-verify` is a house rule, not a lock). What `main` gets
+from a squash merge is a tree nobody ran, and two open pull requests each
+commit `evidence/`: the second rebases, and verifies again.
 
 **Revisit if.** The plan changes (paid minutes, rulesets) or a self-hosted
 Linux runner is set up (`runs-on` it, and its minutes are free): then

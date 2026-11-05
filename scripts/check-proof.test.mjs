@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { proofProblems, treeOf, verdictOf } from "./check-proof.mjs";
-import { agentOf, promptOf, REVIEW_LOADED, REVIEW_TOOLS, reviewArgs } from "./verify.mjs";
+import { agentOf, promptOf, REVIEW_DENIED, REVIEW_LOADED, REVIEW_TOOLS, reviewArgs } from "./verify.mjs";
 
 const lsTree = (...files) => files.map((f) => `100644 blob ${"a".repeat(40)}\t${f}`).join("\n");
 const green = (tree) => ({ commit: "abc1234", tree, linux: true, steps: [{ name: "pnpm check", mark: "✓" }], review: "ready" });
@@ -37,6 +37,7 @@ test("the reviewer is given only tools that read, and no settings that would let
   assert.equal(after("--setting-sources"), "");
   assert.equal(after("--permission-mode"), "dontAsk");
   assert.ok(args.includes("--strict-mcp-config"));
+  assert.deepEqual(args.slice(args.indexOf("--disallowedTools") + 1, args.indexOf("--disallowedTools") + 1 + REVIEW_DENIED.length), ["Bash(*--output*)"]);
   assert.deepEqual(JSON.parse(after("--agents")).reviewer, { description: "Reads a diff.", prompt: "You review.", tools: REVIEW_LOADED });
   assert.deepEqual(REVIEW_LOADED, ["Read", "Grep", "Glob", "Bash"]);
   for (const tool of REVIEW_TOOLS) assert.match(tool, /^(Read|Grep|Glob|Bash\((git (diff|log|show)|gh pr (view|diff)):\*\))$/);

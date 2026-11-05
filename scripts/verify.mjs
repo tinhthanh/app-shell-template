@@ -13,7 +13,8 @@
 //      with a verdict, its answer evidence/review.md. Read-only by more than
 //      its word: only the reading tools are loaded, no settings (the
 //      project's allowlist lets git commit and pnpm through) and no MCP
-//      server, and in dontAsk mode anything not in REVIEW_TOOLS is denied;
+//      server, and in dontAsk mode anything not in REVIEW_TOOLS is denied,
+//      with git's --output (it writes a file) denied outright;
 //   3. evidence/verify.json: the commit, its tree (every tracked file but
 //      evidence/, scripts/check-proof.mjs), each step's mark, the notes, the
 //      verdict, node and the OS.
@@ -34,6 +35,8 @@ import { treeOf, VERIFY_JSON, verdictOf } from "./check-proof.mjs";
 // The tools the reviewer has at all, and the ones it may use: it reads, and asks git and gh.
 export const REVIEW_LOADED = ["Read", "Grep", "Glob", "Bash"];
 export const REVIEW_TOOLS = ["Read", "Grep", "Glob", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)", "Bash(gh pr view:*)", "Bash(gh pr diff:*)"];
+// git diff, log and show write a file given --output: denied, as a redirect already is.
+export const REVIEW_DENIED = ["Bash(*--output*)"];
 
 // promptOf is what the review is asked, with the pull request's text when
 // there is one (PR_TITLE and PR_BODY, the PR on GitHub, or PR.md): verify
@@ -78,6 +81,8 @@ export function reviewArgs(prompt, reviewerMd) {
     ...REVIEW_LOADED,
     "--allowedTools",
     ...REVIEW_TOOLS,
+    "--disallowedTools",
+    ...REVIEW_DENIED,
     "--output-format",
     "text",
   ];
