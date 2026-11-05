@@ -25,7 +25,7 @@ export function treeOf(lsTree) {
   return createHash("sha256").update(lines.join("\n")).digest("hex");
 }
 
-// verdictOf reads the reviewer's first line, "VERDICT: ready" or "VERDICT: not ready …".
+// verdictOf reads the first line that starts with VERDICT: ("ready" or "not ready …"), wherever the reviewer puts it.
 export function verdictOf(review) {
   const m = /^\s*VERDICT:\s*(ready|not ready)\b/im.exec(review);
   return m ? m[1].toLowerCase() : "none";
