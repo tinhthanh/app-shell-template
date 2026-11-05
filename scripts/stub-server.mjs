@@ -60,7 +60,7 @@ export async function startStub(port = 8787, mockOptions = {}) {
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Headers": "Content-Type, Authorization, X-File-Name, X-Requested-With",
-          "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
           Vary: "Origin",
         }
       : { Vary: "Origin" };

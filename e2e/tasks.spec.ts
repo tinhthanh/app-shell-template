@@ -95,6 +95,16 @@ test("taking the file off leaves the keyboard on the file field that takes its p
   await expect(dialog.getByLabel("File")).toBeFocused();
 });
 
+test("on a phone a task's title stops short of its buttons rather than running under them", async ({ app }) => {
+  await app.page.setViewportSize({ width: 375, height: 740 });
+  await app.open({ hash: "/tasks/t-webhooks" });
+  const title = app.page.getByRole("heading", { level: 1 });
+  // The buttons come with the task: until they are there, the title has the whole width.
+  await expect(app.page.getByTestId("task-detail").getByRole("button", { name: "Delete" })).toBeVisible();
+  // Layout widths, which the page's entrance (a transform) doesn't change: nothing in the title's column runs past it, and the column ends where the buttons begin.
+  await expect.poll(() => title.evaluate((h) => (h.parentElement ? h.parentElement.scrollWidth <= h.parentElement.clientWidth : false))).toBe(true);
+});
+
 test("a status change shows at once, before the server answers", async ({ app }) => {
   await app.open({ params: { hold: "1" }, hash: "/tasks/t-icons" });
   const detail = app.page.getByTestId("task-detail");

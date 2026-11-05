@@ -33,3 +33,14 @@ the Kit run without a server. `Project` is the worked example.
 12. **The PR**: under Assumptions, what the task left open and you decided (fields, statuses, defaults, where the place sits); under Not done, what you left out and why.
 
 Then `pnpm check` and the specs.
+
+## One more operation on a resource that exists
+
+Watching a task, archiving a project: no new resource, one more call. The same files, fewer steps:
+
+- **The contract first** (`api/openapi.json`): the operation (`operationId` the `Client` method's name), its `x-permission`, and a new action in `x-roles` if it needs one. A field added to a type the server already answers (a task's `watchers`) is required only if every answer will carry it: the server's own tests that compare whole records (Go's `assert.JSONEq`) go red until they do, which is right.
+- **`src/lib/api.ts`** (`Client`, `httpClient`), **`src/lib/mock.ts`** (`guard(true, "<action>")` on a write) and a line each in **`ARGS`** and **`SAMPLES`** (`scripts/contract.mjs`): `pnpm check:contract` names whichever is missing.
+- **A new action** goes in `ACTIONS` (`src/lib/permissions.ts`) as in `x-roles`, and `src/lib/permissions.test.ts` pins each role's list, so its expected lists change with it (the test is the table, on purpose).
+- **A new HTTP method** (the first `PUT`): `httpClient` sends `X-Requested-With` on every method but GET already; the stub server's CORS (`scripts/stub-server.mjs`) and `docs/deploy.md` name every method a server must allow.
+- **The tests** as for a resource: `mock.test.ts` (the call, a 404, the viewer refused when it is refused), `api.test.ts` (its path and method), and an e2e spec of what the person sees.
+

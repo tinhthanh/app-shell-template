@@ -123,7 +123,7 @@ backend, `pnpm stub` (`scripts/stub-server.mjs`) serves the mock over
 HTTP on `http://localhost:8787` (`STUB_PORT` to move it); run the app
 against it with `VITE_API_URL=http://localhost:8787 pnpm dev`.
 
-Every write (POST, PATCH, DELETE) carries `X-Requested-With: XMLHttpRequest`.
+Every write (POST, PUT, PATCH, DELETE) carries `X-Requested-With: XMLHttpRequest`.
 With a session cookie, the server refuses a write without it: a form or a
 script on another site can't set that header without the server's CORS
 allowing it, so a cross-site request is turned away (CSRF). The cookie is
