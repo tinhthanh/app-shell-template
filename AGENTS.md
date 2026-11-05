@@ -24,7 +24,8 @@ these rules before a PR.
 - Claude Code reads `.claude/settings.json`: a Stop hook runs `pnpm check`
   when the tree has changes and, while it is red, blocks the first stop
   with its last lines (a second stop goes through, so a check that cannot
-  pass doesn't loop); after each Edit/Write, `scripts/check-file.mjs`
+  pass doesn't loop); after each Edit/Write, and after a shell command on
+  each file it changed (`.claude/hooks/around-bash.mjs`), `scripts/check-file.mjs`
   formats the file and checks it alone (Biome's errors, titles, words,
   type sizes, the grid), and what it finds comes back at once: fix it
   before the next edit. Force pushes, pushes to `main`, `pkill` and
