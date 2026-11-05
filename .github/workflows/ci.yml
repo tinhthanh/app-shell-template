@@ -138,3 +138,6 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           PR_ACTOR: ${{ github.event.pull_request.user.login }}
+          # The labels as they are when it runs, not as its event saw them (the script says why).
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}

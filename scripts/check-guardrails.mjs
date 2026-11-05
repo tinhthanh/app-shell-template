@@ -2,6 +2,7 @@
 // the base commit and the PR's labels in env:
 //
 //   BASE_SHA=… PR_LABELS="a,b" PR_ACTOR=… node scripts/check-guardrails.mjs
+//   PR_NUMBER=… (CI): the labels are read from the PR as it is now, with gh
 //
 // What it refuses:
 //   - added lines in src, e2e or scripts with test.skip, test.fixme,
@@ -25,7 +26,12 @@ import { execFileSync, spawnSync } from "node:child_process";
 // runs in a fresh copy with no remote.
 const exists = (ref) => spawnSync("git", ["rev-parse", "--verify", "--quiet", ref], { encoding: "utf8" }).status === 0;
 const base = process.env.BASE_SHA || (exists("origin/main") ? "origin/main" : exists("main") ? "main" : execFileSync("git", ["rev-list", "--max-parents=0", "HEAD"], { encoding: "utf8" }).trim());
-const labels = (process.env.PR_LABELS ?? "")
+// The labels as they are now, read from GitHub when CI names the PR
+// (PR_NUMBER): opening a PR with a label starts two runs, and the one the
+// label's event started can be the one cancelled, leaving a run whose event
+// saw none. PR_LABELS when gh can't say (locally, before the PR exists).
+const live = process.env.PR_NUMBER ? spawnSync("gh", ["pr", "view", process.env.PR_NUMBER, "--json", "labels", "-q", '[.labels[].name] | join(",")'], { encoding: "utf8" }) : null;
+const labels = (live?.status === 0 ? live.stdout : (process.env.PR_LABELS ?? ""))
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
