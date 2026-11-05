@@ -9,9 +9,11 @@
 //      in CI's Linux (Docker), then the evidence and guardrails gates
 //      (scripts/ci-local.mjs);
 //   2. the review: Claude Code's reviewer agent (.claude/agents/reviewer.md)
-//      reads the branch's diff against the repository's rules, read-only
-//      (claude -p, the tools it may use named), and answers with a verdict;
-//      its answer is evidence/review.md;
+//      reads the branch's diff against the repository's rules and answers
+//      with a verdict, its answer evidence/review.md. Read-only by more than
+//      its word: only the reading tools are loaded, no settings (the
+//      project's allowlist lets git commit and pnpm through) and no MCP
+//      server, and in dontAsk mode anything not in REVIEW_TOOLS is denied;
 //   3. evidence/verify.json: the commit, its tree (every tracked file but
 //      evidence/, scripts/check-proof.mjs), each step's mark, the notes, the
 //      verdict, node and the OS.
@@ -24,12 +26,13 @@
 //   pnpm verify
 //   CLAUDE_BIN=/path/to/claude pnpm verify   a claude not on the PATH
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { resolve } from "node:path";
 import { treeOf, VERIFY_JSON, verdictOf } from "./check-proof.mjs";
 
-// The reviewer may read and ask git and gh; nothing it is given writes.
+// The tools the reviewer has at all, and the ones it may use: it reads, and asks git and gh.
+export const REVIEW_LOADED = ["Read", "Grep", "Glob", "Bash"];
 export const REVIEW_TOOLS = ["Read", "Grep", "Glob", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)", "Bash(gh pr view:*)", "Bash(gh pr diff:*)"];
 
 export const REVIEW_PROMPT = `Review this branch as the reviewer agent does: its diff is \`git diff origin/main...HEAD\`, and its pull request's text is the PR (gh pr view) or PR.md if there is no PR yet.
@@ -37,9 +40,37 @@ Begin your answer with one line, exactly \`VERDICT: ready\` or \`VERDICT: not re
 Ready means nothing you found must be fixed before it merges; a finding worth a follow-up is not a reason to say not ready.
 Then the findings, most serious first, each with file:line, as your instructions say.`;
 
+// agentOf reads an agent's file (its frontmatter's description, its body the
+// prompt) as --agents takes it: with no settings loaded, the project's
+// agents aren't either, so the reviewer is handed over whole.
+export function agentOf(md) {
+  const m = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(md);
+  if (!m) throw new Error("verify: the reviewer's file has no frontmatter");
+  const description = /^description:\s*(.*)$/m.exec(m[1])?.[1] ?? "";
+  return { description, prompt: m[2].trim(), tools: REVIEW_LOADED };
+}
+
 // reviewArgs is the command line the review runs with.
-export function reviewArgs() {
-  return ["-p", REVIEW_PROMPT, "--agent", "reviewer", "--allowedTools", ...REVIEW_TOOLS, "--output-format", "text"];
+export function reviewArgs(reviewerMd) {
+  return [
+    "-p",
+    REVIEW_PROMPT,
+    "--agents",
+    JSON.stringify({ reviewer: agentOf(reviewerMd) }),
+    "--agent",
+    "reviewer",
+    "--setting-sources",
+    "",
+    "--strict-mcp-config",
+    "--permission-mode",
+    "dontAsk",
+    "--tools",
+    ...REVIEW_LOADED,
+    "--allowedTools",
+    ...REVIEW_TOOLS,
+    "--output-format",
+    "text",
+  ];
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -58,16 +89,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const tree = treeOf(git("ls-tree", "-r", "HEAD"));
 
   console.log("verify: 1. pnpm ci:local");
-  sh(process.execPath, ["scripts/ci-local.mjs"], { stdio: "inherit" });
+  // The last run's summary goes first, so a run that stops before writing one can't pass for it.
   const summary = resolve(root, "node_modules/.ci-local.json");
+  rmSync(summary, { force: true });
+  const ci = sh(process.execPath, ["scripts/ci-local.mjs"], { stdio: "inherit" });
   const ran = existsSync(summary) ? JSON.parse(readFileSync(summary, "utf8")) : null;
-  const steps = ran?.commit === commit ? ran.steps : [{ name: "pnpm ci:local", mark: "✗", s: 0 }];
+  const steps = ran?.commit === commit ? ran.steps : [{ name: "pnpm ci:local (it stopped before its summary)", mark: "✗", s: 0 }];
+  if (ci.status !== 0 && !steps.some((s) => s.mark === "✗")) steps.push({ name: `pnpm ci:local (exit ${ci.status})`, mark: "✗", s: 0 });
   const notes = ran?.commit === commit ? ran.notes : ["ci:local left no summary of this commit"];
 
   console.log("\nverify: 2. the review (Claude Code's reviewer agent, read-only)");
   const claude = process.env.CLAUDE_BIN ?? "claude";
   const started = Date.now();
-  const review = sh(claude, reviewArgs(), { stdio: ["ignore", "pipe", "inherit"] });
+  const review = sh(claude, reviewArgs(readFileSync(resolve(root, ".claude/agents/reviewer.md"), "utf8")), { stdio: ["ignore", "pipe", "inherit"] });
   const said = review.error ? `VERDICT: not ready: the review didn't run (${review.error.message}); install Claude Code or set CLAUDE_BIN` : String(review.stdout ?? "");
   const verdict = review.status === 0 || review.error ? verdictOf(said) : "none";
   console.log(said.trim());
@@ -75,7 +109,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   mkdirSync(resolve(root, "evidence"), { recursive: true });
   writeFileSync(resolve(root, "evidence/review.md"), `<!-- The reviewer agent's answer on ${commit.slice(0, 7)}, written by pnpm verify (scripts/verify.mjs). -->\n\n${said.trim()}\n`);
-  const record = { commit, tree, at: new Date().toISOString(), steps, notes, review: verdict, node: process.version, os: `${os.platform()} ${os.release()} ${os.arch()}` };
+  const record = {
+    commit,
+    tree,
+    at: new Date().toISOString(),
+    docker: ran?.docker === true,
+    steps,
+    notes,
+    review: verdict,
+    node: process.version,
+    os: `${os.platform()} ${os.release()} ${os.arch()}`,
+  };
   writeFileSync(resolve(root, VERIFY_JSON), `${JSON.stringify(record, null, 2)}\n`);
 
   console.log("\nverify: what it says");

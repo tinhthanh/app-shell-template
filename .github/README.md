@@ -49,6 +49,7 @@ What GitHub gives each, on its free plan:
 | Dependabot, releases, CODEOWNERS | free | free |
 
 `node scripts/setup-repo.mjs` sets `CI_MODE=local` on a private repository
+on GitHub Free
 (ADR 0017): `pnpm verify` runs the app job on a laptop, with the
 `reviewer` agent's verdict, and records it in `evidence/`; the pre-push hook
 and the evidence job hold the pushed head to that record

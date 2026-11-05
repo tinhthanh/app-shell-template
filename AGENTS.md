@@ -71,7 +71,9 @@ then the `reviewer` agent on the diff (`claude -p`, read-only), its answer
 in `evidence/review.md` and the run in `evidence/verify.json`. Commit
 `evidence/` and push: the pre-push hook and CI's evidence job refuse a
 head whose tree has no green run with the verdict "ready" (`pnpm check:proof`,
-ADR 0017). `gh variable get CI_MODE` says which this repository is.
+ADR 0017). `gh variable get CI_MODE` says which this repository is. There,
+Docker is needed: nothing else draws the pictures, so a run without it is
+no proof, and the baselines are taken with `pnpm test:visual --update`.
 
 With no Docker (or one that doesn't answer), push: CI renders the
 pictures on Linux, fails the ones the change moved and keeps each
