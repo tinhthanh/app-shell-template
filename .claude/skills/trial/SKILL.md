@@ -30,7 +30,13 @@ owner would, with the fields and the verbs, and nothing about how.
 
 ## 3. The fresh agent
 
-Start it on the worktree, with the repo as its only source. The prompt:
+Start it on the worktree, with the repo as its only source: a Claude Code
+session of its own (berth's `task new`, say), since a subagent fires none
+of the repo's hooks. A new worktree is a workspace Claude Code hasn't been
+told to trust, and until it is, `.claude/settings.json`'s allowlist is
+ignored and the agent waits on every command: the person running the
+trial trusts it (or answers each prompt) before it starts; don't trust it
+for them. The prompt:
 
 > You are a new engineer joining a frontend repository. Work ONLY inside
 > `<worktree>`. Start by reading the repository's own instructions
@@ -68,6 +74,12 @@ reject; and whether the task was narrowed without saying. Ask for: a
 score out of 10 with a paragraph; a table of deviations (what, where,
 rule, verdict: rule unclear / rule missing / rule ignored / fine); the
 top five template improvements that would prevent them.
+
+Then check what it says it ran, here, rather than reading it off `PR.md`:
+`pnpm check` and both gates with its title and body, and what the hooks
+saw: in its transcript (`~/.claude/projects/<worktree>/*.jsonl`), how many
+files it wrote with Edit or Write and how many from the shell, and what
+each hook said back.
 
 ## 5. Afterwards
 
