@@ -39,7 +39,9 @@ export function ViewHeader({ leading, crumbs, title, description, actions, child
             </BreadcrumbList>
           </Breadcrumb>
         ) : null}
-        <h1 className="shrink-0 text-row">{title}</h1>
+        <h1 className="min-w-0 truncate text-row" title={typeof title === "string" ? title : undefined}>
+          {title}
+        </h1>
         {description && <p className="hidden min-w-0 truncate text-muted-foreground text-meta md:block">{description}</p>}
       </div>
       {children}

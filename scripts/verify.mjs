@@ -120,7 +120,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const pr = process.env.PR_TITLE
     ? { title: process.env.PR_TITLE, body: process.env.PR_BODY ?? "" }
     : (JSON.parse(sh("gh", ["pr", "view", "--json", "title,body"]).stdout || "null") ??
-      (existsSync(resolve(root, "PR.md")) ? (([title, ...body]) => ({ title, body: body.join("\n").trim() }))(readFileSync(resolve(root, "PR.md"), "utf8").split("\n")) : null));
+      (existsSync(resolve(root, "PR.md"))
+        ? (([title, ...body]) => ({ title: title.replace(/^#\s+/, ""), body: body.join("\n").trim() }))(readFileSync(resolve(root, "PR.md"), "utf8").split("\n"))
+        : null));
   const review = sh(claude, reviewArgs(promptOf(pr), readFileSync(resolve(root, ".claude/agents/reviewer.md"), "utf8")), { stdio: ["ignore", "pipe", "inherit"] });
   const said = review.error
     ? `VERDICT: not ready: the review didn't run (${review.error.message}); install Claude Code or set CLAUDE_BIN`

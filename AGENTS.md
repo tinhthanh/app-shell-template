@@ -31,6 +31,9 @@ these rules before a PR.
   before the next edit. Force pushes, pushes to `main`, `pkill` and
   killing port 1420 are refused.
 
+- A session opened in another repository (a server's, working on both) runs that repository's
+  hooks, not these: after each file you write here, run `node scripts/check-file.mjs <file>`,
+  which is what the edit hook would have run, or open a session in this repository for its side.
 - Node 22 (`.nvmrc`) and pnpm 11 (`packageManager`). If `pnpm` is not on
   your PATH, run it as `npx pnpm@11` (or `corepack enable` on Node 22–24).
 - Chromium for the browser tests, once: `pnpm exec playwright install --with-deps chromium`.

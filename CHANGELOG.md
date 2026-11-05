@@ -5,6 +5,7 @@ about what the person gets. A release renames the heading to its version.
 
 ## Unreleased
 
+- On a phone, a long title in a page's header ends in an ellipsis before its buttons, rather than running under them.
 - Taking a file off a task leaves the keyboard on the file field, rather than nowhere, and a field typed in just after keeps what was typed.
 - Tasks says how many of every match are late ("6 tasks · 1 late"), worked out by the server rather than from the rows read so far.
 - ⌘K says a record's status in the person's language.

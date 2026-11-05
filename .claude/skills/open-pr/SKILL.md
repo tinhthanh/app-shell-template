@@ -53,6 +53,6 @@ git push -u origin <branch>                       # pre-push runs pnpm check
 gh pr create --base main --title "…" --body-file pr.md [--label guardrail-change]
 ```
 
-In a trial, or wherever you may not push: write the title and the body into `PR.md` at the root and commit it.
+In a trial, or wherever you may not push: write the title and the body into `PR.md` at the root and commit it, on the branch the worktree is on. Its first line is the title as GitHub shows it (`feat: …`, no `#` before it), then a blank line, then the body: the gates and `pnpm verify` read it that way.
 
 Then watch it: `gh pr checks <n>`. When something goes red, the `fix-ci` skill.
